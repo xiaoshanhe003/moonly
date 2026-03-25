@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: light;
+  --color-canvas: #f7f3ed;
+  --color-panel: #f3efe8;
+  --color-panel-strong: #ede4d6;
+  --color-ink: #243433;
+  --color-muted: #6e7b78;
+  --color-border: rgba(57, 77, 72, 0.12);
+  --color-accent: #d0dea4;
+  --color-accent-soft: #eef5d7;
+  --color-accent-strong: #6b7e2d;
+  --color-rose: #efc2c8;
+  --color-blue: #c8d7f0;
+  --color-gold: #edd07f;
+  --shadow-soft: 0 18px 40px rgba(85, 70, 53, 0.08);
+  --shadow-card: 0 12px 28px rgba(36, 52, 51, 0.08);
+  --radius-xl: 28px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-family: "Avenir Next", "Manrope", "Segoe UI", sans-serif;
+  background:
+    radial-gradient(circle at top left, rgba(237, 208, 127, 0.22), transparent 28%),
+    radial-gradient(circle at top right, rgba(208, 222, 164, 0.26), transparent 32%),
+    var(--color-canvas);
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  color: var(--color-ink);
+  background: transparent;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
