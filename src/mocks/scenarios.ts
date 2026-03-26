@@ -23,6 +23,7 @@ export const scenarios: Record<
     label: string;
     profile: CycleProfile | null;
     entry?: DailyEntry;
+    entries?: DailyEntry[];
   }
 > = {
   "first-run": {
@@ -42,13 +43,58 @@ export const scenarios: Record<
   "today-complete": {
     label: "记录完成",
     profile: baseProfile,
-    entry: {
-      date: isoToday,
-      mood: "calm",
-      symptoms: ["腹胀", "疲惫"],
-      flow: "none",
-      bleedingLevel: "none"
-    }
+    entries: [
+      {
+        date: daysAgo(18),
+        mood: "tense",
+        symptoms: ["痉挛", "疲惫"],
+        flow: "heavy",
+        bleedingLevel: "heavy",
+        periodSignal: "possible_start"
+      },
+      {
+        date: daysAgo(17),
+        mood: "calm",
+        symptoms: ["腹胀"],
+        flow: "medium",
+        bleedingLevel: "medium"
+      },
+      {
+        date: daysAgo(16),
+        mood: "calm",
+        symptoms: ["疲惫"],
+        flow: "light",
+        bleedingLevel: "light"
+      },
+      {
+        date: daysAgo(12),
+        mood: "happy",
+        symptoms: [],
+        flow: "none",
+        bleedingLevel: "none"
+      },
+      {
+        date: daysAgo(7),
+        mood: "happy",
+        symptoms: ["腹胀"],
+        flow: "none",
+        bleedingLevel: "none"
+      },
+      {
+        date: daysAgo(3),
+        mood: "tense",
+        symptoms: ["头痛", "疲惫"],
+        flow: "none",
+        bleedingLevel: "none"
+      },
+      {
+        date: isoToday,
+        mood: "calm",
+        symptoms: ["腹胀", "疲惫"],
+        flow: "none",
+        bleedingLevel: "none"
+      }
+    ]
   },
   "calendar-forecast": {
     label: "日历预测",

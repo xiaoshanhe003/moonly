@@ -15,11 +15,19 @@ type CycleState = {
 
 const defaultScenario = scenarios["today-pending"];
 
+function buildScenarioEntries(scenario: (typeof scenarios)[AppScenario]) {
+  if (scenario.entries) {
+    return Object.fromEntries(scenario.entries.map((entry) => [entry.date, entry]));
+  }
+
+  return scenario.entry ? { [scenario.entry.date]: scenario.entry } : {};
+}
+
 export const useCycleStore = create<CycleState>()(
   persist(
     (set) => ({
       profile: defaultScenario.profile,
-      entries: defaultScenario.entry ? { [defaultScenario.entry.date]: defaultScenario.entry } : {},
+      entries: buildScenarioEntries(defaultScenario),
       activeScenario: "today-pending",
       setProfile: (profile) => set({ profile }),
       updateEntry: (date, patch) =>
@@ -38,7 +46,7 @@ export const useCycleStore = create<CycleState>()(
           const current = scenarios[scenario];
           return {
             profile: current.profile,
-            entries: current.entry ? { [current.entry.date]: current.entry } : {},
+            entries: buildScenarioEntries(current),
             activeScenario: scenario
           };
         }),

@@ -18,3 +18,12 @@ export function formatMonth(date: Date) {
     month: "long"
   }).format(date);
 }
+
+export function formatFullDate(date: Date) {
+  return new Intl.DateTimeFormat("zh-CN", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    weekday: "long"
+  }).format(date);
+}

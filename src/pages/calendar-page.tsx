@@ -1,47 +1,80 @@
-import { Card } from "../components/ui/card";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { CalendarEntrySheet } from "../components/domain/calendar-entry-sheet";
 import { CalendarMonthCard } from "../components/domain/calendar-month-card";
-import { getCycleSummary } from "../features/cycle/cycle";
 import { useCycleStore } from "../features/cycle/store";
-import { formatShortDate } from "../lib/utils";
+import { Card } from "../components/ui/card";
+
+function parseDateKey(dateKey: string) {
+  const [year, month, day] = dateKey.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
+function startOfMonth(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), 1);
+}
+
+function addMonths(date: Date, offset: number) {
+  return new Date(date.getFullYear(), date.getMonth() + offset, 1);
+}
+
+function buildCalendarMonths(profileLastPeriodStart: string, today: Date) {
+  const startMonth = startOfMonth(parseDateKey(profileLastPeriodStart));
+  const endMonth = addMonths(startOfMonth(today), 11);
+  const monthSpan =
+    (endMonth.getFullYear() - startMonth.getFullYear()) * 12 + (endMonth.getMonth() - startMonth.getMonth());
+
+  return Array.from({ length: monthSpan + 1 }, (_, index) => addMonths(startMonth, index));
+}
 
 export function CalendarPage() {
   const profile = useCycleStore((state) => state.profile)!;
   const entries = useCycleStore((state) => state.entries);
   const today = new Date();
-  const summary = getCycleSummary(profile, entries, today);
-  const months = [
-    new Date(today.getFullYear(), today.getMonth(), 1),
-    new Date(today.getFullYear(), today.getMonth() + 1, 1)
-  ];
+  const todayKey = today.toISOString().slice(0, 10);
+  const months = buildCalendarMonths(profile.lastPeriodStart, today);
+  const currentMonthKey = startOfMonth(today).toISOString();
+  const currentMonthRef = useRef<HTMLDivElement | null>(null);
+  const hasScrolledToCurrentMonth = useRef(false);
+  const [selectedDateKey, setSelectedDateKey] = useState<string | null>(null);
+  const selectedEntry = selectedDateKey ? entries[selectedDateKey] : undefined;
+  const selectedDateValue = useMemo(
+    () => (selectedDateKey ? parseDateKey(selectedDateKey) : null),
+    [selectedDateKey]
+  );
+
+  useEffect(() => {
+    if (hasScrolledToCurrentMonth.current) {
+      return;
+    }
+
+    currentMonthRef.current?.scrollIntoView({
+      block: "start"
+    });
+    window.scrollBy({ top: -280, behavior: "instant" });
+    hasScrolledToCurrentMonth.current = true;
+  }, []);
 
   return (
-    <div className="space-y-4 pb-6">
-      <Card>
-        <div className="grid grid-cols-3 gap-3 text-sm">
-          <div>
-            <p className="text-[var(--color-muted)]">周期长度</p>
-            <p className="mt-1 text-2xl font-semibold">{summary.cycleLength}天</p>
-          </div>
-          <div>
-            <p className="text-[var(--color-muted)]">月经</p>
-            <p className="mt-1 text-2xl font-semibold">{summary.periodLength}天</p>
-          </div>
-          <div>
-            <p className="text-[var(--color-muted)]">下次月经</p>
-            <p className="mt-1 text-2xl font-semibold">{formatShortDate(summary.nextPeriodStart)}</p>
-          </div>
-        </div>
-      </Card>
-
-      <div className="scrollbar-none flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2">
+    <div className="space-y-4 pb-32">
+      <div className="space-y-4">
         {months.map((month) => (
-          <div key={month.toISOString()} className="min-w-full snap-center">
-            <CalendarMonthCard monthDate={month} profile={profile} entries={entries} today={today} />
+          <div
+            key={month.toISOString()}
+            ref={month.toISOString() === currentMonthKey ? currentMonthRef : null}
+            className={month.toISOString() === currentMonthKey ? "scroll-mt-72" : undefined}
+          >
+            <CalendarMonthCard
+              monthDate={month}
+              profile={profile}
+              entries={entries}
+              today={today}
+              onEntryClick={setSelectedDateKey}
+            />
           </div>
         ))}
       </div>
 
-      <Card className="flex flex-wrap gap-4 text-sm text-[var(--color-muted)]">
+      <Card className="sticky bottom-4 z-30 bg-white/92 flex flex-wrap gap-4 text-sm text-[var(--color-muted)]">
         <div className="flex items-center gap-2">
           <span className="size-3 rounded-full bg-[var(--color-rose)]" />
           月经期
@@ -58,7 +91,22 @@ export function CalendarPage() {
           <span className="size-3 rounded-full bg-[var(--color-blue)]" />
           黄体期
         </div>
+        <div className="flex items-center gap-2">
+          <span className="size-3 rounded-full bg-[var(--color-ink)]" />
+          已记录
+        </div>
+        <div>浅色日期表示预测</div>
       </Card>
+
+      {selectedDateKey && selectedEntry && selectedDateValue ? (
+        <CalendarEntrySheet
+          date={selectedDateKey}
+          dateValue={selectedDateValue}
+          entry={selectedEntry}
+          isToday={selectedDateKey === todayKey}
+          onClose={() => setSelectedDateKey(null)}
+        />
+      ) : null}
     </div>
   );
 }

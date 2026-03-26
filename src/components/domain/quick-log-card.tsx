@@ -23,12 +23,159 @@ const flowOptions = [
 ] as const;
 const stepOrder: QuickLogStep[] = ["mood", "symptoms", "flow"];
 
-type QuickLogCardProps = {
+type CompletedLogDetailsProps = {
   date: string;
   entry?: DailyEntry;
 };
 
-export function QuickLogCard({ date, entry }: QuickLogCardProps) {
+export function CompletedLogDetails({ date, entry }: CompletedLogDetailsProps) {
+  const updateEntry = useCycleStore((state) => state.updateEntry);
+  const bleedingLevel = getBleedingLevel(entry);
+  const moodLabel = moods.find((item) => item.value === entry?.mood)?.label ?? "未记录";
+  const flowLabel = flowOptions.find((item) => item.value === bleedingLevel)?.label ?? "未记录";
+  const symptomLabel =
+    entry?.symptoms && entry.symptoms.length > 0 ? entry.symptoms.join("、") : "今天没有明显不适";
+  const periodSignalLabel =
+    entry?.periodSignal && entry.periodSignal !== "none" ? "这次感觉像经期开始" : "暂未标记为经期开始";
+  const canShowPeriodSignal = Boolean(bleedingLevel && bleedingLevel !== "none");
+
+  const renderPillButton = ({
+    active,
+    label,
+    onClick
+  }: {
+    active: boolean;
+    label: string;
+    onClick: () => void;
+  }) => (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "rounded-full px-4 py-2 text-sm transition",
+        active
+          ? "bg-[var(--color-ink)] text-white"
+          : "bg-[var(--color-panel)] text-[var(--color-ink)]"
+      )}
+    >
+      {label}
+    </button>
+  );
+
+  return (
+    <div className="grid gap-3">
+      <div className="rounded-2xl bg-[var(--color-panel)] p-4">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-muted)]">心情</p>
+            <p className="mt-2 text-sm font-medium text-[var(--color-ink)]">{moodLabel}</p>
+          </div>
+          <PencilLine className="size-4 text-[var(--color-muted)]" />
+        </div>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {moods.map((mood) =>
+            renderPillButton({
+              active: entry?.mood === mood.value,
+              label: mood.label,
+              onClick: () => updateEntry(date, { mood: mood.value })
+            })
+          )}
+        </div>
+      </div>
+
+      <div className="rounded-2xl bg-[var(--color-panel)] p-4">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-muted)]">身体症状</p>
+            <p className="mt-2 text-sm font-medium text-[var(--color-ink)]">{symptomLabel}</p>
+          </div>
+          <PencilLine className="size-4 text-[var(--color-muted)]" />
+        </div>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {symptomOptions.map((symptom) =>
+            renderPillButton({
+              active: Boolean(entry?.symptoms?.includes(symptom)),
+              label: symptom,
+              onClick: () => {
+                const previous = new Set(entry?.symptoms ?? []);
+                if (previous.has(symptom)) {
+                  previous.delete(symptom);
+                } else {
+                  previous.add(symptom);
+                }
+                updateEntry(date, { symptoms: [...previous] });
+              }
+            })
+          )}
+          <Button variant="soft" onClick={() => updateEntry(date, { symptoms: [] })}>
+            <Check className="mr-1 size-4" />
+            没有明显不适
+          </Button>
+        </div>
+      </div>
+
+      <div className="rounded-2xl bg-[var(--color-panel)] p-4">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-muted)]">出血情况</p>
+            <p className="mt-2 text-sm font-medium text-[var(--color-ink)]">{flowLabel}</p>
+            <p className="mt-1 text-xs text-[var(--color-muted)]">{periodSignalLabel}</p>
+          </div>
+          <PencilLine className="size-4 text-[var(--color-muted)]" />
+        </div>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {flowOptions.map((flow) =>
+            renderPillButton({
+              active: bleedingLevel === flow.value,
+              label: flow.label,
+              onClick: () =>
+                updateEntry(date, {
+                  flow: flow.value === "spotting" ? undefined : flow.value,
+                  bleedingLevel: flow.value,
+                  periodSignal: flow.value === "none" ? "none" : entry?.periodSignal ?? "none",
+                  isPeriodStart: false
+                })
+            })
+          )}
+        </div>
+        {canShowPeriodSignal ? (
+          <div className="mt-4">
+            <Button
+              variant={entry?.periodSignal === "possible_start" ? "primary" : "soft"}
+              onClick={() =>
+                updateEntry(date, {
+                  flow:
+                    bleedingLevel && bleedingLevel !== "none" && bleedingLevel !== "spotting"
+                      ? bleedingLevel
+                      : undefined,
+                  bleedingLevel,
+                  periodSignal: entry?.periodSignal === "possible_start" ? "none" : "possible_start",
+                  isPeriodStart: false
+                })
+              }
+            >
+              这次感觉像经期开始
+            </Button>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+type QuickLogCardProps = {
+  date: string;
+  entry?: DailyEntry;
+  completedDisplay?: "compact" | "expanded";
+  surface?: "card" | "plain";
+};
+
+export function QuickLogCard({
+  date,
+  entry,
+  completedDisplay = "compact",
+  surface = "card"
+}: QuickLogCardProps) {
   const updateEntry = useCycleStore((state) => state.updateEntry);
   const [isExpanded, setIsExpanded] = useState(false);
   const [stepOverride, setStepOverride] = useState<QuickLogStep | null>(null);
@@ -46,13 +193,6 @@ export function QuickLogCard({ date, entry }: QuickLogCardProps) {
     if (entry?.periodSignal && entry.periodSignal !== "none") labels.push("经期信号");
     return labels.join(" · ");
   }, [bleedingLevel, entry]);
-
-  const moodLabel = moods.find((item) => item.value === entry?.mood)?.label ?? "未记录";
-  const flowLabel = flowOptions.find((item) => item.value === bleedingLevel)?.label ?? "未记录";
-  const symptomLabel =
-    entry?.symptoms && entry.symptoms.length > 0 ? entry.symptoms.join("、") : "今天没有明显不适";
-  const periodSignalLabel =
-    entry?.periodSignal && entry.periodSignal !== "none" ? "这次感觉像经期开始" : "暂未标记为经期开始";
   const canShowPeriodSignal = Boolean(bleedingLevel && bleedingLevel !== "none");
 
   const renderPillButton = ({
@@ -214,107 +354,23 @@ export function QuickLogCard({ date, entry }: QuickLogCardProps) {
     );
   };
 
-  const renderCompletedDetails = () => (
-    <div className="grid gap-3">
-      <div className="rounded-2xl bg-[var(--color-panel)] p-4">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-muted)]">心情</p>
-            <p className="mt-2 text-sm font-medium text-[var(--color-ink)]">{moodLabel}</p>
-          </div>
-          <PencilLine className="size-4 text-[var(--color-muted)]" />
-        </div>
-        <div className="mt-4 flex flex-wrap gap-2">
-          {moods.map((mood) =>
-            renderPillButton({
-              active: entry?.mood === mood.value,
-              label: mood.label,
-              onClick: () => updateEntry(date, { mood: mood.value })
-            })
-          )}
-        </div>
-      </div>
-
-      <div className="rounded-2xl bg-[var(--color-panel)] p-4">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-muted)]">身体症状</p>
-            <p className="mt-2 text-sm font-medium text-[var(--color-ink)]">{symptomLabel}</p>
-          </div>
-          <PencilLine className="size-4 text-[var(--color-muted)]" />
-        </div>
-        <div className="mt-4 flex flex-wrap gap-2">
-          {symptomOptions.map((symptom) =>
-            renderPillButton({
-              active: Boolean(entry?.symptoms?.includes(symptom)),
-              label: symptom,
-              onClick: () => {
-                const previous = new Set(entry?.symptoms ?? []);
-                if (previous.has(symptom)) {
-                  previous.delete(symptom);
-                } else {
-                  previous.add(symptom);
-                }
-                updateEntry(date, { symptoms: [...previous] });
-              }
-            })
-          )}
-          <Button variant="soft" onClick={() => updateEntry(date, { symptoms: [] })}>
-            <Check className="mr-1 size-4" />
-            没有明显不适
-          </Button>
-        </div>
-      </div>
-
-      <div className="rounded-2xl bg-[var(--color-panel)] p-4">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-muted)]">出血情况</p>
-            <p className="mt-2 text-sm font-medium text-[var(--color-ink)]">{flowLabel}</p>
-            <p className="mt-1 text-xs text-[var(--color-muted)]">{periodSignalLabel}</p>
-          </div>
-          <PencilLine className="size-4 text-[var(--color-muted)]" />
-        </div>
-        <div className="mt-4 flex flex-wrap gap-2">
-          {flowOptions.map((flow) =>
-            renderPillButton({
-              active: bleedingLevel === flow.value,
-              label: flow.label,
-              onClick: () =>
-                updateEntry(date, {
-                  flow: flow.value === "spotting" ? undefined : flow.value,
-                  bleedingLevel: flow.value,
-                  periodSignal: flow.value === "none" ? "none" : entry?.periodSignal ?? "none",
-                  isPeriodStart: false
-                })
-            })
-          )}
-        </div>
-        {canShowPeriodSignal ? (
-          <div className="mt-4">
-            <Button
-              variant={entry?.periodSignal === "possible_start" ? "primary" : "soft"}
-              onClick={() =>
-                updateEntry(date, {
-                  flow:
-                    bleedingLevel && bleedingLevel !== "none" && bleedingLevel !== "spotting"
-                      ? bleedingLevel
-                      : undefined,
-                  bleedingLevel,
-                  periodSignal: entry?.periodSignal === "possible_start" ? "none" : "possible_start",
-                  isPeriodStart: false
-                })
-              }
-            >
-              这次感觉像经期开始
-            </Button>
-          </div>
-        ) : null}
-      </div>
-    </div>
-  );
-
   if (progress === "complete") {
+    if (completedDisplay === "expanded") {
+      const content = (
+        <>
+          <div>
+            <p className="text-sm text-[var(--color-muted)]">今日记录已完成</p>
+            <p className="mt-1 text-sm font-medium text-[var(--color-ink)]">{completedLabels}</p>
+          </div>
+          <div className="mt-4">
+            <CompletedLogDetails date={date} entry={entry} />
+          </div>
+        </>
+      );
+
+      return surface === "plain" ? content : <Card>{content}</Card>;
+    }
+
     return (
       <>
         <Card className="sticky bottom-4">
@@ -349,7 +405,9 @@ export function QuickLogCard({ date, entry }: QuickLogCardProps) {
                 </Button>
               </div>
 
-              <div className="max-h-[calc(88vh-5rem)] overflow-y-auto p-5">{renderCompletedDetails()}</div>
+              <div className="max-h-[calc(88vh-5rem)] overflow-y-auto p-5">
+                <CompletedLogDetails date={date} entry={entry} />
+              </div>
             </div>
           </div>
         ) : null}
@@ -357,5 +415,5 @@ export function QuickLogCard({ date, entry }: QuickLogCardProps) {
     );
   }
 
-  return <Card>{renderStep(currentStep)}</Card>;
+  return surface === "plain" ? <div>{renderStep(currentStep)}</div> : <Card>{renderStep(currentStep)}</Card>;
 }
