@@ -46,7 +46,8 @@ export const scenarios: Record<
       date: isoToday,
       mood: "calm",
       symptoms: ["腹胀", "疲惫"],
-      flow: "none"
+      flow: "none",
+      bleedingLevel: "none"
     }
   },
   "calendar-forecast": {

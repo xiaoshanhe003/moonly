@@ -6,11 +6,18 @@ export type CycleProfile = {
   isCycleLengthEstimated: boolean;
 };
 
+export type BleedingLevel = "none" | "spotting" | "light" | "medium" | "heavy";
+
+export type PeriodSignal = "none" | "possible_start" | "confirmed_start";
+
 export type DailyEntry = {
   date: string;
   mood?: "happy" | "calm" | "tense";
   flow?: "none" | "light" | "medium" | "heavy";
+  bleedingLevel?: BleedingLevel;
   symptoms?: string[];
+  periodSignal?: PeriodSignal;
+  isPeriodStart?: boolean;
 };
 
 export type QuickLogStep = "mood" | "symptoms" | "flow";

@@ -1,6 +1,6 @@
 import { Card } from "../ui/card";
 import { buildMonthGrid } from "../../features/cycle/cycle";
-import type { CycleProfile } from "../../features/cycle/types";
+import type { CycleProfile, DailyEntry } from "../../features/cycle/types";
 import { formatMonth } from "../../lib/utils";
 
 const weekdays = ["日", "一", "二", "三", "四", "五", "六"];
@@ -8,11 +8,12 @@ const weekdays = ["日", "一", "二", "三", "四", "五", "六"];
 type CalendarMonthCardProps = {
   monthDate: Date;
   profile: CycleProfile;
+  entries: Record<string, DailyEntry>;
   today: Date;
 };
 
-export function CalendarMonthCard({ monthDate, profile, today }: CalendarMonthCardProps) {
-  const cells = buildMonthGrid(profile, monthDate, today);
+export function CalendarMonthCard({ monthDate, profile, entries, today }: CalendarMonthCardProps) {
+  const cells = buildMonthGrid(profile, entries, monthDate, today);
 
   return (
     <Card className="space-y-5">

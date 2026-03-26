@@ -13,7 +13,7 @@ export function PhaseHeroCard({ summary }: PhaseHeroCardProps) {
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-sm text-[var(--color-muted)]">
-              {summary.phase.label} · 还剩约 {summary.daysUntilNextPeriod} 天 · 下次月经期
+              {summary.phase.label}·还将持续{summary.phaseRemainingDays}天·Next {summary.nextPhase.label}
             </p>
           </div>
           <button type="button" className="rounded-full bg-white p-2 text-[var(--color-muted)]">
