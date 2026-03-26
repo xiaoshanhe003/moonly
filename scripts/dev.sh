@@ -3,7 +3,9 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-DEFAULT_URL="http://localhost:5173/"
+DEFAULT_HOST="127.0.0.1"
+DEFAULT_PORT="5173"
+DEFAULT_URL="http://${DEFAULT_HOST}:${DEFAULT_PORT}/"
 
 cd "$ROOT_DIR"
 
@@ -13,7 +15,8 @@ if [ ! -d node_modules ]; then
 fi
 
 echo "Starting Moonly dev server..."
+echo "Agent mode binds to ${DEFAULT_HOST} to avoid sandbox issues with IPv6 localhost."
 echo "Expected local URL: $DEFAULT_URL"
-echo "If port 5173 is occupied, use the URL printed by Vite."
+echo "If port ${DEFAULT_PORT} is occupied, use the URL printed by Vite."
 
-exec npm run dev -- "$@"
+exec npm run dev -- --host "$DEFAULT_HOST" --port "$DEFAULT_PORT" "$@"
