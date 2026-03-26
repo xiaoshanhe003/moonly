@@ -21,8 +21,7 @@ const phaseMeta: Record<
   PhaseKey,
   {
     label: string;
-    tone: string;
-    advice: string;
+    tones: string[];
     dos: string[];
     donts: string[];
     color: string;
@@ -30,37 +29,180 @@ const phaseMeta: Record<
 > = {
   menstrual: {
     label: "月经期",
-    tone: "今天适合放慢节奏，先照顾身体感受。",
-    advice: "宜 温和热茶  忌 过度消耗",
-    dos: ["留白日程", "关注舒适度"],
-    donts: ["过度透支", "忽略疼痛"],
+    tones: [
+      "今天适合放慢节奏，先照顾身体感受。",
+      "先把身体放在前面，别急着跟日程较劲。",
+      "如果状态偏低也没关系，今天更适合温柔一点。",
+      "把步子收小一点，身体舒服比效率更重要。",
+      "今天可以不那么满，先让自己处在舒服的频率里。"
+    ],
+    dos: ["温热饮食", "留白日程", "先顾舒适", "轻缓活动", "早点休息"],
+    donts: ["硬扛不适", "过度透支", "久坐受凉", "高强度训练", "忽略疼痛"],
     color: "var(--color-rose)"
   },
   follicular: {
     label: "卵泡期",
-    tone: "能量通常会慢慢回升，可以轻轻把计划重新打开。",
-    advice: "宜 轻启动  忌 安排过满",
-    dos: ["尝试新任务", "安排轻运动"],
-    donts: ["日程过满", "过度用力"],
+    tones: [
+      "能量通常会慢慢回升，可以轻轻把计划重新打开。",
+      "如果感觉状态在回来，今天适合把事情一点点接上。",
+      "这是重新起步的窗口，先把节奏慢慢拉起来。",
+      "不必一下冲满，稳稳地启动就很好。",
+      "今天适合把想做的事往前推一小步。"
+    ],
+    dos: ["轻启动", "尝试新事", "安排轻运动", "推进计划", "外出走走"],
+    donts: ["日程过满", "一下太猛", "过度用力", "熬夜补进度", "忽略热身"],
     color: "var(--color-accent)"
   },
   ovulation: {
     label: "排卵期",
-    tone: "身心可能更外向，也别忘了给自己留出缓冲。",
-    advice: "宜 社交协作  忌 忽略恢复",
-    dos: ["安排沟通", "记录变化"],
-    donts: ["忽略补水", "过度熬夜"],
+    tones: [
+      "身心可能更外向，也别忘了给自己留出缓冲。",
+      "今天也许更想连接外界，但别把自己排得太满。",
+      "适合互动和表达，也记得给恢复留一点位置。",
+      "如果状态在线，可以把沟通和协作往前放。",
+      "今天的能量更适合流动起来，但不必用满。"
+    ],
+    dos: ["安排沟通", "协作推进", "表达自己", "记录变化", "补充水分"],
+    donts: ["过度熬夜", "行程太满", "忽略恢复", "情绪透支", "跳过正餐"],
     color: "var(--color-gold)"
   },
   luteal: {
     label: "黄体期",
-    tone: "身体正放慢节奏，多给自己一些温柔吧。",
-    advice: "宜 稳住节奏  忌 忽视身体信号",
-    dos: ["降低切换成本", "提早休息"],
-    donts: ["信息过载", "情绪内耗"],
+    tones: [
+      "身体正放慢节奏，多给自己一些温柔吧。",
+      "今天更适合稳住节奏，而不是把自己推得更紧。",
+      "如果有点敏感或疲惫，先把负担减下来。",
+      "把切换变少一点，你会感觉更顺。",
+      "今天适合往内收一收，把能量留给真正重要的事。"
+    ],
+    dos: ["稳住节奏", "提早休息", "减少切换", "优先刚需", "少量多次"],
+    donts: ["信息过载", "情绪内耗", "咖啡过量", "死磕细节", "行程堆太满"],
     color: "var(--color-blue)"
   }
 };
+
+const symptomAdviceMap: Record<
+  string,
+  {
+    dos: string[];
+    donts: string[];
+  }
+> = {
+  腹胀: {
+    dos: ["少量多次", "饭后慢走", "穿得松一点"],
+    donts: ["吃得太急", "久坐不动", "裤腰太紧"]
+  },
+  疲惫: {
+    dos: ["先做刚需", "午后留白", "早点收尾"],
+    donts: ["连续硬撑", "咖啡硬顶", "熬夜补进度"]
+  },
+  头痛: {
+    dos: ["放暗一点", "补充水分", "减少屏幕"],
+    donts: ["久盯屏幕", "声音太吵", "忘记喝水"]
+  },
+  痉挛: {
+    dos: ["热敷一下", "轻缓拉伸", "减少奔波"],
+    donts: ["硬扛疼痛", "突然发力", "身体受凉"]
+  }
+};
+
+const moodAdviceMap: Record<
+  NonNullable<DailyEntry["mood"]>,
+  {
+    dos: string[];
+    donts: string[];
+  }
+> = {
+  happy: {
+    dos: ["推进要事", "约人见面", "把握状态"],
+    donts: ["答应太多", "节奏过满", "兴奋熬夜"]
+  },
+  calm: {
+    dos: ["稳步推进", "按序处理", "留点空档"],
+    donts: ["来回切换", "临时加塞", "把表排满"]
+  },
+  tense: {
+    dos: ["先减负担", "把事做少", "放慢语速"],
+    donts: ["继续加码", "硬扛情绪", "把自己逼紧"]
+  }
+};
+
+function formatDateKey(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function hashString(value: string) {
+  let hash = 0;
+
+  for (const char of value) {
+    hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+  }
+
+  return hash;
+}
+
+function pickDailyPhrase(items: string[], seed: string) {
+  return items[hashString(seed) % items.length];
+}
+
+function pickContextualPhrase(
+  baseItems: string[],
+  contextItems: string[],
+  primarySeed: string,
+  fallbackSeed: string
+) {
+  if (contextItems.length > 0) {
+    return pickDailyPhrase(contextItems, primarySeed);
+  }
+
+  return pickDailyPhrase(baseItems, fallbackSeed);
+}
+
+function buildPhaseAdvice(phase: PhaseKey, date: Date, entry?: DailyEntry) {
+  const meta = phaseMeta[phase];
+  const dateKey = formatDateKey(date);
+  const symptomContexts = (entry?.symptoms ?? [])
+    .map((symptom) => symptomAdviceMap[symptom])
+    .filter(Boolean);
+  const moodContext = entry?.mood ? moodAdviceMap[entry.mood] : undefined;
+
+  const contextualDos = [
+    ...symptomContexts.flatMap((context) => context.dos),
+    ...(moodContext?.dos ?? [])
+  ];
+  const contextualDonts = [
+    ...symptomContexts.flatMap((context) => context.donts),
+    ...(moodContext?.donts ?? [])
+  ];
+
+  if (entry && hasTrackedBleeding(entry)) {
+    contextualDos.push("照顾体感", "准备备用");
+    contextualDonts.push("硬撑行程", "忽略更换");
+  }
+
+  const doText = pickContextualPhrase(
+    meta.dos,
+    contextualDos,
+    `${phase}:${dateKey}:do:context`,
+    `${phase}:${dateKey}:do:base`
+  );
+  const dontText = pickContextualPhrase(
+    meta.donts,
+    contextualDonts,
+    `${phase}:${dateKey}:dont:context`,
+    `${phase}:${dateKey}:dont:base`
+  );
+
+  return `宜 ${doText}  忌 ${dontText}`;
+}
+
+function buildPhaseTone(phase: PhaseKey, date: Date) {
+  const meta = phaseMeta[phase];
+  return pickDailyPhrase(meta.tones, `${phase}:${formatDateKey(date)}:tone`);
+}
 
 const strongBleedingLevels: BleedingLevel[] = ["light", "medium", "heavy"];
 
@@ -135,7 +277,11 @@ function buildBaseCycleSummary(profile: CycleProfile, today: Date) {
 
   return {
     dayOfCycle,
-    phase: phaseMeta[phase],
+    phase: {
+      ...phaseMeta[phase],
+      tone: buildPhaseTone(phase, today),
+      advice: buildPhaseAdvice(phase, today)
+    },
     cycleLength,
     periodLength: profile.periodLength,
     lastPeriodStart: start
@@ -259,6 +405,7 @@ export function getCycleSummary(
   entries: Record<string, DailyEntry>,
   today: Date
 ) {
+  const todayEntry = entries[formatDateKey(today)];
   const { cycleLength, periodLength, lastPeriodStart } = resolveCycleMetrics(profile, entries, today);
   const elapsed = diffInDays(today, lastPeriodStart);
   const dayIndex = ((elapsed % cycleLength) + cycleLength) % cycleLength;
@@ -297,8 +444,16 @@ export function getCycleSummary(
   return {
     dayOfCycle,
     phaseRemainingDays,
-    phase: phaseMeta[phase],
-    nextPhase: phaseMeta[nextPhaseKey],
+    phase: {
+      ...phaseMeta[phase],
+      tone: buildPhaseTone(phase, today),
+      advice: buildPhaseAdvice(phase, today, todayEntry)
+    },
+    nextPhase: {
+      ...phaseMeta[nextPhaseKey],
+      tone: buildPhaseTone(nextPhaseKey, addDays(today, Math.max(phaseRemainingDays, 1))),
+      advice: buildPhaseAdvice(nextPhaseKey, addDays(today, Math.max(phaseRemainingDays, 1)))
+    },
     daysUntilNextPeriod,
     nextPeriodStart,
     cycleLength,
