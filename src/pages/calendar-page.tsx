@@ -26,7 +26,11 @@ function buildCalendarMonths(profileLastPeriodStart: string, today: Date) {
   return Array.from({ length: monthSpan + 1 }, (_, index) => addMonths(startMonth, index));
 }
 
-export function CalendarPage() {
+type CalendarPageProps = {
+  onVisibleMonthChange?: (monthKey: string) => void;
+};
+
+export function CalendarPage({ onVisibleMonthChange }: CalendarPageProps) {
   const profile = useCycleStore((state) => state.profile)!;
   const entries = useCycleStore((state) => state.entries);
   const today = new Date();
@@ -35,13 +39,14 @@ export function CalendarPage() {
   const currentMonthKey = startOfMonth(today).toISOString();
   const currentMonthRef = useRef<HTMLDivElement | null>(null);
   const hasScrolledToCurrentMonth = useRef(false);
+  const monthRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [selectedDateKey, setSelectedDateKey] = useState<string | null>(null);
+  const [visibleMonthKey, setVisibleMonthKey] = useState(currentMonthKey);
   const selectedEntry = selectedDateKey ? entries[selectedDateKey] : undefined;
   const selectedDateValue = useMemo(
     () => (selectedDateKey ? parseDateKey(selectedDateKey) : null),
     [selectedDateKey]
   );
-
   useEffect(() => {
     if (hasScrolledToCurrentMonth.current) {
       return;
@@ -54,13 +59,55 @@ export function CalendarPage() {
     hasScrolledToCurrentMonth.current = true;
   }, []);
 
+  useEffect(() => {
+    const updateVisibleMonth = () => {
+      const threshold = 220;
+      let nextMonthKey = months[0]?.toISOString() ?? currentMonthKey;
+
+      for (const month of months) {
+        const key = month.toISOString();
+        const element = monthRefs.current[key];
+
+        if (!element) {
+          continue;
+        }
+
+        if (element.getBoundingClientRect().top <= threshold) {
+          nextMonthKey = key;
+        } else {
+          break;
+        }
+      }
+
+      setVisibleMonthKey((current) => (current === nextMonthKey ? current : nextMonthKey));
+    };
+
+    updateVisibleMonth();
+    window.addEventListener("scroll", updateVisibleMonth, { passive: true });
+    window.addEventListener("resize", updateVisibleMonth);
+
+    return () => {
+      window.removeEventListener("scroll", updateVisibleMonth);
+      window.removeEventListener("resize", updateVisibleMonth);
+    };
+  }, [currentMonthKey, months]);
+
+  useEffect(() => {
+    onVisibleMonthChange?.(visibleMonthKey);
+  }, [onVisibleMonthChange, visibleMonthKey]);
+
   return (
     <div className="space-y-4 pb-32">
       <div className="space-y-4">
         {months.map((month) => (
           <div
             key={month.toISOString()}
-            ref={month.toISOString() === currentMonthKey ? currentMonthRef : null}
+            ref={(node) => {
+              monthRefs.current[month.toISOString()] = node;
+              if (month.toISOString() === currentMonthKey) {
+                currentMonthRef.current = node;
+              }
+            }}
             className={month.toISOString() === currentMonthKey ? "scroll-mt-72" : undefined}
           >
             <CalendarMonthCard

@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { PhaseHeroCard } from "../components/domain/phase-hero-card";
 import { QuickLogCard } from "../components/domain/quick-log-card";
 import { getCycleSummary } from "../features/cycle/cycle";
@@ -11,11 +12,21 @@ export function TodayPage() {
   const entry = entries[dateKey];
 
   const summary = getCycleSummary(profile, entries, today);
+  const initialAdviceRef = useRef(summary.phase.advice);
+  const stableSummary = {
+    ...summary,
+    phase: {
+      ...summary.phase,
+      advice: initialAdviceRef.current
+    }
+  };
 
   return (
-    <div className="space-y-4 pb-6">
-      <PhaseHeroCard summary={summary} />
-      <QuickLogCard date={dateKey} entry={entry} />
+    <div className="flex flex-1 flex-col gap-4 pb-6">
+      <PhaseHeroCard summary={stableSummary} />
+      <div className="mt-auto">
+        <QuickLogCard date={dateKey} entry={entry} />
+      </div>
     </div>
   );
 }

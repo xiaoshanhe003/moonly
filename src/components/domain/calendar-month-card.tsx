@@ -1,9 +1,7 @@
 import { Card } from "../ui/card";
 import { buildMonthGrid } from "../../features/cycle/cycle";
 import type { CycleProfile, DailyEntry } from "../../features/cycle/types";
-import { formatMonth } from "../../lib/utils";
-
-const weekdays = ["日", "一", "二", "三", "四", "五", "六"];
+import { cn } from "../../lib/utils";
 
 type CalendarMonthCardProps = {
   monthDate: Date;
@@ -21,54 +19,66 @@ function formatDateKey(date: Date) {
 }
 
 export function CalendarMonthCard({ monthDate, profile, entries, today, onEntryClick }: CalendarMonthCardProps) {
-  const cells = buildMonthGrid(profile, entries, monthDate, today).filter((cell) => cell.inMonth);
+  const cells = buildMonthGrid(profile, entries, monthDate, today);
+  const monthLabelColumnStart = monthDate.getDay() + 1;
 
   return (
-    <Card className="space-y-5">
-      <div>
-        <h3 className="text-lg font-semibold">{formatMonth(monthDate)}</h3>
-      </div>
-
-      <div className="grid grid-cols-7 gap-2 text-center text-xs text-[var(--color-muted)]">
-        {weekdays.map((weekday) => (
-          <div key={weekday}>{weekday}</div>
-        ))}
+    <Card className="space-y-4">
+      <div className="grid grid-cols-7 gap-2">
+        <div
+          className="text-sm font-semibold text-[var(--color-rose)]"
+          style={{ gridColumnStart: monthLabelColumnStart }}
+        >
+          {monthDate.getMonth() + 1}月
+        </div>
       </div>
 
       <div className="grid grid-cols-7 gap-2">
         {cells.map((cell, index) => (
-          <div key={cell.date.toISOString()} className="relative">
-            {entries[formatDateKey(cell.date)] ? (
+          <div
+            key={cell.date.toISOString()}
+            className="relative"
+            style={{
+              gridColumnStart: index === 0 ? cell.date.getDay() + 1 : undefined
+            }}
+          >
+            {!cell.inMonth ? <div className="aspect-square w-full rounded-full opacity-0" aria-hidden="true" /> : null}
+            {cell.inMonth && entries[formatDateKey(cell.date)] ? (
               <button
                 type="button"
                 onClick={() => onEntryClick?.(formatDateKey(cell.date))}
-                className="flex aspect-square w-full items-center justify-center rounded-full text-sm transition-transform active:scale-95"
+                className={cn(
+                  "flex aspect-square w-full items-center justify-center rounded-full text-sm transition-transform active:scale-95",
+                  cell.inMonth ? "text-[var(--color-ink)]" : "text-[var(--color-muted)]"
+                )}
                 style={{
                   background: cell.isPredictable ? cell.phase.color : "transparent",
                   opacity: cell.isPredictable ? 0.95 : 0.22,
                   outline: cell.isToday ? "2px solid var(--color-ink)" : "none",
-                  outlineOffset: "-2px",
-                  gridColumnStart: index === 0 ? cell.date.getDay() + 1 : undefined
+                  outlineOffset: "-2px"
                 }}
                 aria-label={`查看 ${formatDateKey(cell.date)} 的记录`}
               >
                 {cell.dayOfMonth}
               </button>
-            ) : (
+            ) : null}
+            {cell.inMonth && !entries[formatDateKey(cell.date)] ? (
               <div
-                className="flex aspect-square items-center justify-center rounded-full text-sm"
+                className={cn(
+                  "flex aspect-square items-center justify-center rounded-full text-sm",
+                  cell.inMonth ? "text-[var(--color-ink)]" : "text-[var(--color-muted)]"
+                )}
                 style={{
                   background: cell.isPredictable ? cell.phase.color : "transparent",
                   opacity: cell.isPredictable ? 0.58 : 0.22,
                   outline: cell.isToday ? "2px solid var(--color-ink)" : "none",
-                  outlineOffset: "-2px",
-                  gridColumnStart: index === 0 ? cell.date.getDay() + 1 : undefined
+                  outlineOffset: "-2px"
                 }}
               >
                 {cell.dayOfMonth}
               </div>
-            )}
-            {entries[formatDateKey(cell.date)] ? (
+            ) : null}
+            {cell.inMonth && entries[formatDateKey(cell.date)] ? (
               <span className="absolute right-1 top-1 size-1.5 rounded-full bg-[var(--color-ink)]" />
             ) : null}
           </div>

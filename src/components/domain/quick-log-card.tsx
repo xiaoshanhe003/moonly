@@ -13,6 +13,7 @@ const moods = [
   { label: "紧绷", value: "tense" }
 ] as const;
 
+const noSymptomLabel = "没有不适";
 const symptomOptions = ["腹胀", "疲惫", "头痛", "痉挛"];
 const flowOptions = [
   { label: "无", value: "none" },
@@ -38,26 +39,31 @@ export function CompletedLogDetails({ date, entry }: CompletedLogDetailsProps) {
   const periodSignalLabel =
     entry?.periodSignal && entry.periodSignal !== "none" ? "这次感觉像经期开始" : "暂未标记为经期开始";
   const canShowPeriodSignal = Boolean(bleedingLevel && bleedingLevel !== "none");
+  const noSymptomSelected = entry?.symptoms !== undefined && entry.symptoms.length === 0;
 
   const renderPillButton = ({
     active,
+    itemKey,
     label,
     onClick
   }: {
     active: boolean;
+    itemKey?: string;
     label: string;
     onClick: () => void;
   }) => (
     <button
+      key={itemKey}
       type="button"
       onClick={onClick}
       className={cn(
-        "rounded-full px-4 py-2 text-sm transition",
+        "inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm transition",
         active
-          ? "bg-[var(--color-ink)] text-white"
+          ? "bg-[var(--color-ink)] text-white shadow-[0_0_0_2px_rgba(36,52,51,0.08)]"
           : "bg-[var(--color-panel)] text-[var(--color-ink)]"
       )}
     >
+      {active ? <Check className="size-4" /> : null}
       {label}
     </button>
   );
@@ -76,6 +82,7 @@ export function CompletedLogDetails({ date, entry }: CompletedLogDetailsProps) {
           {moods.map((mood) =>
             renderPillButton({
               active: entry?.mood === mood.value,
+              itemKey: mood.value,
               label: mood.label,
               onClick: () => updateEntry(date, { mood: mood.value })
             })
@@ -92,12 +99,22 @@ export function CompletedLogDetails({ date, entry }: CompletedLogDetailsProps) {
           <PencilLine className="size-4 text-[var(--color-muted)]" />
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
+          {renderPillButton({
+            active: noSymptomSelected,
+            itemKey: "no-symptom",
+            label: noSymptomLabel,
+            onClick: () => updateEntry(date, { symptoms: [] })
+          })}
           {symptomOptions.map((symptom) =>
             renderPillButton({
               active: Boolean(entry?.symptoms?.includes(symptom)),
+              itemKey: symptom,
               label: symptom,
               onClick: () => {
                 const previous = new Set(entry?.symptoms ?? []);
+                if (noSymptomSelected) {
+                  previous.clear();
+                }
                 if (previous.has(symptom)) {
                   previous.delete(symptom);
                 } else {
@@ -107,10 +124,6 @@ export function CompletedLogDetails({ date, entry }: CompletedLogDetailsProps) {
               }
             })
           )}
-          <Button variant="soft" onClick={() => updateEntry(date, { symptoms: [] })}>
-            <Check className="mr-1 size-4" />
-            没有明显不适
-          </Button>
         </div>
       </div>
 
@@ -127,6 +140,7 @@ export function CompletedLogDetails({ date, entry }: CompletedLogDetailsProps) {
           {flowOptions.map((flow) =>
             renderPillButton({
               active: bleedingLevel === flow.value,
+              itemKey: flow.value,
               label: flow.label,
               onClick: () =>
                 updateEntry(date, {
@@ -194,26 +208,31 @@ export function QuickLogCard({
     return labels.join(" · ");
   }, [bleedingLevel, entry]);
   const canShowPeriodSignal = Boolean(bleedingLevel && bleedingLevel !== "none");
+  const noSymptomSelected = entry?.symptoms !== undefined && entry.symptoms.length === 0;
 
   const renderPillButton = ({
     active,
+    itemKey,
     label,
     onClick
   }: {
     active: boolean;
+    itemKey?: string;
     label: string;
     onClick: () => void;
   }) => (
     <button
+      key={itemKey}
       type="button"
       onClick={onClick}
       className={cn(
-        "rounded-full px-4 py-2 text-sm transition",
+        "inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm transition",
         active
-          ? "bg-[var(--color-ink)] text-white"
+          ? "bg-[var(--color-ink)] text-white shadow-[0_0_0_2px_rgba(36,52,51,0.08)]"
           : "bg-[var(--color-panel)] text-[var(--color-ink)]"
       )}
     >
+      {active ? <Check className="size-4" /> : null}
       {label}
     </button>
   );
@@ -260,13 +279,26 @@ export function QuickLogCard({
             <p className="text-sm font-medium text-[var(--color-muted)]">{progressText}</p>
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
+            {renderPillButton({
+              active: noSymptomSelected,
+              itemKey: "no-symptom",
+              label: noSymptomLabel,
+              onClick: () => {
+                updateEntry(date, { symptoms: [] });
+                setStepOverride("symptoms");
+              }
+            })}
             {symptomOptions.map((symptom) => {
               const active = entry?.symptoms?.includes(symptom);
               return renderPillButton({
                 active: Boolean(active),
+                itemKey: symptom,
                 label: symptom,
                 onClick: () => {
                   const previous = new Set(entry?.symptoms ?? []);
+                  if (noSymptomSelected) {
+                    previous.clear();
+                  }
                   if (previous.has(symptom)) {
                     previous.delete(symptom);
                   } else {
@@ -279,15 +311,6 @@ export function QuickLogCard({
             })}
           </div>
           <div className="mt-4 flex flex-wrap items-center gap-3">
-            <Button
-              variant="soft"
-              onClick={() => {
-                updateEntry(date, { symptoms: [] });
-                setStepOverride("symptoms");
-              }}
-            >
-              今天没有明显不适
-            </Button>
             <Button
               variant="primary"
               onClick={() => setStepOverride(null)}
@@ -377,7 +400,6 @@ export function QuickLogCard({
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-sm text-[var(--color-muted)]">今日记录已完成</p>
-              <p className="mt-1 text-sm font-medium text-[var(--color-ink)]">{completedLabels}</p>
             </div>
             <Button variant="secondary" onClick={() => setIsExpanded(true)}>
               查看
