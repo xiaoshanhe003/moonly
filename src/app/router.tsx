@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { AppShell } from "./shell";
+import { PhaseSciencePage } from "../pages/phase-science-page";
 
 export const router = createBrowserRouter([
   {
@@ -13,5 +14,9 @@ export const router = createBrowserRouter([
   {
     path: "/calendar",
     element: <AppShell initialView="calendar" />
+  },
+  {
+    path: "/phase-science",
+    element: <PhaseSciencePage />
   }
 ]);
