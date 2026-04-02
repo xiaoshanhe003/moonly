@@ -182,13 +182,15 @@ type QuickLogCardProps = {
   entry?: DailyEntry;
   completedDisplay?: "compact" | "expanded";
   surface?: "card" | "plain";
+  className?: string;
 };
 
 export function QuickLogCard({
   date,
   entry,
   completedDisplay = "compact",
-  surface = "card"
+  surface = "card",
+  className
 }: QuickLogCardProps) {
   const updateEntry = useCycleStore((state) => state.updateEntry);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -396,7 +398,7 @@ export function QuickLogCard({
 
     return (
       <>
-        <Card className="sticky bottom-4">
+        <Card className={className}>
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-sm text-[var(--color-muted)]">今日记录已完成</p>
@@ -437,5 +439,9 @@ export function QuickLogCard({
     );
   }
 
-  return surface === "plain" ? <div>{renderStep(currentStep)}</div> : <Card>{renderStep(currentStep)}</Card>;
+  return surface === "plain" ? (
+    <div className={className}>{renderStep(currentStep)}</div>
+  ) : (
+    <Card className={className}>{renderStep(currentStep)}</Card>
+  );
 }

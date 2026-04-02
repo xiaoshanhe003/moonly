@@ -405,7 +405,6 @@ export function getCycleSummary(
   entries: Record<string, DailyEntry>,
   today: Date
 ) {
-  const todayEntry = entries[formatDateKey(today)];
   const { cycleLength, periodLength, lastPeriodStart } = resolveCycleMetrics(profile, entries, today);
   const elapsed = diffInDays(today, lastPeriodStart);
   const dayIndex = ((elapsed % cycleLength) + cycleLength) % cycleLength;
@@ -447,7 +446,7 @@ export function getCycleSummary(
     phase: {
       ...phaseMeta[phase],
       tone: buildPhaseTone(phase, today),
-      advice: buildPhaseAdvice(phase, today, todayEntry)
+      advice: buildPhaseAdvice(phase, today)
     },
     nextPhase: {
       ...phaseMeta[nextPhaseKey],
