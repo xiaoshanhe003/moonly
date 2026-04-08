@@ -9,26 +9,41 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["icon.svg", "mask-icon.svg"],
+      includeAssets: [
+        "favicon.svg",
+        "favicon.ico",
+        "favicon-16x16.png",
+        "favicon-32x32.png",
+        "apple-touch-icon.png",
+        "icon-192.png",
+        "icon-512.png",
+        "icon-512-maskable.png"
+      ],
       manifest: {
         name: "Moonly",
         short_name: "Moonly",
         description: "A calm cycle tracking app for daily understanding and gentle guidance.",
-        theme_color: "#f7f3ed",
-        background_color: "#f7f3ed",
+        theme_color: "#E0F2FE",
+        background_color: "#E0F2FE",
         display: "standalone",
         start_url: "/",
         icons: [
           {
-            src: "/icon.svg",
-            sizes: "any",
-            type: "image/svg+xml",
+            src: "/icon-192.png",
+            sizes: "192x192",
+            type: "image/png",
             purpose: "any"
           },
           {
-            src: "/mask-icon.svg",
-            sizes: "any",
-            type: "image/svg+xml",
+            src: "/icon-512.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "any"
+          },
+          {
+            src: "/icon-512-maskable.png",
+            sizes: "512x512",
+            type: "image/png",
             purpose: "maskable"
           }
         ]
