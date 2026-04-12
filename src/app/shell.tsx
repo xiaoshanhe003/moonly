@@ -18,6 +18,7 @@ type AppShellProps = {
 };
 
 export function AppShell({ initialView }: AppShellProps) {
+  const isDev = import.meta.env.DEV;
   const navigate = useNavigate();
   const location = useLocation();
   const profile = useCycleStore((state) => state.profile);
@@ -122,7 +123,7 @@ export function AppShell({ initialView }: AppShellProps) {
           currentView === "today" ? "py-3" : "py-6"
         }`}
       >
-        <DevScenarioBar />
+        {isDev ? <DevScenarioBar /> : null}
 
         {!profile ? (
           <OnboardingPage />
