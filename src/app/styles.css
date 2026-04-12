@@ -9,6 +9,7 @@
   --muted: #f3f4f6;
   --muted-strong: #e5e7eb;
   --muted-foreground: #6b7280;
+  --foreground-subtle: #374151;
   --border: #e5e7eb;
   --border-strong: rgba(255, 255, 255, 0.72);
   --input: rgba(17, 24, 39, 0.12);
@@ -51,6 +52,7 @@
   --text-2xl: 1.5rem;
   --text-3xl: 1.875rem;
   --text-hero-title: var(--text-xl);
+  --line-height-body: 1.625;
   --radius-sm: 0.75rem;
   --radius-md: 0.875rem;
   --radius-lg: 1.25rem;
@@ -62,6 +64,7 @@
   --color-panel: var(--muted);
   --color-panel-strong: var(--muted-strong);
   --color-ink: var(--foreground);
+  --color-ink-subtle: var(--foreground-subtle);
   --color-muted: var(--muted-foreground);
   --color-border: var(--border);
 }
