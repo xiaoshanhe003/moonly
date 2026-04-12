@@ -1,4 +1,4 @@
-import type { PropsWithChildren, ReactNode } from "react";
+import { useEffect, type PropsWithChildren, type ReactNode } from "react";
 import { X } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { Button } from "./button";
@@ -12,6 +12,28 @@ type SheetProps = PropsWithChildren<{
 }>;
 
 export function Sheet({ header, onClose, bodyClassName, contentClassName, children }: SheetProps) {
+  useEffect(() => {
+    const scrollY = window.scrollY;
+    const { body } = document;
+    const previousOverflow = body.style.overflow;
+    const previousPosition = body.style.position;
+    const previousTop = body.style.top;
+    const previousWidth = body.style.width;
+
+    body.style.overflow = "hidden";
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.width = "100%";
+
+    return () => {
+      body.style.overflow = previousOverflow;
+      body.style.position = previousPosition;
+      body.style.top = previousTop;
+      body.style.width = previousWidth;
+      window.scrollTo(0, scrollY);
+    };
+  }, []);
+
   return (
     <div className={uiLayoutStyles.sheetOverlay} onClick={onClose}>
       <div className={cn(uiLayoutStyles.sheetBody, bodyClassName)} onClick={(event) => event.stopPropagation()}>
@@ -22,7 +44,7 @@ export function Sheet({ header, onClose, bodyClassName, contentClassName, childr
           </Button>
         </div>
 
-        <div className={cn(uiLayoutStyles.sheetContent, contentClassName)}>{children}</div>
+        <div className={cn(uiLayoutStyles.sheetContent, "overscroll-contain", contentClassName)}>{children}</div>
       </div>
     </div>
   );

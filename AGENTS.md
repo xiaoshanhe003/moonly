@@ -54,6 +54,8 @@ Use 2-space indentation for JavaScript, TypeScript, JSON, and YAML unless the ch
 
 Adopt a formatter and linter early, such as Prettier and ESLint, and run them before opening a pull request.
 
+For visual styling work, prefer existing design tokens and shared scales over hardcoded values. Reuse the project's color variables, spacing tokens, radius values, and typography steps whenever possible; only introduce one-off literal values when there is a clear need and no suitable token already exists.
+
 ## Testing Guidelines
 Add tests alongside new functionality when a test runner is introduced. Mirror the source structure under `tests/` or colocate test files when the toolchain supports it. Use names like `feature-name.test.ts` or `feature-name.spec.ts`.
 

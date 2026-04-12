@@ -78,22 +78,22 @@ export function AppShell({ initialView }: AppShellProps) {
 
             {currentView === "calendar" && cycleSummary ? (
               <div className="mt-6 space-y-6 pb-4">
-                <div className="grid grid-cols-3 gap-3 border-b border-[color:var(--border)] pb-6">
+                <div className="flex gap-[var(--space-10)] pb-6">
                   <div className="min-w-0">
                     <p className={cn("leading-none", uiTextStyles.sm, uiTextStyles.muted)}>周期长度</p>
-                    <p className={cn("mt-2.5 leading-none font-semibold tracking-[-0.04em]", uiTextStyles.xxl)}>
+                    <p className={cn("mt-2.5 font-semibold leading-none tracking-[-0.04em]", uiTextStyles.md)}>
                       {cycleSummary.cycleLength}天
                     </p>
                   </div>
                   <div className="min-w-0">
                     <p className={cn("leading-none", uiTextStyles.sm, uiTextStyles.muted)}>月经</p>
-                    <p className={cn("mt-2.5 leading-none font-semibold tracking-[-0.04em]", uiTextStyles.xxl)}>
+                    <p className={cn("mt-2.5 font-semibold leading-none tracking-[-0.04em]", uiTextStyles.md)}>
                       {cycleSummary.periodLength}天
                     </p>
                   </div>
                   <div className="min-w-0">
                     <p className={cn("leading-none", uiTextStyles.sm, uiTextStyles.muted)}>下次月经</p>
-                    <p className={cn("mt-2.5 leading-none font-semibold tracking-[-0.04em] whitespace-nowrap", uiTextStyles.xxl)}>
+                    <p className={cn("mt-2.5 whitespace-nowrap font-semibold leading-none tracking-[-0.04em]", uiTextStyles.md)}>
                       {formatShortDate(cycleSummary.nextPeriodStart)}
                     </p>
                   </div>
@@ -108,7 +108,13 @@ export function AppShell({ initialView }: AppShellProps) {
                       {visibleYearLabel}
                     </span>
                   </div>
-                  <div className={cn("grid grid-cols-7 gap-2.5 text-center", uiTextStyles.xs, uiTextStyles.muted)}>
+                  <div
+                    className={cn(
+                      "grid grid-cols-7 gap-0 border-b border-[color:var(--border)] pb-3 text-center",
+                      uiTextStyles.xs,
+                      uiTextStyles.muted
+                    )}
+                  >
                     {weekdays.map((weekday) => (
                       <div key={weekday}>{weekday}</div>
                     ))}

@@ -11,9 +11,9 @@ import { useCycleStore } from "../../features/cycle/store";
 import { getChoiceTileClass, getOptionPillClass, uiSpacingStyles, uiTextStyles } from "../ui/styles";
 
 const moods = [
-  { label: "开心", value: "happy" },
-  { label: "平静", value: "calm" },
-  { label: "紧绷", value: "tense" }
+  { label: "开心", value: "happy", emoji: "😄" },
+  { label: "平静", value: "calm", emoji: "🙂" },
+  { label: "紧绷", value: "tense", emoji: "😣" }
 ] as const;
 
 const noSymptomLabel = "没有不适";
@@ -49,10 +49,56 @@ function SelectionPill({
   );
 }
 
+function MoodSticker({
+  active,
+  emoji,
+  label,
+  onClick
+}: {
+  active: boolean;
+  emoji: string;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "flex flex-col items-center justify-center gap-3 rounded-[var(--radius-lg)] border px-3 py-4 text-center transition-transform active:scale-[0.98]",
+        active
+          ? "border-[color:var(--foreground)] bg-[color:var(--foreground)] text-[color:var(--background)] shadow-[0_0_0_2px_var(--ring-soft)]"
+          : "border-[color:var(--border)] bg-[color:var(--muted)] text-[color:var(--foreground)]"
+      )}
+    >
+      <span className="text-4xl leading-none" aria-hidden="true">
+        {emoji}
+      </span>
+      <span className="text-sm font-medium leading-none">{label}</span>
+    </button>
+  );
+}
+
+function MoodValue({ mood }: { mood?: DailyEntry["mood"] }) {
+  const moodItem = moods.find((item) => item.value === mood);
+
+  if (!moodItem) {
+    return <>未记录</>;
+  }
+
+  return (
+    <span className="inline-flex items-center gap-2">
+      <span className="text-base leading-none" aria-hidden="true">
+        {moodItem.emoji}
+      </span>
+      <span>{moodItem.label}</span>
+    </span>
+  );
+}
+
 export function CompletedLogDetails({ date, entry }: CompletedLogDetailsProps) {
   const updateEntry = useCycleStore((state) => state.updateEntry);
   const bleedingLevel = getBleedingLevel(entry);
-  const moodLabel = moods.find((item) => item.value === entry?.mood)?.label ?? "未记录";
   const flowLabel = flowOptions.find((item) => item.value === bleedingLevel)?.label ?? "未记录";
   const symptomLabel =
     entry?.symptoms && entry.symptoms.length > 0 ? entry.symptoms.join("、") : "今天没有明显不适";
@@ -63,16 +109,17 @@ export function CompletedLogDetails({ date, entry }: CompletedLogDetailsProps) {
 
   return (
     <div className={cn("grid", uiSpacingStyles.gapSm)}>
-      <DetailPanel label="心情" value={moodLabel} action={<PencilLine className={cn("size-4", uiTextStyles.muted)} />}>
-        <div className="flex flex-wrap gap-2">
-          {moods.map((mood) =>
-            <SelectionPill
+      <DetailPanel label="心情" value={<MoodValue mood={entry?.mood} />} action={<PencilLine className={cn("size-4", uiTextStyles.muted)} />}>
+        <div className="grid grid-cols-3 gap-3">
+          {moods.map((mood) => (
+            <MoodSticker
               key={mood.value}
               active={entry?.mood === mood.value}
+              emoji={mood.emoji}
               label={mood.label}
               onClick={() => updateEntry(date, { mood: mood.value })}
             />
-          )}
+          ))}
         </div>
       </DetailPanel>
 
@@ -200,17 +247,16 @@ export function QuickLogCard({
           </div>
           <div className="mt-4 grid grid-cols-3 gap-3">
             {moods.map((mood) => (
-              <button
+              <MoodSticker
                 key={mood.value}
-                type="button"
+                active={entry?.mood === mood.value}
+                emoji={mood.emoji}
+                label={mood.label}
                 onClick={() => {
                   updateEntry(date, { mood: mood.value });
                   setStepOverride("symptoms");
                 }}
-                className={getChoiceTileClass(entry?.mood === mood.value)}
-              >
-                {mood.label}
-              </button>
+              />
             ))}
           </div>
         </>

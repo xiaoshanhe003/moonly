@@ -34,10 +34,10 @@ type CalendarPageProps = {
 const STICKY_HEADER_BUFFER = 8;
 
 const legendItems = [
-  { label: "月经期", color: "var(--phase-menstrual)" },
-  { label: "卵泡期", color: "var(--phase-follicular)" },
-  { label: "排卵期", color: "var(--phase-ovulation)" },
-  { label: "黄体期", color: "var(--phase-luteal)" }
+  { label: "月经期", color: "var(--phase-menstrual-400)" },
+  { label: "卵泡期", color: "var(--phase-follicular-400)" },
+  { label: "排卵期", color: "var(--phase-ovulation-400)" },
+  { label: "黄体期", color: "var(--phase-luteal-400)" }
 ] as const;
 
 export function CalendarPage({ onVisibleMonthChange }: CalendarPageProps) {
@@ -47,7 +47,6 @@ export function CalendarPage({ onVisibleMonthChange }: CalendarPageProps) {
   const todayKey = today.toISOString().slice(0, 10);
   const months = buildCalendarMonths(profile.lastPeriodStart, today);
   const currentMonthKey = startOfMonth(today).toISOString();
-  const currentMonthRef = useRef<HTMLDivElement | null>(null);
   const hasScrolledToCurrentMonth = useRef(false);
   const monthRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [selectedDateKey, setSelectedDateKey] = useState<string | null>(null);
@@ -79,12 +78,11 @@ export function CalendarPage({ onVisibleMonthChange }: CalendarPageProps) {
       return;
     }
 
-    currentMonthRef.current?.scrollIntoView({
+    monthRefs.current[currentMonthKey]?.scrollIntoView({
       block: "start"
     });
-    window.scrollBy({ top: -stickyHeaderOffset, behavior: "instant" });
     hasScrolledToCurrentMonth.current = true;
-  }, [stickyHeaderOffset]);
+  }, [currentMonthKey, stickyHeaderOffset]);
 
   useEffect(() => {
     const updateVisibleMonth = () => {
@@ -131,9 +129,6 @@ export function CalendarPage({ onVisibleMonthChange }: CalendarPageProps) {
             key={month.toISOString()}
             ref={(node) => {
               monthRefs.current[month.toISOString()] = node;
-              if (month.toISOString() === currentMonthKey) {
-                currentMonthRef.current = node;
-              }
             }}
             style={{
               scrollMarginTop: stickyHeaderOffset
