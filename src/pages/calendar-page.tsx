@@ -176,7 +176,6 @@ export function CalendarPage({ onVisibleMonthChange }: CalendarPageProps) {
       {selectedDateKey && selectedEntry && selectedDateValue ? (
         <CalendarEntrySheet
           date={selectedDateKey}
-          dateValue={selectedDateValue}
           entry={selectedEntry}
           isToday={selectedDateKey === todayKey}
           onClose={() => setSelectedDateKey(null)}
