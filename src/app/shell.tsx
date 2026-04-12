@@ -8,7 +8,7 @@ import { DevScenarioBar } from "../components/domain/dev-scenario-bar";
 import { SegmentedControl } from "../components/domain/segmented-control";
 import { useCycleStore } from "../features/cycle/store";
 import { getCycleSummary } from "../features/cycle/cycle";
-import { cn, formatMonth, formatShortDate } from "../lib/utils";
+import { cn, formatShortDate } from "../lib/utils";
 import { uiTextStyles } from "../components/ui/styles";
 
 const weekdays = ["日", "一", "二", "三", "四", "五", "六"];
@@ -30,6 +30,8 @@ export function AppShell({ initialView }: AppShellProps) {
 
   const cycleSummary = profile ? getCycleSummary(profile, entries, new Date()) : null;
   const visibleCalendarMonth = new Date(visibleCalendarMonthKey);
+  const visibleMonthLabel = `${visibleCalendarMonth.getMonth() + 1}月`;
+  const visibleYearLabel = visibleCalendarMonth.getFullYear();
 
   useEffect(() => {
     if (currentView === "calendar") {
@@ -74,25 +76,36 @@ export function AppShell({ initialView }: AppShellProps) {
             </div>
 
             {currentView === "calendar" && cycleSummary ? (
-              <div className="mt-4 space-y-4 pb-4">
-                <div className={cn("grid grid-cols-3 gap-3", uiTextStyles.sm)}>
-                  <div>
-                    <p className={uiTextStyles.muted}>周期长度</p>
-                    <p className={cn("mt-1 font-semibold", uiTextStyles.xxl)}>{cycleSummary.cycleLength}天</p>
+              <div className="mt-6 space-y-6 pb-4">
+                <div className="grid grid-cols-3 gap-3 border-b border-[color:var(--border)] pb-6">
+                  <div className="min-w-0">
+                    <p className={cn("leading-none", uiTextStyles.sm, uiTextStyles.muted)}>周期长度</p>
+                    <p className={cn("mt-2.5 leading-none font-semibold tracking-[-0.04em]", uiTextStyles.xxl)}>
+                      {cycleSummary.cycleLength}天
+                    </p>
                   </div>
-                  <div>
-                    <p className={uiTextStyles.muted}>月经</p>
-                    <p className={cn("mt-1 font-semibold", uiTextStyles.xxl)}>{cycleSummary.periodLength}天</p>
+                  <div className="min-w-0">
+                    <p className={cn("leading-none", uiTextStyles.sm, uiTextStyles.muted)}>月经</p>
+                    <p className={cn("mt-2.5 leading-none font-semibold tracking-[-0.04em]", uiTextStyles.xxl)}>
+                      {cycleSummary.periodLength}天
+                    </p>
                   </div>
-                  <div>
-                    <p className={uiTextStyles.muted}>下次月经</p>
-                    <p className={cn("mt-1 font-semibold", uiTextStyles.xxl)}>{formatShortDate(cycleSummary.nextPeriodStart)}</p>
+                  <div className="min-w-0">
+                    <p className={cn("leading-none", uiTextStyles.sm, uiTextStyles.muted)}>下次月经</p>
+                    <p className={cn("mt-2.5 leading-none font-semibold tracking-[-0.04em] whitespace-nowrap", uiTextStyles.xxl)}>
+                      {formatShortDate(cycleSummary.nextPeriodStart)}
+                    </p>
                   </div>
                 </div>
 
-                <div className="space-y-3">
-                  <p className={cn("font-semibold leading-none", uiTextStyles.xxxl)}>{formatMonth(visibleCalendarMonth)}</p>
-                  <div className={cn("grid grid-cols-7 gap-2 text-center", uiTextStyles.xs, uiTextStyles.muted)}>
+                <div className="space-y-3.5">
+                  <div className="flex items-baseline gap-2">
+                    <p className={cn("font-semibold leading-none tracking-[-0.04em]", uiTextStyles.xl)}>
+                      {visibleMonthLabel}
+                    </p>
+                    <span className={cn("leading-none", uiTextStyles.sm, uiTextStyles.muted)}>{visibleYearLabel}</span>
+                  </div>
+                  <div className={cn("grid grid-cols-7 gap-2.5 text-center", uiTextStyles.xs, uiTextStyles.muted)}>
                     {weekdays.map((weekday) => (
                       <div key={weekday}>{weekday}</div>
                     ))}

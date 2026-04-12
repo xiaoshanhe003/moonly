@@ -45,16 +45,15 @@ function formatDateKey(date: Date) {
 
 export function CalendarMonthCard({ monthDate, profile, entries, today, onEntryClick }: CalendarMonthCardProps) {
   const cells = buildMonthGrid(profile, entries, monthDate, today);
-  const monthLabelColumnStart = monthDate.getDay() + 1;
 
   return (
     <Card className="space-y-4">
-      <div className="grid grid-cols-7 gap-2">
-        <div
-          className="text-sm font-semibold text-[color:var(--phase-menstrual)]"
-          style={{ gridColumnStart: monthLabelColumnStart }}
-        >
-          {monthDate.getMonth() + 1}月
+      <div className="space-y-3 border-b border-[color:var(--border)] pb-4">
+        <div className="flex items-baseline gap-2">
+          <h2 className="text-[length:var(--text-lg)] font-semibold leading-none tracking-[-0.04em] text-[color:var(--foreground)]">
+            {monthDate.getMonth() + 1}月
+          </h2>
+          <span className={cn("leading-none", uiTextStyles.sm, uiTextStyles.muted)}>{monthDate.getFullYear()}</span>
         </div>
       </div>
 
