@@ -1,11 +1,14 @@
 import { useMemo, useState } from "react";
-import { Check, ChevronRight, PencilLine, X } from "lucide-react";
+import { Check, ChevronRight, PencilLine } from "lucide-react";
 import { Card } from "../ui/card";
 import { Button } from "../ui/button";
+import { DetailPanel } from "../ui/detail-panel";
+import { Sheet } from "../ui/sheet";
 import { getBleedingLevel, getLogProgress, getSuggestedStep } from "../../features/cycle/cycle";
 import type { DailyEntry, QuickLogStep } from "../../features/cycle/types";
 import { cn } from "../../lib/utils";
 import { useCycleStore } from "../../features/cycle/store";
+import { getChoiceTileClass, getOptionPillClass, uiSpacingStyles, uiTextStyles } from "../ui/styles";
 
 const moods = [
   { label: "开心", value: "happy" },
@@ -29,6 +32,23 @@ type CompletedLogDetailsProps = {
   entry?: DailyEntry;
 };
 
+function SelectionPill({
+  active,
+  label,
+  onClick
+}: {
+  active: boolean;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button type="button" onClick={onClick} className={getOptionPillClass(active)}>
+      {active ? <Check className="size-4" /> : null}
+      {label}
+    </button>
+  );
+}
+
 export function CompletedLogDetails({ date, entry }: CompletedLogDetailsProps) {
   const updateEntry = useCycleStore((state) => state.updateEntry);
   const bleedingLevel = getBleedingLevel(entry);
@@ -41,76 +61,34 @@ export function CompletedLogDetails({ date, entry }: CompletedLogDetailsProps) {
   const canShowPeriodSignal = Boolean(bleedingLevel && bleedingLevel !== "none");
   const noSymptomSelected = entry?.symptoms !== undefined && entry.symptoms.length === 0;
 
-  const renderPillButton = ({
-    active,
-    itemKey,
-    label,
-    onClick
-  }: {
-    active: boolean;
-    itemKey?: string;
-    label: string;
-    onClick: () => void;
-  }) => (
-    <button
-      key={itemKey}
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm transition",
-        active
-          ? "bg-[var(--color-ink)] text-white shadow-[0_0_0_2px_rgba(36,52,51,0.08)]"
-          : "bg-[var(--color-panel)] text-[var(--color-ink)]"
-      )}
-    >
-      {active ? <Check className="size-4" /> : null}
-      {label}
-    </button>
-  );
-
   return (
-    <div className="grid gap-3">
-      <div className="rounded-2xl bg-[var(--color-panel)] p-4">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-muted)]">心情</p>
-            <p className="mt-2 text-sm font-medium text-[var(--color-ink)]">{moodLabel}</p>
-          </div>
-          <PencilLine className="size-4 text-[var(--color-muted)]" />
-        </div>
-        <div className="mt-4 flex flex-wrap gap-2">
+    <div className={cn("grid", uiSpacingStyles.gapSm)}>
+      <DetailPanel label="心情" value={moodLabel} action={<PencilLine className={cn("size-4", uiTextStyles.muted)} />}>
+        <div className="flex flex-wrap gap-2">
           {moods.map((mood) =>
-            renderPillButton({
-              active: entry?.mood === mood.value,
-              itemKey: mood.value,
-              label: mood.label,
-              onClick: () => updateEntry(date, { mood: mood.value })
-            })
+            <SelectionPill
+              key={mood.value}
+              active={entry?.mood === mood.value}
+              label={mood.label}
+              onClick={() => updateEntry(date, { mood: mood.value })}
+            />
           )}
         </div>
-      </div>
+      </DetailPanel>
 
-      <div className="rounded-2xl bg-[var(--color-panel)] p-4">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-muted)]">身体症状</p>
-            <p className="mt-2 text-sm font-medium text-[var(--color-ink)]">{symptomLabel}</p>
-          </div>
-          <PencilLine className="size-4 text-[var(--color-muted)]" />
-        </div>
-        <div className="mt-4 flex flex-wrap gap-2">
-          {renderPillButton({
-            active: noSymptomSelected,
-            itemKey: "no-symptom",
-            label: noSymptomLabel,
-            onClick: () => updateEntry(date, { symptoms: [] })
-          })}
+      <DetailPanel
+        label="身体症状"
+        value={symptomLabel}
+        action={<PencilLine className={cn("size-4", uiTextStyles.muted)} />}
+      >
+        <div className="flex flex-wrap gap-2">
+          <SelectionPill active={noSymptomSelected} label={noSymptomLabel} onClick={() => updateEntry(date, { symptoms: [] })} />
           {symptomOptions.map((symptom) =>
-            renderPillButton({
-              active: Boolean(entry?.symptoms?.includes(symptom)),
-              itemKey: symptom,
-              label: symptom,
-              onClick: () => {
+            <SelectionPill
+              key={symptom}
+              active={Boolean(entry?.symptoms?.includes(symptom))}
+              label={symptom}
+              onClick={() => {
                 const previous = new Set(entry?.symptoms ?? []);
                 if (noSymptomSelected) {
                   previous.clear();
@@ -121,39 +99,37 @@ export function CompletedLogDetails({ date, entry }: CompletedLogDetailsProps) {
                   previous.add(symptom);
                 }
                 updateEntry(date, { symptoms: [...previous] });
-              }
-            })
+              }}
+            />
           )}
         </div>
-      </div>
+      </DetailPanel>
 
-      <div className="rounded-2xl bg-[var(--color-panel)] p-4">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-muted)]">出血情况</p>
-            <p className="mt-2 text-sm font-medium text-[var(--color-ink)]">{flowLabel}</p>
-            <p className="mt-1 text-xs text-[var(--color-muted)]">{periodSignalLabel}</p>
-          </div>
-          <PencilLine className="size-4 text-[var(--color-muted)]" />
-        </div>
-        <div className="mt-4 flex flex-wrap gap-2">
+      <DetailPanel
+        label="出血情况"
+        value={flowLabel}
+        hint={periodSignalLabel}
+        action={<PencilLine className={cn("size-4", uiTextStyles.muted)} />}
+      >
+        <div className="flex flex-wrap gap-2">
           {flowOptions.map((flow) =>
-            renderPillButton({
-              active: bleedingLevel === flow.value,
-              itemKey: flow.value,
-              label: flow.label,
-              onClick: () =>
+            <SelectionPill
+              key={flow.value}
+              active={bleedingLevel === flow.value}
+              label={flow.label}
+              onClick={() =>
                 updateEntry(date, {
                   flow: flow.value === "spotting" ? undefined : flow.value,
                   bleedingLevel: flow.value,
                   periodSignal: flow.value === "none" ? "none" : entry?.periodSignal ?? "none",
                   isPeriodStart: false
                 })
-            })
+              }
+            />
           )}
         </div>
         {canShowPeriodSignal ? (
-          <div className="mt-4">
+          <div className={uiSpacingStyles.sectionTop}>
             <Button
               variant={entry?.periodSignal === "possible_start" ? "primary" : "soft"}
               onClick={() =>
@@ -172,7 +148,7 @@ export function CompletedLogDetails({ date, entry }: CompletedLogDetailsProps) {
             </Button>
           </div>
         ) : null}
-      </div>
+      </DetailPanel>
     </div>
   );
 }
@@ -212,33 +188,6 @@ export function QuickLogCard({
   const canShowPeriodSignal = Boolean(bleedingLevel && bleedingLevel !== "none");
   const noSymptomSelected = entry?.symptoms !== undefined && entry.symptoms.length === 0;
 
-  const renderPillButton = ({
-    active,
-    itemKey,
-    label,
-    onClick
-  }: {
-    active: boolean;
-    itemKey?: string;
-    label: string;
-    onClick: () => void;
-  }) => (
-    <button
-      key={itemKey}
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm transition",
-        active
-          ? "bg-[var(--color-ink)] text-white shadow-[0_0_0_2px_rgba(36,52,51,0.08)]"
-          : "bg-[var(--color-panel)] text-[var(--color-ink)]"
-      )}
-    >
-      {active ? <Check className="size-4" /> : null}
-      {label}
-    </button>
-  );
-
   const renderStep = (step: QuickLogStep) => {
     const progressText = `${currentStepIndex}/${stepOrder.length}`;
 
@@ -246,8 +195,8 @@ export function QuickLogCard({
       return (
         <>
           <div className="flex items-start justify-between gap-3">
-            <p className="text-sm font-medium text-[var(--color-muted)]">今天心情如何？</p>
-            <p className="text-sm font-medium text-[var(--color-muted)]">{progressText}</p>
+            <p className={cn("text-sm font-medium", uiTextStyles.muted)}>今天心情如何？</p>
+            <p className={cn("text-sm font-medium", uiTextStyles.muted)}>{progressText}</p>
           </div>
           <div className="mt-4 grid grid-cols-3 gap-3">
             {moods.map((mood) => (
@@ -258,12 +207,7 @@ export function QuickLogCard({
                   updateEntry(date, { mood: mood.value });
                   setStepOverride("symptoms");
                 }}
-                className={cn(
-                  "rounded-2xl px-3 py-5 text-sm transition",
-                  entry?.mood === mood.value
-                    ? "bg-[var(--color-ink)] text-white"
-                    : "bg-[var(--color-panel)] text-[var(--color-ink)]"
-                )}
+                className={getChoiceTileClass(entry?.mood === mood.value)}
               >
                 {mood.label}
               </button>
@@ -277,42 +221,43 @@ export function QuickLogCard({
       return (
         <>
           <div className="flex items-start justify-between gap-3">
-            <p className="text-sm font-medium text-[var(--color-muted)]">身体有什么信号？</p>
-            <p className="text-sm font-medium text-[var(--color-muted)]">{progressText}</p>
+            <p className={cn("text-sm font-medium", uiTextStyles.muted)}>身体有什么信号？</p>
+            <p className={cn("text-sm font-medium", uiTextStyles.muted)}>{progressText}</p>
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
-            {renderPillButton({
-              active: noSymptomSelected,
-              itemKey: "no-symptom",
-              label: noSymptomLabel,
-              onClick: () => {
+            <SelectionPill
+              active={noSymptomSelected}
+              label={noSymptomLabel}
+              onClick={() => {
                 updateEntry(date, { symptoms: [] });
                 setStepOverride("symptoms");
-              }
-            })}
+              }}
+            />
             {symptomOptions.map((symptom) => {
               const active = entry?.symptoms?.includes(symptom);
-              return renderPillButton({
-                active: Boolean(active),
-                itemKey: symptom,
-                label: symptom,
-                onClick: () => {
-                  const previous = new Set(entry?.symptoms ?? []);
-                  if (noSymptomSelected) {
-                    previous.clear();
-                  }
-                  if (previous.has(symptom)) {
-                    previous.delete(symptom);
-                  } else {
-                    previous.add(symptom);
-                  }
-                  updateEntry(date, { symptoms: [...previous] });
-                  setStepOverride("symptoms");
-                }
-              });
+              return (
+                <SelectionPill
+                  key={symptom}
+                  active={Boolean(active)}
+                  label={symptom}
+                  onClick={() => {
+                    const previous = new Set(entry?.symptoms ?? []);
+                    if (noSymptomSelected) {
+                      previous.clear();
+                    }
+                    if (previous.has(symptom)) {
+                      previous.delete(symptom);
+                    } else {
+                      previous.add(symptom);
+                    }
+                    updateEntry(date, { symptoms: [...previous] });
+                    setStepOverride("symptoms");
+                  }}
+                />
+              );
             })}
           </div>
-          <div className="mt-4 flex flex-wrap items-center gap-3">
+          <div className={cn(uiSpacingStyles.sectionTop, "flex flex-wrap items-center", uiSpacingStyles.gapSm)}>
             <Button
               variant="primary"
               onClick={() => setStepOverride(null)}
@@ -328,8 +273,8 @@ export function QuickLogCard({
     return (
       <>
         <div className="flex items-start justify-between gap-3">
-          <p className="text-sm font-medium text-[var(--color-muted)]">今天有出血吗？</p>
-          <p className="text-sm font-medium text-[var(--color-muted)]">{progressText}</p>
+          <p className={cn("text-sm font-medium", uiTextStyles.muted)}>今天有出血吗？</p>
+          <p className={cn("text-sm font-medium", uiTextStyles.muted)}>{progressText}</p>
         </div>
         <div className="mt-4 grid grid-cols-2 gap-3">
           {flowOptions.map((flow) => (
@@ -344,12 +289,7 @@ export function QuickLogCard({
                   isPeriodStart: false
                 })
               }
-              className={cn(
-                "rounded-2xl px-3 py-4 text-sm transition",
-                bleedingLevel === flow.value
-                  ? "bg-[var(--color-ink)] text-white"
-                  : "bg-[var(--color-panel)] text-[var(--color-ink)]"
-              )}
+              className={getChoiceTileClass(bleedingLevel === flow.value)}
             >
               {flow.label}
             </button>
@@ -384,10 +324,10 @@ export function QuickLogCard({
       const content = (
         <>
           <div>
-            <p className="text-sm text-[var(--color-muted)]">今日记录已完成</p>
-            <p className="mt-1 text-sm font-medium text-[var(--color-ink)]">{completedLabels}</p>
+            <p className={cn("text-sm", uiTextStyles.muted)}>今日记录已完成</p>
+            <p className="mt-1 text-sm font-medium text-[color:var(--foreground)]">{completedLabels}</p>
           </div>
-          <div className="mt-4">
+          <div className={uiSpacingStyles.sectionTop}>
             <CompletedLogDetails date={date} entry={entry} />
           </div>
         </>
@@ -399,9 +339,9 @@ export function QuickLogCard({
     return (
       <>
         <Card className={className}>
-          <div className="flex items-center justify-between gap-3">
+          <div className={cn("flex items-center justify-between", uiSpacingStyles.gapSm)}>
             <div>
-              <p className="text-sm text-[var(--color-muted)]">今日记录已完成</p>
+              <p className={cn("text-sm", uiTextStyles.muted)}>今日记录已完成</p>
             </div>
             <Button variant="secondary" onClick={() => setIsExpanded(true)}>
               查看
@@ -411,29 +351,17 @@ export function QuickLogCard({
         </Card>
 
         {isExpanded ? (
-          <div
-            className="fixed inset-0 z-50 flex items-end bg-[rgba(36,52,51,0.18)] p-0 backdrop-blur-sm sm:items-center sm:justify-center sm:p-6"
-            onClick={() => setIsExpanded(false)}
+          <Sheet
+            onClose={() => setIsExpanded(false)}
+            header={
+              <>
+                <p className={cn("text-sm", uiTextStyles.muted)}>今日记录已完成</p>
+                <p className="mt-1 text-sm font-medium text-[color:var(--foreground)]">{completedLabels}</p>
+              </>
+            }
           >
-            <div
-              className="max-h-[88vh] w-full overflow-hidden rounded-t-[28px] bg-white shadow-[var(--shadow-card)] sm:max-w-2xl sm:rounded-[28px]"
-              onClick={(event) => event.stopPropagation()}
-            >
-              <div className="flex items-center justify-between border-b border-[var(--color-border)] px-5 py-4">
-                <div>
-                  <p className="text-sm text-[var(--color-muted)]">今日记录已完成</p>
-                  <p className="mt-1 text-sm font-medium text-[var(--color-ink)]">{completedLabels}</p>
-                </div>
-                <Button variant="ghost" size="icon" onClick={() => setIsExpanded(false)}>
-                  <X className="size-4" />
-                </Button>
-              </div>
-
-              <div className="max-h-[calc(88vh-5rem)] overflow-y-auto p-5">
-                <CompletedLogDetails date={date} entry={entry} />
-              </div>
-            </div>
-          </div>
+            <CompletedLogDetails date={date} entry={entry} />
+          </Sheet>
         ) : null}
       </>
     );

@@ -1,3 +1,4 @@
+import { uiSurfaceStyles } from "../components/ui/styles";
 import { PhaseHeroCard } from "../components/domain/phase-hero-card";
 import { QuickLogCard } from "../components/domain/quick-log-card";
 import { getCycleSummary } from "../features/cycle/cycle";
@@ -21,7 +22,7 @@ export function TodayPage() {
         <QuickLogCard
           date={dateKey}
           entry={entry}
-          className="border-white/85 bg-white/92 shadow-[0_18px_42px_rgba(36,52,51,0.16)] backdrop-blur-xl"
+          className={uiSurfaceStyles.elevated}
         />
       </div>
     </div>

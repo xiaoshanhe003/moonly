@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, FlaskConical } from "lucide-react";
 import { scenarios } from "../../mocks/scenarios";
 import { useCycleStore } from "../../features/cycle/store";
 import { cn } from "../../lib/utils";
+import { getOptionPillClass, uiTextStyles } from "../ui/styles";
 
 export function DevScenarioBar() {
   const activeScenario = useCycleStore((state) => state.activeScenario);
@@ -13,23 +14,23 @@ export function DevScenarioBar() {
     <div className="pointer-events-none fixed left-0 top-24 z-30 flex max-w-[calc(100vw-1rem)] items-start">
       <aside
         className={cn(
-          "pointer-events-auto ml-2 flex w-72 flex-col gap-3 rounded-[24px] border border-dashed border-[var(--color-border)] bg-white/88 p-3 shadow-[var(--shadow-card)] backdrop-blur transition-transform duration-300",
+          "pointer-events-auto ml-2 flex w-72 flex-col gap-3 rounded-[24px] border border-dashed border-[color:var(--border)] bg-[color:var(--card-elevated)] p-3 shadow-[var(--shadow-card)] backdrop-blur transition-transform duration-300",
           isCollapsed && "-translate-x-[calc(100%-3rem)]"
         )}
       >
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--color-muted)]">
+            <p className={cn("flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em]", uiTextStyles.muted)}>
               <FlaskConical className="size-3.5" />
               Dev scenarios
             </p>
-            <p className="mt-1 text-xs text-[var(--color-muted)]">切换页面状态，不影响实际布局。</p>
+            <p className={cn("mt-1 text-xs", uiTextStyles.muted)}>切换页面状态，不影响实际布局。</p>
           </div>
 
           <button
             type="button"
             onClick={() => setIsCollapsed((current) => !current)}
-            className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-[var(--color-panel)] text-[var(--color-muted)] transition-colors hover:bg-[var(--color-panel-strong)]"
+            className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-[color:var(--muted)] p-0 text-[color:var(--muted-foreground)] transition-colors hover:bg-[color:var(--muted-strong)]"
             aria-label={isCollapsed ? "展开开发面板" : "收起开发面板"}
             aria-expanded={!isCollapsed}
           >
@@ -49,11 +50,7 @@ export function DevScenarioBar() {
               key={key}
               type="button"
               onClick={() => loadScenario(key as keyof typeof scenarios)}
-              className={
-                activeScenario === key
-                  ? "rounded-full bg-[var(--color-ink)] px-3 py-1.5 text-xs text-white"
-                  : "rounded-full bg-[var(--color-panel)] px-3 py-1.5 text-xs text-[var(--color-muted)]"
-              }
+              className={cn(getOptionPillClass(activeScenario === key), "px-3 py-1.5 text-xs")}
             >
               {scenario.label}
             </button>

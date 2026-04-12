@@ -38,7 +38,7 @@ const phaseMeta: Record<
     ],
     dos: ["温热饮食", "留白日程", "先顾舒适", "轻缓活动", "早点休息"],
     donts: ["硬扛不适", "过度透支", "久坐受凉", "高强度训练", "忽略疼痛"],
-    color: "var(--color-rose)"
+    color: "var(--phase-menstrual)"
   },
   follicular: {
     label: "卵泡期",
@@ -51,7 +51,7 @@ const phaseMeta: Record<
     ],
     dos: ["轻启动", "尝试新事", "安排轻运动", "推进计划", "外出走走"],
     donts: ["日程过满", "一下太猛", "过度用力", "熬夜补进度", "忽略热身"],
-    color: "var(--color-accent)"
+    color: "var(--phase-follicular)"
   },
   ovulation: {
     label: "排卵期",
@@ -64,7 +64,7 @@ const phaseMeta: Record<
     ],
     dos: ["安排沟通", "协作推进", "表达自己", "记录变化", "补充水分"],
     donts: ["过度熬夜", "行程太满", "忽略恢复", "情绪透支", "跳过正餐"],
-    color: "var(--color-gold)"
+    color: "var(--phase-ovulation)"
   },
   luteal: {
     label: "黄体期",
@@ -77,7 +77,7 @@ const phaseMeta: Record<
     ],
     dos: ["稳住节奏", "提早休息", "减少切换", "优先刚需", "少量多次"],
     donts: ["信息过载", "情绪内耗", "咖啡过量", "死磕细节", "行程堆太满"],
-    color: "var(--color-blue)"
+    color: "var(--phase-luteal)"
   }
 };
 

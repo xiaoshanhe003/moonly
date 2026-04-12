@@ -5,6 +5,7 @@ import { Button } from "../components/ui/button";
 import { getCycleSummary, type PhaseKey } from "../features/cycle/cycle";
 import { useCycleStore } from "../features/cycle/store";
 import { cn } from "../lib/utils";
+import { uiTextStyles } from "../components/ui/styles";
 
 type ScienceTabKey = "overview" | PhaseKey;
 
@@ -22,8 +23,6 @@ type ScienceContent = {
   mindSignalsLabel: string;
   suggestions: string[];
   suggestionsLabel: string;
-  accent: string;
-  accentSoft: string;
 };
 
 const scienceContentMap: Record<ScienceTabKey, ScienceContent> = {
@@ -52,9 +51,7 @@ const scienceContentMap: Record<ScienceTabKey, ScienceContent> = {
       "如果月经长期过少、过多、疼痛剧烈或周期长期紊乱，值得进一步就医确认",
       "记录月经、症状和情绪，通常比单独记日期更有帮助"
     ],
-    suggestionsLabel: "如何理解周期",
-    accent: "var(--color-ink)",
-    accentSoft: "rgba(36,52,51,0.08)"
+    suggestionsLabel: "如何理解周期"
   },
   menstrual: {
     label: "月经期",
@@ -70,9 +67,7 @@ const scienceContentMap: Record<ScienceTabKey, ScienceContent> = {
     mindSignalsLabel: "心理与行为特征",
     mindSignals: ["更适合把节奏放慢一点", "如果想独处、安静一些，通常是正常反应"],
     suggestionsLabel: "建议",
-    suggestions: ["优先睡眠和补水", "安排更轻的活动和更松的日程", "如果不适明显，先以舒适和恢复为主"],
-    accent: "var(--color-rose)",
-    accentSoft: "rgba(239,194,200,0.26)"
+    suggestions: ["优先睡眠和补水", "安排更轻的活动和更松的日程", "如果不适明显，先以舒适和恢复为主"]
   },
   follicular: {
     label: "卵泡期",
@@ -88,9 +83,7 @@ const scienceContentMap: Record<ScienceTabKey, ScienceContent> = {
     mindSignalsLabel: "心理与行为特征",
     mindSignals: ["心情较轻，专注力上升，社交欲增强", "创造力与学习效率更容易被调动起来"],
     suggestionsLabel: "建议",
-    suggestions: ["迎接新事物和挑战的好时机", "适合进行中高强度运动和力量训练", "更适合安排重要会议、输出型工作或见面活动"],
-    accent: "var(--color-accent-strong)",
-    accentSoft: "rgba(208,222,164,0.28)"
+    suggestions: ["迎接新事物和挑战的好时机", "适合进行中高强度运动和力量训练", "更适合安排重要会议、输出型工作或见面活动"]
   },
   ovulation: {
     label: "排卵期",
@@ -106,9 +99,7 @@ const scienceContentMap: Record<ScienceTabKey, ScienceContent> = {
     mindSignalsLabel: "心理与行为特征",
     mindSignals: ["更愿意连接外界，表达欲和行动力增强", "在沟通、展示、社交场景里通常更容易进入状态"],
     suggestionsLabel: "建议",
-    suggestions: ["适合安排表达、展示、合作类任务", "维持规律饮食和补水，避免行程排太满", "如果精力在线，可以推进重要互动和公开场景"],
-    accent: "var(--color-gold)",
-    accentSoft: "rgba(237,208,127,0.3)"
+    suggestions: ["适合安排表达、展示、合作类任务", "维持规律饮食和补水，避免行程排太满", "如果精力在线，可以推进重要互动和公开场景"]
   },
   luteal: {
     label: "黄体期",
@@ -124,9 +115,7 @@ const scienceContentMap: Record<ScienceTabKey, ScienceContent> = {
     mindSignalsLabel: "心理与行为特征",
     mindSignals: ["更容易对噪音、压力和信息切换敏感", "情绪波动增多时，通常不意味着你做得不够好"],
     suggestionsLabel: "建议",
-    suggestions: ["减少高频切换，优先真正重要的事", "提早休息，给日程留缓冲", "尽量用稳定、低刺激的环境保护能量"],
-    accent: "var(--color-blue)",
-    accentSoft: "rgba(200,215,240,0.28)"
+    suggestions: ["减少高频切换，优先真正重要的事", "提早休息，给日程留缓冲", "尽量用稳定、低刺激的环境保护能量"]
   }
 };
 
@@ -159,10 +148,10 @@ export function PhaseSciencePage() {
   const activeContent = scienceContentMap[activeTab];
 
   return (
-    <main className="min-h-screen bg-[var(--color-canvas)] px-4 py-6 text-[var(--color-ink)] sm:px-6">
+    <main className="min-h-screen bg-[color:var(--background)] px-4 py-6 text-[color:var(--foreground)] sm:px-6">
       <div className="mx-auto flex min-h-[calc(100vh-3rem)] max-w-md flex-col gap-4">
         <div className="sticky top-4 z-40">
-          <header className="overflow-hidden rounded-[32px] border border-white/70 bg-white/88 shadow-[var(--shadow-soft)] backdrop-blur">
+          <header className="overflow-hidden rounded-[32px] border border-[color:var(--border-strong)] bg-[color:var(--card-elevated)] shadow-[var(--shadow-soft)] backdrop-blur">
             <div className="px-4 pt-3">
               <Button variant="ghost" size="icon" onClick={() => navigate(-1)} aria-label="返回">
                 <ArrowLeft className="size-4" />
@@ -181,7 +170,7 @@ export function PhaseSciencePage() {
                       type="button"
                       className={cn(
                         "relative shrink-0 pb-3 font-medium transition-colors",
-                        isActive ? "text-[var(--color-accent-strong)]" : "text-[var(--color-muted)]"
+                        isActive ? "text-[color:var(--foreground)]" : uiTextStyles.muted
                       )}
                       onClick={() => setActiveTab(tabKey)}
                     >
@@ -191,7 +180,7 @@ export function PhaseSciencePage() {
                           "absolute inset-x-0 bottom-0 h-0.5 rounded-full transition-opacity",
                           isActive ? "opacity-100" : "opacity-0"
                         )}
-                        style={{ backgroundColor: "var(--color-accent-strong)" }}
+                        style={{ backgroundColor: "var(--foreground)" }}
                       />
                     </button>
                   );
@@ -201,31 +190,31 @@ export function PhaseSciencePage() {
           </header>
         </div>
 
-        <section className="rounded-[32px] border border-white/70 bg-white/82 p-5 shadow-[var(--shadow-card)] backdrop-blur">
+        <section className="rounded-[32px] border border-[color:var(--border-strong)] bg-[color:var(--card)] p-5 shadow-[var(--shadow-card)] backdrop-blur">
           <div>
             <h1 className="text-3xl font-semibold leading-none">{activeContent.label}</h1>
-            <p className="mt-3 text-sm leading-6 text-[var(--color-muted)]">{activeContent.overview}</p>
+            <p className={cn("mt-3 text-sm leading-6", uiTextStyles.muted)}>{activeContent.overview}</p>
           </div>
 
           <div className="mt-8 grid gap-7">
             <div>
-              <p className="text-sm font-medium text-[var(--color-panel-strong)]">概述</p>
-              <p className="mt-3 text-base leading-7 text-[var(--color-ink)]">{activeContent.subtitle}</p>
+              <p className={cn("text-sm font-medium", uiTextStyles.muted)}>概述</p>
+              <p className="mt-3 text-base leading-7 text-[color:var(--foreground)]">{activeContent.subtitle}</p>
             </div>
 
             <div>
-              <p className="text-sm font-medium text-[var(--color-panel-strong)]">{activeContent.durationLabel}</p>
-              <p className="mt-3 text-xl font-semibold text-[var(--color-ink)]">{activeContent.duration}</p>
+              <p className={cn("text-sm font-medium", uiTextStyles.muted)}>{activeContent.durationLabel}</p>
+              <p className="mt-3 text-xl font-semibold text-[color:var(--foreground)]">{activeContent.duration}</p>
             </div>
 
             <div>
-              <p className="text-sm font-medium text-[var(--color-panel-strong)]">{activeContent.hormoneLabel}</p>
-              <p className="mt-3 text-lg font-semibold text-[var(--color-ink)]">{activeContent.hormones}</p>
+              <p className={cn("text-sm font-medium", uiTextStyles.muted)}>{activeContent.hormoneLabel}</p>
+              <p className="mt-3 text-lg font-semibold text-[color:var(--foreground)]">{activeContent.hormones}</p>
             </div>
 
             <div>
-              <p className="text-sm font-medium text-[var(--color-panel-strong)]">{activeContent.bodySignalsLabel}</p>
-              <div className="mt-3 space-y-2 text-base leading-7 text-[var(--color-ink)]">
+              <p className={cn("text-sm font-medium", uiTextStyles.muted)}>{activeContent.bodySignalsLabel}</p>
+              <div className="mt-3 space-y-2 text-base leading-7 text-[color:var(--foreground)]">
                 {activeContent.bodySignals.map((item) => (
                   <p key={item}>{item}</p>
                 ))}
@@ -233,8 +222,8 @@ export function PhaseSciencePage() {
             </div>
 
             <div>
-              <p className="text-sm font-medium text-[var(--color-panel-strong)]">{activeContent.mindSignalsLabel}</p>
-              <div className="mt-3 space-y-2 text-base leading-7 text-[var(--color-ink)]">
+              <p className={cn("text-sm font-medium", uiTextStyles.muted)}>{activeContent.mindSignalsLabel}</p>
+              <div className="mt-3 space-y-2 text-base leading-7 text-[color:var(--foreground)]">
                 {activeContent.mindSignals.map((item) => (
                   <p key={item}>{item}</p>
                 ))}
@@ -242,11 +231,11 @@ export function PhaseSciencePage() {
             </div>
 
             <div>
-              <p className="text-sm font-medium text-[var(--color-panel-strong)]">{activeContent.suggestionsLabel}</p>
-              <div className="mt-3 space-y-3 text-base leading-7 text-[var(--color-ink)]">
+              <p className={cn("text-sm font-medium", uiTextStyles.muted)}>{activeContent.suggestionsLabel}</p>
+              <div className="mt-3 space-y-3 text-base leading-7 text-[color:var(--foreground)]">
                 {activeContent.suggestions.map((item) => (
                   <div key={item} className="flex items-start gap-3">
-                    <span className="mt-2 size-1.5 shrink-0 rounded-full bg-[var(--color-ink)]" />
+                    <span className="mt-2 size-1.5 shrink-0 rounded-full bg-[color:var(--foreground)]" />
                     <p>{item}</p>
                   </div>
                 ))}

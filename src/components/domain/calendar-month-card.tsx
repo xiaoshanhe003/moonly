@@ -2,6 +2,7 @@ import { Card } from "../ui/card";
 import { buildMonthGrid } from "../../features/cycle/cycle";
 import type { CycleProfile, DailyEntry } from "../../features/cycle/types";
 import { cn } from "../../lib/utils";
+import { uiTextStyles } from "../ui/styles";
 
 type CalendarMonthCardProps = {
   monthDate: Date;
@@ -26,7 +27,7 @@ export function CalendarMonthCard({ monthDate, profile, entries, today, onEntryC
     <Card className="space-y-4">
       <div className="grid grid-cols-7 gap-2">
         <div
-          className="text-sm font-semibold text-[var(--color-rose)]"
+          className="text-sm font-semibold text-[color:var(--phase-menstrual)]"
           style={{ gridColumnStart: monthLabelColumnStart }}
         >
           {monthDate.getMonth() + 1}月
@@ -49,12 +50,12 @@ export function CalendarMonthCard({ monthDate, profile, entries, today, onEntryC
                 onClick={() => onEntryClick?.(formatDateKey(cell.date))}
                 className={cn(
                   "flex aspect-square w-full items-center justify-center rounded-full text-sm transition-transform active:scale-95",
-                  cell.inMonth ? "text-[var(--color-ink)]" : "text-[var(--color-muted)]"
+                  cell.inMonth ? "text-[color:var(--foreground)]" : uiTextStyles.muted
                 )}
                 style={{
                   background: cell.isPredictable ? cell.phase.color : "transparent",
                   opacity: cell.isPredictable ? 0.95 : 0.22,
-                  outline: cell.isToday ? "2px solid var(--color-ink)" : "none",
+                  outline: cell.isToday ? "2px solid var(--foreground)" : "none",
                   outlineOffset: "-2px"
                 }}
                 aria-label={`查看 ${formatDateKey(cell.date)} 的记录`}
@@ -66,12 +67,12 @@ export function CalendarMonthCard({ monthDate, profile, entries, today, onEntryC
               <div
                 className={cn(
                   "flex aspect-square items-center justify-center rounded-full text-sm",
-                  cell.inMonth ? "text-[var(--color-ink)]" : "text-[var(--color-muted)]"
+                  cell.inMonth ? "text-[color:var(--foreground)]" : uiTextStyles.muted
                 )}
                 style={{
                   background: cell.isPredictable ? cell.phase.color : "transparent",
                   opacity: cell.isPredictable ? 0.58 : 0.22,
-                  outline: cell.isToday ? "2px solid var(--color-ink)" : "none",
+                  outline: cell.isToday ? "2px solid var(--foreground)" : "none",
                   outlineOffset: "-2px"
                 }}
               >
@@ -79,7 +80,7 @@ export function CalendarMonthCard({ monthDate, profile, entries, today, onEntryC
               </div>
             ) : null}
             {cell.inMonth && entries[formatDateKey(cell.date)] ? (
-              <span className="absolute right-1 top-1 size-1.5 rounded-full bg-[var(--color-ink)]" />
+              <span className="absolute right-1 top-1 size-1.5 rounded-full bg-[color:var(--foreground)]" />
             ) : null}
           </div>
         ))}

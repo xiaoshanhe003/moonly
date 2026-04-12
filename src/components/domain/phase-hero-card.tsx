@@ -2,6 +2,8 @@ import { BookOpen, MoonStar, Sparkle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "../ui/card";
 import type { ReturnTypeOfGetCycleSummary } from "../../types/helper";
+import { cn } from "../../lib/utils";
+import { uiSpacingStyles, uiSurfaceStyles, uiTextStyles } from "../ui/styles";
 
 type PhaseHeroCardProps = {
   summary: ReturnTypeOfGetCycleSummary;
@@ -10,14 +12,17 @@ type PhaseHeroCardProps = {
 export function PhaseHeroCard({ summary }: PhaseHeroCardProps) {
   const navigate = useNavigate();
 
-  return (
+    return (
     <Card className="overflow-hidden">
-      <div className="rounded-[24px] bg-[var(--color-panel)] p-4">
-        <div className="flex items-start justify-between gap-3">
+      <div className={cn("rounded-[var(--radius-lg)]", uiSurfaceStyles.panel)}>
+        <div className={cn("flex items-start justify-between", uiSpacingStyles.gapSm)}>
           <div className="min-w-0">
             <button
               type="button"
-              className="inline-flex items-center gap-1 rounded-full text-sm text-[var(--color-muted)] transition-colors hover:text-[var(--color-ink)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-strong)]"
+              className={cn(
+                "inline-flex items-center gap-1 rounded-full text-sm transition-colors hover:text-[color:var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ring)]",
+                uiTextStyles.muted
+              )}
               onClick={() =>
                 navigate("/phase-science", {
                   state: { initialPhaseLabel: summary.phase.label }
@@ -27,11 +32,11 @@ export function PhaseHeroCard({ summary }: PhaseHeroCardProps) {
               <span>{summary.phase.label}</span>
               <BookOpen className="size-4" strokeWidth={1.8} />
             </button>
-            <p className="mt-1 text-sm text-[var(--color-muted)]">
+            <p className={cn("mt-1 text-sm", uiTextStyles.muted)}>
               还将持续{summary.phaseRemainingDays}天·Next {summary.nextPhase.label}
             </p>
           </div>
-          <button type="button" className="rounded-full bg-white p-2 text-[var(--color-muted)]">
+          <button type="button" className="rounded-full bg-[color:var(--card-elevated)] p-2 text-[color:var(--muted-foreground)]">
             <Sparkle className="size-4" />
           </button>
         </div>
@@ -43,15 +48,13 @@ export function PhaseHeroCard({ summary }: PhaseHeroCardProps) {
               background: `radial-gradient(circle, ${summary.phase.color} 0%, transparent 58%)`
             }}
           >
-            <MoonStar className="size-24 text-[var(--color-ink)]" strokeWidth={1.2} />
+            <MoonStar className="size-24 text-[color:var(--foreground)]" strokeWidth={1.2} />
           </div>
         </div>
 
-        <div className="space-y-3 text-center">
-          <h2 className="text-3xl font-semibold leading-tight text-[var(--color-ink)]">
-            {summary.phase.tone}
-          </h2>
-          <p className="text-sm text-[var(--color-muted)]">{summary.phase.advice}</p>
+        <div className={cn("text-center", uiSpacingStyles.stackSm)}>
+          <h2 className="text-3xl font-semibold leading-tight text-[color:var(--foreground)]">{summary.phase.tone}</h2>
+          <p className={cn("text-sm", uiTextStyles.muted)}>{summary.phase.advice}</p>
         </div>
       </div>
     </Card>

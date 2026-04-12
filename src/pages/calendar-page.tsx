@@ -3,6 +3,7 @@ import { CalendarEntrySheet } from "../components/domain/calendar-entry-sheet";
 import { CalendarMonthCard } from "../components/domain/calendar-month-card";
 import { useCycleStore } from "../features/cycle/store";
 import { Card } from "../components/ui/card";
+import { uiTextStyles } from "../components/ui/styles";
 
 function parseDateKey(dateKey: string) {
   const [year, month, day] = dateKey.split("-").map(Number);
@@ -29,6 +30,14 @@ function buildCalendarMonths(profileLastPeriodStart: string, today: Date) {
 type CalendarPageProps = {
   onVisibleMonthChange?: (monthKey: string) => void;
 };
+
+const legendItems = [
+  { label: "月经期", color: "var(--phase-menstrual)" },
+  { label: "卵泡期", color: "var(--phase-follicular)" },
+  { label: "排卵期", color: "var(--phase-ovulation)" },
+  { label: "黄体期", color: "var(--phase-luteal)" },
+  { label: "已记录", color: "var(--foreground)" }
+] as const;
 
 export function CalendarPage({ onVisibleMonthChange }: CalendarPageProps) {
   const profile = useCycleStore((state) => state.profile)!;
@@ -121,27 +130,13 @@ export function CalendarPage({ onVisibleMonthChange }: CalendarPageProps) {
         ))}
       </div>
 
-      <Card className="sticky bottom-4 z-30 bg-white/92 flex flex-wrap gap-4 text-sm text-[var(--color-muted)]">
-        <div className="flex items-center gap-2">
-          <span className="size-3 rounded-full bg-[var(--color-rose)]" />
-          月经期
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="size-3 rounded-full bg-[var(--color-accent)]" />
-          卵泡期
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="size-3 rounded-full bg-[var(--color-gold)]" />
-          排卵期
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="size-3 rounded-full bg-[var(--color-blue)]" />
-          黄体期
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="size-3 rounded-full bg-[var(--color-ink)]" />
-          已记录
-        </div>
+      <Card className={["sticky bottom-4 z-30 flex flex-wrap gap-4 text-sm", uiTextStyles.muted].join(" ")}>
+        {legendItems.map((item) => (
+          <div key={item.label} className="flex items-center gap-2">
+            <span className="size-3 rounded-full" style={{ backgroundColor: item.color }} />
+            {item.label}
+          </div>
+        ))}
         <div>浅色日期表示预测</div>
       </Card>
 

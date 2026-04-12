@@ -1,4 +1,6 @@
 import { Card } from "../ui/card";
+import { cn } from "../../lib/utils";
+import { uiSpacingStyles, uiSurfaceStyles, uiTextStyles } from "../ui/styles";
 
 type ActionHintsCardProps = {
   dos: string[];
@@ -7,19 +9,19 @@ type ActionHintsCardProps = {
 
 export function ActionHintsCard({ dos, donts }: ActionHintsCardProps) {
   return (
-    <Card className="space-y-3">
-      <div className="flex gap-3">
-        <div className="flex-1 rounded-2xl bg-[var(--color-accent-soft)] p-4">
-          <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-accent-strong)]">宜</p>
-          <ul className="mt-3 space-y-2 text-sm text-[var(--color-ink)]">
+    <Card className={uiSpacingStyles.stackSm}>
+      <div className={cn("flex", uiSpacingStyles.gapSm)}>
+        <div className={cn("flex-1", uiSurfaceStyles.panel)}>
+          <p className={uiTextStyles.sectionLabel}>宜</p>
+          <ul className="mt-3 space-y-2 text-sm text-[color:var(--foreground)]">
             {dos.map((item) => (
               <li key={item}>{item}</li>
             ))}
           </ul>
         </div>
-        <div className="flex-1 rounded-2xl bg-[#f6ecec] p-4">
-          <p className="text-xs uppercase tracking-[0.2em] text-[#b36d78]">忌</p>
-          <ul className="mt-3 space-y-2 text-sm text-[var(--color-ink)]">
+        <div className={cn("flex-1", uiSurfaceStyles.panelStrong)}>
+          <p className={uiTextStyles.sectionLabel}>忌</p>
+          <ul className="mt-3 space-y-2 text-sm text-[color:var(--foreground)]">
             {donts.map((item) => (
               <li key={item}>{item}</li>
             ))}
