@@ -20,11 +20,11 @@ export function DevScenarioBar() {
       >
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className={cn("flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em]", uiTextStyles.muted)}>
+            <p className={cn("flex items-center gap-2 font-semibold uppercase tracking-[0.22em]", uiTextStyles.xs, uiTextStyles.muted)}>
               <FlaskConical className="size-3.5" />
               Dev scenarios
             </p>
-            <p className={cn("mt-1 text-xs", uiTextStyles.muted)}>切换页面状态，不影响实际布局。</p>
+            <p className={cn("mt-1", uiTextStyles.xs, uiTextStyles.muted)}>切换页面状态，不影响实际布局。</p>
           </div>
 
           <button
@@ -50,7 +50,7 @@ export function DevScenarioBar() {
               key={key}
               type="button"
               onClick={() => loadScenario(key as keyof typeof scenarios)}
-              className={cn(getOptionPillClass(activeScenario === key), "px-3 py-1.5 text-xs")}
+              className={cn(getOptionPillClass(activeScenario === key), uiTextStyles.xs, "px-3 py-1.5")}
             >
               {scenario.label}
             </button>

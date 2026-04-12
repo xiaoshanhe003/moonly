@@ -8,7 +8,8 @@ import { DevScenarioBar } from "../components/domain/dev-scenario-bar";
 import { SegmentedControl } from "../components/domain/segmented-control";
 import { useCycleStore } from "../features/cycle/store";
 import { getCycleSummary } from "../features/cycle/cycle";
-import { formatMonth, formatShortDate } from "../lib/utils";
+import { cn, formatMonth, formatShortDate } from "../lib/utils";
+import { uiTextStyles } from "../components/ui/styles";
 
 const weekdays = ["日", "一", "二", "三", "四", "五", "六"];
 
@@ -74,24 +75,24 @@ export function AppShell({ initialView }: AppShellProps) {
 
             {currentView === "calendar" && cycleSummary ? (
               <div className="mt-4 space-y-4 pb-4">
-                <div className="grid grid-cols-3 gap-3 text-sm">
+                <div className={cn("grid grid-cols-3 gap-3", uiTextStyles.sm)}>
                   <div>
-                    <p className="text-[var(--color-muted)]">周期长度</p>
-                    <p className="mt-1 text-2xl font-semibold">{cycleSummary.cycleLength}天</p>
+                    <p className={uiTextStyles.muted}>周期长度</p>
+                    <p className={cn("mt-1 font-semibold", uiTextStyles.xxl)}>{cycleSummary.cycleLength}天</p>
                   </div>
                   <div>
-                    <p className="text-[var(--color-muted)]">月经</p>
-                    <p className="mt-1 text-2xl font-semibold">{cycleSummary.periodLength}天</p>
+                    <p className={uiTextStyles.muted}>月经</p>
+                    <p className={cn("mt-1 font-semibold", uiTextStyles.xxl)}>{cycleSummary.periodLength}天</p>
                   </div>
                   <div>
-                    <p className="text-[var(--color-muted)]">下次月经</p>
-                    <p className="mt-1 text-2xl font-semibold">{formatShortDate(cycleSummary.nextPeriodStart)}</p>
+                    <p className={uiTextStyles.muted}>下次月经</p>
+                    <p className={cn("mt-1 font-semibold", uiTextStyles.xxl)}>{formatShortDate(cycleSummary.nextPeriodStart)}</p>
                   </div>
                 </div>
 
                 <div className="space-y-3">
-                  <p className="text-3xl font-semibold leading-none">{formatMonth(visibleCalendarMonth)}</p>
-                  <div className="grid grid-cols-7 gap-2 text-center text-xs text-[var(--color-muted)]">
+                  <p className={cn("font-semibold leading-none", uiTextStyles.xxxl)}>{formatMonth(visibleCalendarMonth)}</p>
+                  <div className={cn("grid grid-cols-7 gap-2 text-center", uiTextStyles.xs, uiTextStyles.muted)}>
                     {weekdays.map((weekday) => (
                       <div key={weekday}>{weekday}</div>
                     ))}
@@ -103,7 +104,11 @@ export function AppShell({ initialView }: AppShellProps) {
         </div>
       ) : null}
 
-      <div className="mx-auto flex min-h-screen max-w-md flex-col gap-4 px-4 py-6 sm:px-6">
+      <div
+        className={`mx-auto flex min-h-screen max-w-md flex-col gap-4 px-4 sm:px-6 ${
+          currentView === "today" ? "py-3" : "py-6"
+        }`}
+      >
         <DevScenarioBar />
 
         {!profile ? (

@@ -161,7 +161,7 @@ export function PhaseSciencePage() {
             </div>
 
             <div className="overflow-x-auto scrollbar-none">
-              <div className="flex min-w-max gap-6 px-4 pt-4 text-sm">
+              <div className={cn("flex min-w-max gap-6 px-4 pt-4", uiTextStyles.sm)}>
                 {scienceTabOrder.map((tabKey) => {
                   const phase = scienceContentMap[tabKey];
                   const isActive = tabKey === activeTab;
@@ -205,29 +205,29 @@ export function PhaseSciencePage() {
           </div>
 
           <div>
-            <h1 className="text-3xl font-semibold leading-none">{activeContent.label}</h1>
-            <p className={cn("mt-3 text-sm leading-6", uiTextStyles.muted)}>{activeContent.overview}</p>
+            <h1 className={cn("font-semibold leading-none", uiTextStyles.xxxl)}>{activeContent.label}</h1>
+            <p className={cn("mt-3 leading-6", uiTextStyles.sm, uiTextStyles.muted)}>{activeContent.overview}</p>
           </div>
 
           <div className="mt-8 grid gap-7">
             <div>
-              <p className={cn("text-sm font-medium", uiTextStyles.muted)}>概述</p>
-              <p className="mt-3 text-base leading-7 text-[color:var(--foreground)]">{activeContent.subtitle}</p>
+              <p className={cn(uiTextStyles.sm, "font-medium", uiTextStyles.muted)}>概述</p>
+              <p className={cn("mt-3 leading-7 text-[color:var(--foreground)]", uiTextStyles.md)}>{activeContent.subtitle}</p>
             </div>
 
             <div>
-              <p className={cn("text-sm font-medium", uiTextStyles.muted)}>{activeContent.durationLabel}</p>
-              <p className="mt-3 text-xl font-semibold text-[color:var(--foreground)]">{activeContent.duration}</p>
+              <p className={cn(uiTextStyles.sm, "font-medium", uiTextStyles.muted)}>{activeContent.durationLabel}</p>
+              <p className={cn("mt-3 font-semibold text-[color:var(--foreground)]", uiTextStyles.xl)}>{activeContent.duration}</p>
             </div>
 
             <div>
-              <p className={cn("text-sm font-medium", uiTextStyles.muted)}>{activeContent.hormoneLabel}</p>
-              <p className="mt-3 text-lg font-semibold text-[color:var(--foreground)]">{activeContent.hormones}</p>
+              <p className={cn(uiTextStyles.sm, "font-medium", uiTextStyles.muted)}>{activeContent.hormoneLabel}</p>
+              <p className={cn("mt-3 font-semibold text-[color:var(--foreground)]", uiTextStyles.lg)}>{activeContent.hormones}</p>
             </div>
 
             <div>
-              <p className={cn("text-sm font-medium", uiTextStyles.muted)}>{activeContent.bodySignalsLabel}</p>
-              <div className="mt-3 space-y-2 text-base leading-7 text-[color:var(--foreground)]">
+              <p className={cn(uiTextStyles.sm, "font-medium", uiTextStyles.muted)}>{activeContent.bodySignalsLabel}</p>
+              <div className={cn("mt-3 space-y-2 leading-7 text-[color:var(--foreground)]", uiTextStyles.md)}>
                 {activeContent.bodySignals.map((item) => (
                   <p key={item}>{item}</p>
                 ))}
@@ -235,8 +235,8 @@ export function PhaseSciencePage() {
             </div>
 
             <div>
-              <p className={cn("text-sm font-medium", uiTextStyles.muted)}>{activeContent.mindSignalsLabel}</p>
-              <div className="mt-3 space-y-2 text-base leading-7 text-[color:var(--foreground)]">
+              <p className={cn(uiTextStyles.sm, "font-medium", uiTextStyles.muted)}>{activeContent.mindSignalsLabel}</p>
+              <div className={cn("mt-3 space-y-2 leading-7 text-[color:var(--foreground)]", uiTextStyles.md)}>
                 {activeContent.mindSignals.map((item) => (
                   <p key={item}>{item}</p>
                 ))}
@@ -244,8 +244,8 @@ export function PhaseSciencePage() {
             </div>
 
             <div>
-              <p className={cn("text-sm font-medium", uiTextStyles.muted)}>{activeContent.suggestionsLabel}</p>
-              <div className="mt-3 space-y-3 text-base leading-7 text-[color:var(--foreground)]">
+              <p className={cn(uiTextStyles.sm, "font-medium", uiTextStyles.muted)}>{activeContent.suggestionsLabel}</p>
+              <div className={cn("mt-3 space-y-3 leading-7 text-[color:var(--foreground)]", uiTextStyles.md)}>
                 {activeContent.suggestions.map((item) => (
                   <div key={item} className="flex items-start gap-3">
                     <span className="mt-2 size-1.5 shrink-0 rounded-full bg-[color:var(--foreground)]" />

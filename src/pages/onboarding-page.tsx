@@ -33,24 +33,24 @@ export function OnboardingPage() {
 
   const nextStep = () => setStep((current) => Math.min(current + 1, totalSteps - 1) as OnboardingStep);
   const previousStep = () => setStep((current) => Math.max(current - 1, 0) as OnboardingStep);
-  const helperButtonClass = cn("text-sm", uiTextStyles.muted);
+  const helperButtonClass = cn(uiTextStyles.sm, uiTextStyles.muted);
 
   return (
     <Card className="space-y-6">
       <div className="space-y-2">
         <div className="flex items-start justify-between gap-3">
-          <p className={cn("text-sm uppercase tracking-[0.25em]", uiTextStyles.muted)}>Cold Start</p>
-          <p className={cn("text-sm font-medium", uiTextStyles.muted)}>{progressText}</p>
+          <p className={cn(uiTextStyles.sm, "uppercase tracking-[0.25em]", uiTextStyles.muted)}>Cold Start</p>
+          <p className={cn(uiTextStyles.sm, "font-medium", uiTextStyles.muted)}>{progressText}</p>
         </div>
-        <h2 className="text-3xl font-semibold leading-tight">先用三个问题，建立一个温和的起点。</h2>
-        <p className={cn("text-sm", uiTextStyles.muted)}>
+        <h2 className={cn(uiTextStyles.xxxl, "font-semibold leading-tight")}>先用三个问题，建立一个温和的起点。</h2>
+        <p className={cn(uiTextStyles.sm, uiTextStyles.muted)}>
           之后你可以随时修改，这里只需要一个大致可用的基础。
         </p>
       </div>
 
       {step === 0 ? (
         <label className="block space-y-2">
-          <span className={cn("text-sm", uiTextStyles.muted)}>上次月经开始时间</span>
+          <span className={cn(uiTextStyles.sm, uiTextStyles.muted)}>上次月经开始时间</span>
           <input
             type="date"
             value={lastPeriodStart}
@@ -62,7 +62,7 @@ export function OnboardingPage() {
 
       {step === 1 ? (
         <label className="block space-y-2">
-          <span className={cn("text-sm", uiTextStyles.muted)}>月经一般持续几天</span>
+          <span className={cn(uiTextStyles.sm, uiTextStyles.muted)}>月经一般持续几天</span>
           <input
             type="number"
             min={2}
@@ -80,7 +80,7 @@ export function OnboardingPage() {
 
       {step === 2 ? (
         <label className="block space-y-2">
-          <span className={cn("text-sm", uiTextStyles.muted)}>月经一般多久来一次</span>
+          <span className={cn(uiTextStyles.sm, uiTextStyles.muted)}>月经一般多久来一次</span>
           <input
             type="number"
             min={21}

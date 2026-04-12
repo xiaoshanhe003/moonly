@@ -2,8 +2,16 @@ import { cn } from "../../lib/utils";
 
 export const uiTextStyles = {
   muted: "text-[color:var(--muted-foreground)]",
-  sectionLabel: "text-xs uppercase tracking-[0.2em] text-[color:var(--muted-foreground)]",
-  meta: "text-sm font-medium text-[color:var(--muted-foreground)]"
+  xs: "text-[length:var(--text-xs)]",
+  sm: "text-[length:var(--text-sm)]",
+  md: "text-[length:var(--text-md)]",
+  lg: "text-[length:var(--text-lg)]",
+  xl: "text-[length:var(--text-xl)]",
+  xxl: "text-[length:var(--text-2xl)]",
+  xxxl: "text-[length:var(--text-3xl)]",
+  heroTitle: "text-[length:var(--text-hero-title)]",
+  sectionLabel: "text-[length:var(--text-xs)] uppercase tracking-[0.2em] text-[color:var(--muted-foreground)]",
+  meta: "text-[length:var(--text-sm)] font-medium text-[color:var(--muted-foreground)]"
 };
 
 export const uiSpacingStyles = {

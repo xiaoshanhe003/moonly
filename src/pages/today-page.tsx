@@ -14,11 +14,11 @@ export function TodayPage() {
   const summary = getCycleSummary(profile, entries, today);
 
   return (
-    <div className="flex flex-1 flex-col gap-4 pb-44">
-      <div id="today-phase-hero">
+    <div className="flex flex-1 flex-col">
+      <div id="today-phase-hero" className="flex flex-1 flex-col justify-start pt-0">
         <PhaseHeroCard summary={summary} />
       </div>
-      <div className="fixed inset-x-4 bottom-4 z-[45] sm:left-1/2 sm:right-auto sm:w-[calc(100%-3rem)] sm:max-w-md sm:-translate-x-1/2">
+      <div className="sticky bottom-3 z-[45] mt-auto pt-4">
         <QuickLogCard
           date={dateKey}
           entry={entry}
