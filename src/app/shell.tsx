@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { CalendarDays, Circle } from "lucide-react";
+import { Calendar, CircleDot } from "lucide-react";
 import { TodayPage } from "../pages/today-page";
 import { CalendarPage } from "../pages/calendar-page";
 import { OnboardingPage } from "../pages/onboarding-page";
@@ -22,6 +22,7 @@ export function AppShell({ initialView }: AppShellProps) {
   const profile = useCycleStore((state) => state.profile);
   const entries = useCycleStore((state) => state.entries);
   const currentView = location.pathname.includes("calendar") ? "calendar" : initialView;
+  const previousViewRef = useRef(currentView);
   const [visibleCalendarMonthKey, setVisibleCalendarMonthKey] = useState(() =>
     new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()
   );
@@ -35,56 +36,74 @@ export function AppShell({ initialView }: AppShellProps) {
     }
   }, [currentView]);
 
+  useEffect(() => {
+    if (previousViewRef.current === "calendar" && currentView === "today") {
+      requestAnimationFrame(() => {
+        const stickyHeader = document.querySelector("[data-sticky-shell-header]");
+        const heroCard = document.getElementById("today-phase-hero");
+        const stickyHeaderHeight = stickyHeader?.getBoundingClientRect().height ?? 0;
+        const targetTop = heroCard?.getBoundingClientRect().top ?? 0;
+        const topPadding = 8;
+
+        window.scrollTo({
+          top: Math.max(0, window.scrollY + targetTop - stickyHeaderHeight - topPadding),
+          left: 0,
+          behavior: "auto"
+        });
+      });
+    }
+
+    previousViewRef.current = currentView;
+  }, [currentView]);
+
   return (
-    <main className="min-h-screen bg-[var(--color-canvas)] px-4 py-6 text-[var(--color-ink)] sm:px-6">
-      <div className="mx-auto flex min-h-[calc(100vh-3rem)] max-w-md flex-col gap-4">
-        {profile ? (
-          <div className="sticky top-4 z-40 space-y-4">
-            <header className="rounded-[32px] border border-white/70 bg-white/85 p-4 shadow-[var(--shadow-soft)] backdrop-blur">
-              <div className="flex items-center justify-center">
-                <SegmentedControl
-                  value={currentView}
-                  onChange={(next) => navigate(next === "today" ? "/today" : "/calendar")}
-                  items={[
-                    { value: "today", label: "今日", icon: Circle },
-                    { value: "calendar", label: "日历", icon: CalendarDays }
-                  ]}
-                />
-              </div>
+    <main className="min-h-screen bg-[var(--color-canvas)] text-[var(--color-ink)]">
+      {profile ? (
+        <div className="sticky top-0 z-40 w-full bg-[var(--color-canvas)] backdrop-blur" data-sticky-shell-header>
+          <header className="mx-auto max-w-md px-4 pt-4 sm:px-6">
+            <div className="flex items-center justify-center">
+              <SegmentedControl
+                value={currentView}
+                onChange={(next) => navigate(next === "today" ? "/today" : "/calendar")}
+                items={[
+                  { value: "today", label: "今天", icon: CircleDot },
+                  { value: "calendar", label: "日历", icon: Calendar }
+                ]}
+              />
+            </div>
 
-              {currentView === "calendar" && cycleSummary ? (
-                <div className="mt-4 space-y-4">
-                  <div className="grid grid-cols-3 gap-3 text-sm">
-                    <div>
-                      <p className="text-[var(--color-muted)]">周期长度</p>
-                      <p className="mt-1 text-2xl font-semibold">{cycleSummary.cycleLength}天</p>
-                    </div>
-                    <div>
-                      <p className="text-[var(--color-muted)]">月经</p>
-                      <p className="mt-1 text-2xl font-semibold">{cycleSummary.periodLength}天</p>
-                    </div>
-                    <div>
-                      <p className="text-[var(--color-muted)]">下次月经</p>
-                      <p className="mt-1 text-2xl font-semibold">
-                        {formatShortDate(cycleSummary.nextPeriodStart)}
-                      </p>
-                    </div>
+            {currentView === "calendar" && cycleSummary ? (
+              <div className="mt-4 space-y-4 pb-4">
+                <div className="grid grid-cols-3 gap-3 text-sm">
+                  <div>
+                    <p className="text-[var(--color-muted)]">周期长度</p>
+                    <p className="mt-1 text-2xl font-semibold">{cycleSummary.cycleLength}天</p>
                   </div>
-
-                  <div className="space-y-3">
-                    <p className="text-3xl font-semibold leading-none">{formatMonth(visibleCalendarMonth)}</p>
-                    <div className="grid grid-cols-7 gap-2 text-center text-xs text-[var(--color-muted)]">
-                      {weekdays.map((weekday) => (
-                        <div key={weekday}>{weekday}</div>
-                      ))}
-                    </div>
+                  <div>
+                    <p className="text-[var(--color-muted)]">月经</p>
+                    <p className="mt-1 text-2xl font-semibold">{cycleSummary.periodLength}天</p>
+                  </div>
+                  <div>
+                    <p className="text-[var(--color-muted)]">下次月经</p>
+                    <p className="mt-1 text-2xl font-semibold">{formatShortDate(cycleSummary.nextPeriodStart)}</p>
                   </div>
                 </div>
-              ) : null}
-            </header>
-          </div>
-        ) : null}
 
+                <div className="space-y-3">
+                  <p className="text-3xl font-semibold leading-none">{formatMonth(visibleCalendarMonth)}</p>
+                  <div className="grid grid-cols-7 gap-2 text-center text-xs text-[var(--color-muted)]">
+                    {weekdays.map((weekday) => (
+                      <div key={weekday}>{weekday}</div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : null}
+          </header>
+        </div>
+      ) : null}
+
+      <div className="mx-auto flex min-h-screen max-w-md flex-col gap-4 px-4 py-6 sm:px-6">
         <DevScenarioBar />
 
         {!profile ? (

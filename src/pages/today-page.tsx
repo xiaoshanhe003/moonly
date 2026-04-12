@@ -14,7 +14,9 @@ export function TodayPage() {
 
   return (
     <div className="flex flex-1 flex-col gap-4 pb-44">
-      <PhaseHeroCard summary={summary} />
+      <div id="today-phase-hero">
+        <PhaseHeroCard summary={summary} />
+      </div>
       <div className="fixed inset-x-4 bottom-4 z-[45] sm:left-1/2 sm:right-auto sm:w-[calc(100%-3rem)] sm:max-w-md sm:-translate-x-1/2">
         <QuickLogCard
           date={dateKey}
