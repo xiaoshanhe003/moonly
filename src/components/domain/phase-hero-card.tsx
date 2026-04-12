@@ -31,15 +31,6 @@ export function PhaseHeroCard({ summary }: PhaseHeroCardProps) {
 
   return (
     <section className="relative overflow-hidden px-2 pt-6">
-      <div className="pointer-events-none absolute inset-x-0 top-10 flex justify-center">
-        <div
-          className="h-56 w-56 rounded-full blur-3xl"
-          style={{
-            background: `radial-gradient(circle, ${summary.phase.color} 0%, transparent 72%)`
-          }}
-        />
-      </div>
-
       <div className={cn("relative mx-auto flex max-w-[21rem] flex-col items-center text-center", uiSpacingStyles.gapMd)}>
         <div className={cn("inline-flex items-center gap-1 font-medium", uiTextStyles.sm, uiTextStyles.muted)}>
           <button
@@ -66,8 +57,19 @@ export function PhaseHeroCard({ summary }: PhaseHeroCardProps) {
           </h1>
         </div>
 
-        <div className="flex min-h-[15rem] items-center justify-center py-4">
-          <PhaseIllustration phase={phaseKey} className="size-56 sm:size-60" />
+        <div className="relative flex min-h-[15rem] items-center justify-center py-6">
+          <div
+            className="pointer-events-none absolute inset-x-0 top-1/2 flex -translate-y-1/2 justify-center"
+            aria-hidden="true"
+          >
+            <div
+              className="h-56 w-56 rounded-full blur-3xl"
+              style={{
+                background: `radial-gradient(circle, ${summary.phase.color} 0%, transparent 72%)`
+              }}
+            />
+          </div>
+          <PhaseIllustration phase={phaseKey} className="relative z-10 size-56 sm:size-60" />
         </div>
 
         <div className={cn("flex items-center justify-center gap-3 leading-none", uiTextStyles.sm)}>

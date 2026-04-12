@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Calendar, CircleDot } from "lucide-react";
 import { TodayPage } from "../pages/today-page";
@@ -40,20 +40,18 @@ export function AppShell({ initialView }: AppShellProps) {
     }
   }, [currentView]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (previousViewRef.current === "calendar" && currentView === "today") {
-      requestAnimationFrame(() => {
-        const stickyHeader = document.querySelector("[data-sticky-shell-header]");
-        const heroCard = document.getElementById("today-phase-hero");
-        const stickyHeaderHeight = stickyHeader?.getBoundingClientRect().height ?? 0;
-        const targetTop = heroCard?.getBoundingClientRect().top ?? 0;
-        const topPadding = 8;
+      const stickyHeader = document.querySelector("[data-sticky-shell-header]");
+      const heroCard = document.getElementById("today-phase-hero");
+      const stickyHeaderHeight = stickyHeader?.getBoundingClientRect().height ?? 0;
+      const targetTop = heroCard?.getBoundingClientRect().top ?? 0;
+      const topPadding = 8;
 
-        window.scrollTo({
-          top: Math.max(0, window.scrollY + targetTop - stickyHeaderHeight - topPadding),
-          left: 0,
-          behavior: "auto"
-        });
+      window.scrollTo({
+        top: Math.max(0, window.scrollY + targetTop - stickyHeaderHeight - topPadding),
+        left: 0,
+        behavior: "auto"
       });
     }
 
