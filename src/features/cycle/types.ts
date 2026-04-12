@@ -12,7 +12,7 @@ export type PeriodSignal = "none" | "possible_start" | "confirmed_start";
 
 export type DailyEntry = {
   date: string;
-  mood?: "happy" | "calm" | "tense";
+  mood?: "great" | "happy" | "calm" | "low" | "tense";
   flow?: "none" | "light" | "medium" | "heavy";
   bleedingLevel?: BleedingLevel;
   symptoms?: string[];

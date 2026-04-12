@@ -47,7 +47,7 @@ export const scenarios: Record<
       {
         date: daysAgo(18),
         mood: "tense",
-        symptoms: ["痉挛", "疲惫"],
+        symptoms: ["腹痛", "疲惫"],
         flow: "heavy",
         bleedingLevel: "heavy",
         periodSignal: "possible_start"

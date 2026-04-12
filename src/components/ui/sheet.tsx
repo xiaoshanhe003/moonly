@@ -40,7 +40,7 @@ export function Sheet({ header, onClose, bodyClassName, contentClassName, childr
         <div className={uiLayoutStyles.sheetHeader}>
           <div>{header}</div>
           <Button variant="ghost" size="icon" onClick={onClose}>
-            <X className="size-4" />
+            <X className="size-5" />
           </Button>
         </div>
 

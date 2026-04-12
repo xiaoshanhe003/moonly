@@ -17,9 +17,11 @@ type CalendarCellTone = {
 };
 
 const moodEmojiMap: Record<NonNullable<DailyEntry["mood"]>, string> = {
-  happy: "😄",
+  great: "😆",
+  happy: "☺️",
   calm: "🙂",
-  tense: "😣"
+  low: "🥲",
+  tense: "😭"
 };
 
 const phaseFamilyMap: Record<string, string> = {
