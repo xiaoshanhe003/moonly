@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
+import { PhaseIllustration } from "../components/domain/phase-illustration";
 import { getCycleSummary, type PhaseKey } from "../features/cycle/cycle";
 import { useCycleStore } from "../features/cycle/store";
 import { cn } from "../lib/utils";
@@ -146,12 +147,13 @@ export function PhaseSciencePage() {
 
   const [activeTab, setActiveTab] = useState<ScienceTabKey>(initialPhase);
   const activeContent = scienceContentMap[activeTab];
+  const activeIllustrationPhase = activeTab === "overview" ? getPhaseKeyFromLabel(summary.phase.label) ?? "follicular" : activeTab;
 
   return (
     <main className="min-h-screen bg-[color:var(--background)] px-4 py-6 text-[color:var(--foreground)] sm:px-6">
       <div className="mx-auto flex min-h-[calc(100vh-3rem)] max-w-md flex-col gap-4">
         <div className="sticky top-4 z-40">
-          <header className="overflow-hidden rounded-[32px] border border-[color:var(--border-strong)] bg-[color:var(--card-elevated)] shadow-[var(--shadow-soft)] backdrop-blur">
+          <header className="overflow-hidden rounded-[var(--radius-xl)] border border-[color:var(--border-strong)] bg-[color:var(--card-elevated)] shadow-[var(--shadow-soft)] backdrop-blur">
             <div className="px-4 pt-3">
               <Button variant="ghost" size="icon" onClick={() => navigate(-1)} aria-label="返回">
                 <ArrowLeft className="size-4" />
@@ -190,7 +192,18 @@ export function PhaseSciencePage() {
           </header>
         </div>
 
-        <section className="rounded-[32px] border border-[color:var(--border-strong)] bg-[color:var(--card)] p-5 shadow-[var(--shadow-card)] backdrop-blur">
+        <section className="rounded-[var(--radius-xl)] border border-[color:var(--border-strong)] bg-[color:var(--card)] p-5 shadow-[var(--shadow-card)] backdrop-blur">
+          <div className="mb-8 flex justify-center">
+            <div
+              className="flex size-64 items-center justify-center rounded-full"
+              style={{
+                background: `radial-gradient(circle, var(--phase-${activeIllustrationPhase}) 0%, transparent 58%)`
+              }}
+            >
+              <PhaseIllustration phase={activeIllustrationPhase} className="size-52" />
+            </div>
+          </div>
+
           <div>
             <h1 className="text-3xl font-semibold leading-none">{activeContent.label}</h1>
             <p className={cn("mt-3 text-sm leading-6", uiTextStyles.muted)}>{activeContent.overview}</p>

@@ -25,7 +25,7 @@ export function SegmentedControl({ value, onChange, items }: SegmentedControlPro
             type="button"
             onClick={() => onChange(item.value)}
             className={cn(
-              "inline-flex items-center gap-2 rounded-[14px] px-4 py-2 text-sm transition",
+              "inline-flex items-center gap-2 rounded-[12px] px-4 py-2 text-sm transition",
               active
                 ? "bg-[color:var(--card-elevated)] text-[color:var(--foreground)] shadow-sm"
                 : uiTextStyles.muted

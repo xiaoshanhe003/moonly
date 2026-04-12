@@ -1,16 +1,30 @@
-import { BookOpen, MoonStar, Sparkle } from "lucide-react";
+import { BookOpen, Sparkle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "../ui/card";
 import type { ReturnTypeOfGetCycleSummary } from "../../types/helper";
 import { cn } from "../../lib/utils";
+import type { PhaseKey } from "../../features/cycle/cycle";
+import { PhaseIllustration } from "./phase-illustration";
 import { uiSpacingStyles, uiSurfaceStyles, uiTextStyles } from "../ui/styles";
 
 type PhaseHeroCardProps = {
   summary: ReturnTypeOfGetCycleSummary;
 };
 
+function getPhaseKeyFromLabel(label: string): PhaseKey {
+  const labelMap: Record<string, PhaseKey> = {
+    月经期: "menstrual",
+    卵泡期: "follicular",
+    排卵期: "ovulation",
+    黄体期: "luteal"
+  };
+
+  return labelMap[label] ?? "follicular";
+}
+
 export function PhaseHeroCard({ summary }: PhaseHeroCardProps) {
   const navigate = useNavigate();
+  const phaseKey = getPhaseKeyFromLabel(summary.phase.label);
 
     return (
     <Card className="overflow-hidden">
@@ -43,12 +57,12 @@ export function PhaseHeroCard({ summary }: PhaseHeroCardProps) {
 
         <div className="my-8 flex justify-center">
           <div
-            className="flex size-52 items-center justify-center rounded-full"
+            className="flex size-64 items-center justify-center rounded-full"
             style={{
               background: `radial-gradient(circle, ${summary.phase.color} 0%, transparent 58%)`
             }}
           >
-            <MoonStar className="size-24 text-[color:var(--foreground)]" strokeWidth={1.2} />
+            <PhaseIllustration phase={phaseKey} className="size-52" />
           </div>
         </div>
 

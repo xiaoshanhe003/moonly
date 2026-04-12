@@ -11,10 +11,10 @@ export function DevScenarioBar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (
-    <div className="pointer-events-none fixed left-0 top-24 z-30 flex max-w-[calc(100vw-1rem)] items-start">
+    <div className="pointer-events-none fixed left-0 top-24 z-[60] flex max-w-[calc(100vw-1rem)] items-start">
       <aside
         className={cn(
-          "pointer-events-auto ml-2 flex w-72 flex-col gap-3 rounded-[24px] border border-dashed border-[color:var(--border)] bg-[color:var(--card-elevated)] p-3 shadow-[var(--shadow-card)] backdrop-blur transition-transform duration-300",
+          "pointer-events-auto ml-2 flex w-72 flex-col gap-3 rounded-[var(--radius-lg)] border border-dashed border-[color:var(--border)] bg-[color:var(--card-elevated)] p-3 shadow-[var(--shadow-card)] backdrop-blur transition-transform duration-300",
           isCollapsed && "-translate-x-[calc(100%-3rem)]"
         )}
       >

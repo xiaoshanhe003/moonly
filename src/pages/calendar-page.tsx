@@ -137,7 +137,7 @@ export function CalendarPage({ onVisibleMonthChange }: CalendarPageProps) {
             {item.label}
           </div>
         ))}
-        <div>浅色日期表示预测</div>
+        <div>过去和未来都保留周期色，未来会更淡</div>
       </Card>
 
       {selectedDateKey && selectedEntry && selectedDateValue ? (

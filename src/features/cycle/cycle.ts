@@ -470,7 +470,7 @@ export function buildMonthGrid(
   const monthStart = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
   const monthEnd = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0);
   const startWeekday = monthStart.getDay();
-  const predictionStart = startOfDay(parseDateKey(profile.lastPeriodStart));
+  const normalizedToday = startOfDay(today);
   const cells: Array<{
     date: Date;
     inMonth: boolean;
@@ -483,11 +483,12 @@ export function buildMonthGrid(
   for (let i = 0; i < 42; i += 1) {
     const date = addDays(monthStart, i - startWeekday);
     const summary = getCycleSummary(profile, entries, date);
-    const isPredictable = startOfDay(date).getTime() >= predictionStart.getTime();
+    const normalizedDate = startOfDay(date);
+    const isPredictable = normalizedDate.getTime() > normalizedToday.getTime();
     cells.push({
       date,
       inMonth: date >= monthStart && date <= monthEnd,
-      isToday: startOfDay(date).getTime() === startOfDay(today).getTime(),
+      isToday: normalizedDate.getTime() === normalizedToday.getTime(),
       isPredictable,
       phase: summary.phase,
       dayOfMonth: date.getDate()
