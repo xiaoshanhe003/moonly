@@ -470,6 +470,8 @@ export function buildMonthGrid(
   const monthStart = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
   const monthEnd = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0);
   const startWeekday = monthStart.getDay();
+  const daysInMonth = monthEnd.getDate();
+  const totalCells = Math.ceil((startWeekday + daysInMonth) / 7) * 7;
   const normalizedToday = startOfDay(today);
   const cells: Array<{
     date: Date;
@@ -480,7 +482,7 @@ export function buildMonthGrid(
     dayOfMonth: number;
   }> = [];
 
-  for (let i = 0; i < 42; i += 1) {
+  for (let i = 0; i < totalCells; i += 1) {
     const date = addDays(monthStart, i - startWeekday);
     const summary = getCycleSummary(profile, entries, date);
     const normalizedDate = startOfDay(date);

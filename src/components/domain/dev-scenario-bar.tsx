@@ -11,7 +11,7 @@ const DEFAULT_TOP = 96;
 export function DevScenarioBar() {
   const activeScenario = useCycleStore((state) => state.activeScenario);
   const loadScenario = useCycleStore((state) => state.loadScenario);
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const panelRef = useRef<HTMLElement | null>(null);
   const dragStateRef = useRef({
     pointerId: null as number | null,

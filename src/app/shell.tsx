@@ -101,10 +101,12 @@ export function AppShell({ initialView }: AppShellProps) {
 
                 <div className="space-y-3.5">
                   <div className="flex items-baseline gap-2">
-                    <p className={cn("font-semibold leading-none tracking-[-0.04em]", uiTextStyles.xl)}>
+                    <p className={cn("font-semibold leading-none tracking-[-0.04em]", uiTextStyles.xxl)}>
                       {visibleMonthLabel}
                     </p>
-                    <span className={cn("leading-none", uiTextStyles.sm, uiTextStyles.muted)}>{visibleYearLabel}</span>
+                    <span className={cn("font-semibold leading-none tracking-[-0.04em]", uiTextStyles.xxl)}>
+                      {visibleYearLabel}
+                    </span>
                   </div>
                   <div className={cn("grid grid-cols-7 gap-2.5 text-center", uiTextStyles.xs, uiTextStyles.muted)}>
                     {weekdays.map((weekday) => (

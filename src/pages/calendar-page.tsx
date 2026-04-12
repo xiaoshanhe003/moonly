@@ -31,12 +31,13 @@ type CalendarPageProps = {
   onVisibleMonthChange?: (monthKey: string) => void;
 };
 
+const STICKY_HEADER_BUFFER = 8;
+
 const legendItems = [
   { label: "月经期", color: "var(--phase-menstrual)" },
   { label: "卵泡期", color: "var(--phase-follicular)" },
   { label: "排卵期", color: "var(--phase-ovulation)" },
-  { label: "黄体期", color: "var(--phase-luteal)" },
-  { label: "已记录", color: "var(--foreground)" }
+  { label: "黄体期", color: "var(--phase-luteal)" }
 ] as const;
 
 export function CalendarPage({ onVisibleMonthChange }: CalendarPageProps) {
@@ -51,26 +52,43 @@ export function CalendarPage({ onVisibleMonthChange }: CalendarPageProps) {
   const monthRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [selectedDateKey, setSelectedDateKey] = useState<string | null>(null);
   const [visibleMonthKey, setVisibleMonthKey] = useState(currentMonthKey);
+  const [stickyHeaderOffset, setStickyHeaderOffset] = useState(0);
   const selectedEntry = selectedDateKey ? entries[selectedDateKey] : undefined;
   const selectedDateValue = useMemo(
     () => (selectedDateKey ? parseDateKey(selectedDateKey) : null),
     [selectedDateKey]
   );
+
   useEffect(() => {
-    if (hasScrolledToCurrentMonth.current) {
+    const updateStickyHeaderOffset = () => {
+      const stickyHeader = document.querySelector("[data-sticky-shell-header]");
+      const stickyHeaderHeight = stickyHeader?.getBoundingClientRect().height ?? 0;
+      setStickyHeaderOffset(stickyHeaderHeight > 0 ? stickyHeaderHeight + STICKY_HEADER_BUFFER : 0);
+    };
+
+    updateStickyHeaderOffset();
+    window.addEventListener("resize", updateStickyHeaderOffset);
+
+    return () => {
+      window.removeEventListener("resize", updateStickyHeaderOffset);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (hasScrolledToCurrentMonth.current || stickyHeaderOffset === 0) {
       return;
     }
 
     currentMonthRef.current?.scrollIntoView({
       block: "start"
     });
-    window.scrollBy({ top: -280, behavior: "instant" });
+    window.scrollBy({ top: -stickyHeaderOffset, behavior: "instant" });
     hasScrolledToCurrentMonth.current = true;
-  }, []);
+  }, [stickyHeaderOffset]);
 
   useEffect(() => {
     const updateVisibleMonth = () => {
-      const threshold = 220;
+      const threshold = stickyHeaderOffset;
       let nextMonthKey = months[0]?.toISOString() ?? currentMonthKey;
 
       for (const month of months) {
@@ -99,7 +117,7 @@ export function CalendarPage({ onVisibleMonthChange }: CalendarPageProps) {
       window.removeEventListener("scroll", updateVisibleMonth);
       window.removeEventListener("resize", updateVisibleMonth);
     };
-  }, [currentMonthKey, months]);
+  }, [currentMonthKey, months, stickyHeaderOffset]);
 
   useEffect(() => {
     onVisibleMonthChange?.(visibleMonthKey);
@@ -117,7 +135,9 @@ export function CalendarPage({ onVisibleMonthChange }: CalendarPageProps) {
                 currentMonthRef.current = node;
               }
             }}
-            className={month.toISOString() === currentMonthKey ? "scroll-mt-72" : undefined}
+            style={{
+              scrollMarginTop: stickyHeaderOffset
+            }}
           >
             <CalendarMonthCard
               monthDate={month}
@@ -130,15 +150,21 @@ export function CalendarPage({ onVisibleMonthChange }: CalendarPageProps) {
         ))}
       </div>
 
-      <Card className={["sticky bottom-4 z-30 flex flex-wrap gap-4 text-sm", uiTextStyles.muted].join(" ")}>
-        {legendItems.map((item) => (
-          <div key={item.label} className="flex items-center gap-2">
-            <span className="size-3 rounded-full" style={{ backgroundColor: item.color }} />
-            {item.label}
-          </div>
-        ))}
-        <div>过去和未来都保留周期色，未来会更淡</div>
-      </Card>
+      <div className="fixed inset-x-0 bottom-0 z-30">
+        <Card
+          className={[
+            "mx-auto flex max-w-md flex-wrap gap-4 rounded-b-none border-b-0 px-4 pb-5 pt-3 text-sm shadow-none sm:px-6",
+            uiTextStyles.muted
+          ].join(" ")}
+        >
+          {legendItems.map((item) => (
+            <div key={item.label} className="flex items-center gap-2">
+              <span className="size-3 rounded-full" style={{ backgroundColor: item.color }} />
+              {item.label}
+            </div>
+          ))}
+        </Card>
+      </div>
 
       {selectedDateKey && selectedEntry && selectedDateValue ? (
         <CalendarEntrySheet

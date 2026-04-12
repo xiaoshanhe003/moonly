@@ -1,4 +1,3 @@
-import { Card } from "../ui/card";
 import { buildMonthGrid } from "../../features/cycle/cycle";
 import type { CycleProfile, DailyEntry } from "../../features/cycle/types";
 import { cn } from "../../lib/utils";
@@ -47,16 +46,10 @@ export function CalendarMonthCard({ monthDate, profile, entries, today, onEntryC
   const cells = buildMonthGrid(profile, entries, monthDate, today);
 
   return (
-    <Card className="space-y-4">
-      <div className="space-y-3 border-b border-[color:var(--border)] pb-4">
-        <div className="flex items-baseline gap-2">
-          <h2 className="text-[length:var(--text-lg)] font-semibold leading-none tracking-[-0.04em] text-[color:var(--foreground)]">
-            {monthDate.getMonth() + 1}月
-          </h2>
-          <span className={cn("leading-none", uiTextStyles.sm, uiTextStyles.muted)}>{monthDate.getFullYear()}</span>
-        </div>
-      </div>
-
+    <section className="space-y-0">
+      <h2 className="mb-4 text-[length:var(--text-lg)] font-semibold leading-none tracking-[-0.04em] text-[color:var(--foreground)]">
+        {monthDate.getMonth() + 1}月
+      </h2>
       <div className="grid grid-cols-7 gap-2">
         {cells.map((cell, index) => {
           const dateKey = formatDateKey(cell.date);
@@ -114,6 +107,6 @@ export function CalendarMonthCard({ monthDate, profile, entries, today, onEntryC
           );
         })}
       </div>
-    </Card>
+    </section>
   );
 }
