@@ -77,7 +77,7 @@ export function AppShell({ initialView }: AppShellProps) {
             </div>
 
             {currentView === "calendar" && cycleSummary ? (
-              <div className="mt-6 space-y-6 pb-4">
+              <div className="mt-6 space-y-6">
                 <div className="flex gap-[var(--space-10)] pb-6">
                   <div className="min-w-0">
                     <p className={cn("leading-none", uiTextStyles.sm, uiTextStyles.muted)}>周期长度</p>

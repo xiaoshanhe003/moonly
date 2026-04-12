@@ -32,6 +32,7 @@ type CalendarPageProps = {
 };
 
 const STICKY_HEADER_BUFFER = 8;
+const INITIAL_CALENDAR_SCROLL_NUDGE = 4;
 
 const legendItems = [
   { label: "月经期", color: "var(--phase-menstrual-400)" },
@@ -78,8 +79,19 @@ export function CalendarPage({ onVisibleMonthChange }: CalendarPageProps) {
       return;
     }
 
-    monthRefs.current[currentMonthKey]?.scrollIntoView({
-      block: "start"
+    const currentMonthElement = monthRefs.current[currentMonthKey];
+
+    requestAnimationFrame(() => {
+      const firstDayContent = currentMonthElement?.querySelector("[data-calendar-day-content]");
+      const firstDayContentTop = firstDayContent?.getBoundingClientRect().top;
+
+      if (firstDayContentTop !== undefined) {
+        window.scrollTo({
+          top: Math.max(0, window.scrollY + firstDayContentTop - stickyHeaderOffset + INITIAL_CALENDAR_SCROLL_NUDGE),
+          left: 0,
+          behavior: "auto"
+        });
+      }
     });
     hasScrolledToCurrentMonth.current = true;
   }, [currentMonthKey, stickyHeaderOffset]);
