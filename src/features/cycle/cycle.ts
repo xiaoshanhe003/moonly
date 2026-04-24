@@ -283,6 +283,11 @@ function hasTrackedBleeding(entry?: DailyEntry) {
   return level !== undefined && level !== "none";
 }
 
+function hasTrackedNoBleeding(entry?: DailyEntry) {
+  const level = getBleedingLevel(entry);
+  return level === "none";
+}
+
 function buildBaseCycleSummary(profile: CycleProfile, today: Date) {
   const start = parseDateKey(profile.lastPeriodStart);
   const elapsed = diffInDays(today, start);
@@ -410,12 +415,24 @@ function resolveCycleMetrics(
     (item) => item.event.confidence === "confirmed" || item.event.confidence === "inferred"
   );
   const latestReliable = reliableEvents.at(-1);
+  const normalizedToday = startOfDay(today);
+  const completedReliableEvents = reliableEvents.filter((item, index) => {
+    if (index < reliableEvents.length - 1) {
+      return true;
+    }
+
+    return Object.values(entries).some((entry) => {
+      const entryDate = startOfDay(parseDateKey(entry.date));
+      return entryDate > startOfDay(item.streak.end) && entryDate <= normalizedToday && hasTrackedNoBleeding(entry);
+    });
+  });
+  const latestCompletedReliable = completedReliableEvents.at(-1);
 
   const recentEventDates = reliableEvents.slice(-4).map((item) => item.event.date);
   const recentIntervals = recentEventDates.slice(1).map((date, index) => diffInDays(date, recentEventDates[index]));
 
   const cycleLength = recentIntervals.length > 0 ? average(recentIntervals) : profile.cycleLength;
-  const periodLength = latestReliable?.streak.levels.length ?? profile.periodLength;
+  const periodLength = latestCompletedReliable?.streak.levels.length ?? profile.periodLength;
   const lastPeriodStart = latestReliable?.event.date ?? parseDateKey(profile.lastPeriodStart);
 
   return {
