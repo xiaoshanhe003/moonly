@@ -13,6 +13,7 @@ export type PeriodSignal = "none" | "possible_start" | "confirmed_start";
 export type DailyEntry = {
   date: string;
   mood?: "great" | "happy" | "calm" | "low" | "tense";
+  energy?: "low" | "medium" | "higher" | "high";
   flow?: "none" | "light" | "medium" | "heavy";
   bleedingLevel?: BleedingLevel;
   symptoms?: string[];
@@ -20,7 +21,7 @@ export type DailyEntry = {
   isPeriodStart?: boolean;
 };
 
-export type QuickLogStep = "mood" | "symptoms" | "flow";
+export type QuickLogStep = "mood" | "energy" | "symptoms" | "flow";
 
 export type AppScenario =
   | "first-run"

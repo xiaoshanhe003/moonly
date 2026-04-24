@@ -398,6 +398,22 @@ function classifyPeriodStart(
   return null;
 }
 
+function isCompletedPeriodStreak(
+  streak: BleedingStreak,
+  entries: Record<string, DailyEntry>,
+  today: Date,
+  profile: CycleProfile
+) {
+  const normalizedToday = startOfDay(today);
+  const streakEnd = startOfDay(streak.end);
+  const hasLaterNoBleedingEntry = Object.values(entries).some((entry) => {
+    const entryDate = startOfDay(parseDateKey(entry.date));
+    return entryDate > streakEnd && entryDate <= normalizedToday && hasTrackedNoBleeding(entry);
+  });
+
+  return hasLaterNoBleedingEntry || diffInDays(normalizedToday, streakEnd) >= profile.periodLength;
+}
+
 function resolveCycleMetrics(
   profile: CycleProfile,
   entries: Record<string, DailyEntry>,
@@ -415,16 +431,12 @@ function resolveCycleMetrics(
     (item) => item.event.confidence === "confirmed" || item.event.confidence === "inferred"
   );
   const latestReliable = reliableEvents.at(-1);
-  const normalizedToday = startOfDay(today);
   const completedReliableEvents = reliableEvents.filter((item, index) => {
     if (index < reliableEvents.length - 1) {
       return true;
     }
 
-    return Object.values(entries).some((entry) => {
-      const entryDate = startOfDay(parseDateKey(entry.date));
-      return entryDate > startOfDay(item.streak.end) && entryDate <= normalizedToday && hasTrackedNoBleeding(entry);
-    });
+    return isCompletedPeriodStreak(item.streak, entries, today, profile);
   });
   const latestCompletedReliable = completedReliableEvents.at(-1);
 
@@ -546,6 +558,7 @@ export function getLogProgress(entry?: DailyEntry) {
   const bleedingLevel = getBleedingLevel(entry);
   const completedSteps = [
     entry?.mood ? "mood" : null,
+    entry?.energy ? "energy" : null,
     entry?.symptoms !== undefined ? "symptoms" : null,
     bleedingLevel !== undefined ? "flow" : null
   ].filter(Boolean);
@@ -554,7 +567,7 @@ export function getLogProgress(entry?: DailyEntry) {
     return "pending";
   }
 
-  if (completedSteps.length === 3) {
+  if (completedSteps.length === 4) {
     return "complete";
   }
 
@@ -564,6 +577,10 @@ export function getLogProgress(entry?: DailyEntry) {
 export function getSuggestedStep(entry?: DailyEntry) {
   if (!entry?.mood) {
     return "mood";
+  }
+
+  if (!entry?.energy) {
+    return "energy";
   }
 
   if (entry?.symptoms === undefined) {

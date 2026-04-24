@@ -9,30 +9,42 @@ import { cn } from "../../lib/utils";
 import { useCycleStore } from "../../features/cycle/store";
 import { getChoiceTileClass, uiSpacingStyles, uiTextStyles } from "../ui/styles";
 import { formatFullDate } from "../../lib/utils";
+import boredSticker from "../../assets/mood/bored.png";
+import calmSticker from "../../assets/mood/calm.png";
+import happySticker from "../../assets/mood/happy.png";
+import notHappySticker from "../../assets/mood/not_happy.png";
+import sadSticker from "../../assets/mood/sad.png";
 
 const moods = [
-  { label: "超开心", value: "great", emoji: "😆" },
-  { label: "开心", value: "happy", emoji: "☺️" },
-  { label: "鼻酸", value: "low", emoji: "🥲" },
-  { label: "想哭", value: "tense", emoji: "😭" },
-  { label: "平静", value: "calm", emoji: "🙂" }
+  { label: "超开心", value: "great", imageSrc: happySticker },
+  { label: "开心", value: "happy", imageSrc: calmSticker },
+  { label: "平静", value: "calm", imageSrc: boredSticker },
+  { label: "鼻酸", value: "low", imageSrc: notHappySticker },
+  { label: "想哭", value: "tense", imageSrc: sadSticker }
 ] as const;
 
 const moodStickerLayout: Record<
   (typeof moods)[number]["value"],
   {
     rotate: string;
-    shift: string;
+    placement: string;
+    imageSize?: string;
   }
 > = {
-  great: { rotate: "-rotate-2", shift: "-translate-y-0.5 translate-x-0.5" },
-  happy: { rotate: "rotate-1", shift: "translate-y-0.5" },
-  low: { rotate: "-rotate-1", shift: "translate-y-0.5 -translate-x-0.5" },
-  tense: { rotate: "rotate-2", shift: "-translate-y-0.5 translate-x-0.5" },
-  calm: { rotate: "-rotate-1", shift: "translate-y-1" }
+  great: { rotate: "-rotate-[7deg]", placement: "-left-1 top-1" },
+  happy: { rotate: "-rotate-[4deg]", placement: "left-[20%] top-[3.5rem] sm:top-16", imageSize: "h-[3.75rem] sm:h-[4.25rem]" },
+  calm: { rotate: "rotate-[8deg]", placement: "left-1/2 top-2 -translate-x-1/2" },
+  low: { rotate: "rotate-[5deg]", placement: "right-[19%] top-[3.7rem] sm:top-[4.15rem]" },
+  tense: { rotate: "rotate-[6deg]", placement: "-right-1 top-1" }
 };
 
 const noSymptomLabel = "没有不适";
+const energyOptions = [
+  { label: "低", value: "low" },
+  { label: "中", value: "medium" },
+  { label: "较高", value: "higher" },
+  { label: "高", value: "high" }
+] as const;
 const symptomOptions = ["疲惫", "头痛", "乳房胀痛", "腹胀", "腹痛", "腰酸"];
 const flowOptions = [
   { label: "无", value: "none" },
@@ -41,7 +53,7 @@ const flowOptions = [
   { label: "中等", value: "medium" },
   { label: "较多", value: "heavy" }
 ] as const;
-const stepOrder: QuickLogStep[] = ["mood", "symptoms", "flow"];
+const stepOrder: QuickLogStep[] = ["mood", "energy", "symptoms", "flow"];
 
 type CompletedLogDetailsProps = {
   entry?: DailyEntry;
@@ -83,13 +95,13 @@ function SelectionPill({
 
 function MoodSticker({
   active,
-  emoji,
+  imageSrc,
   label,
   value,
   onClick
 }: {
   active: boolean;
-  emoji: string;
+  imageSrc: string;
   label: string;
   value: (typeof moods)[number]["value"];
   onClick: () => void;
@@ -103,17 +115,20 @@ function MoodSticker({
       aria-label={label}
       title={label}
       className={cn(
-        "flex h-16 w-16 items-center justify-center rounded-full border shadow-[0_14px_30px_rgba(15,23,42,0.08)] transition duration-200 active:scale-[0.98] sm:h-18 sm:w-18",
+        "absolute inline-flex shrink-0 items-center justify-center rounded-[var(--radius-lg)] border bg-transparent transition duration-200 active:scale-[0.98]",
+        layout.placement,
         layout.rotate,
-        layout.shift,
         active
-          ? "border-[color:var(--foreground)] bg-[color:var(--muted-strong)] text-[color:var(--foreground)] shadow-[0_0_0_1px_var(--foreground)_inset,0_18px_36px_rgba(15,23,42,0.12)]"
-          : "border-[color:var(--border)] bg-[color:var(--card-elevated)] text-[color:var(--foreground)] hover:-translate-y-0.5"
+          ? "border-[color:var(--foreground)] shadow-[0_0_0_1px_var(--foreground)_inset,0_18px_36px_rgba(15,23,42,0.12)]"
+          : "border-transparent hover:-translate-y-0.5"
       )}
     >
-      <span className="text-[2.6rem] leading-none sm:text-[3rem]" aria-hidden="true">
-        {emoji}
-      </span>
+      <img
+        src={imageSrc}
+        alt=""
+        className={cn("w-auto object-contain", layout.imageSize ?? "h-14 sm:h-16")}
+        aria-hidden="true"
+      />
     </button>
   );
 }
@@ -127,12 +142,14 @@ function MoodValue({ mood }: { mood?: DailyEntry["mood"] }) {
 
   return (
     <span className="inline-flex items-center gap-2">
-      <span className="text-base leading-none" aria-hidden="true">
-        {moodItem.emoji}
-      </span>
+      <img src={moodItem.imageSrc} alt="" className="h-8 w-8 object-contain" aria-hidden="true" />
       <span>{moodItem.label}</span>
     </span>
   );
+}
+
+function EnergyValue({ energy }: { energy?: DailyEntry["energy"] }) {
+  return energyOptions.find((item) => item.value === energy)?.label ?? "未记录";
 }
 
 function parseDateKey(dateKey: string) {
@@ -161,6 +178,12 @@ export function LogAnswerSummary({ entry }: { entry?: DailyEntry }) {
         <div className="mt-2 text-base font-medium text-[color:var(--foreground)]">
           <MoodValue mood={entry?.mood} />
         </div>
+      </div>
+      <div>
+        <p className={uiTextStyles.sectionLabel}>能量</p>
+        <p className="mt-2 text-base font-medium text-[color:var(--foreground)]">
+          <EnergyValue energy={entry?.energy} />
+        </p>
       </div>
       <div>
         <p className={uiTextStyles.sectionLabel}>身体症状</p>
@@ -206,15 +229,29 @@ export function CompletedLogDetails({ entry, onChange }: CompletedLogDetailsProp
     <div className="grid gap-8">
       <div className="grid gap-3">
         <p className={questionClassName}>今天心情如何？</p>
-        <div className="grid grid-cols-5 justify-items-center gap-3">
+        <div className="relative mx-auto h-[7.5rem] w-full max-w-[19rem] sm:h-[8.25rem] sm:max-w-[21rem]">
           {moods.map((mood) => (
             <MoodSticker
               key={mood.value}
               active={entry?.mood === mood.value}
-              emoji={mood.emoji}
+              imageSrc={mood.imageSrc}
               label={mood.label}
               value={mood.value}
               onClick={() => onChange({ mood: mood.value })}
+            />
+          ))}
+        </div>
+      </div>
+
+      <div className="grid gap-3">
+        <p className={questionClassName}>感觉体内的能量如何？</p>
+        <div className="flex flex-wrap gap-2">
+          {energyOptions.map((energy) => (
+            <SelectionPill
+              key={energy.value}
+              active={entry?.energy === energy.value}
+              label={energy.label}
+              onClick={() => onChange({ energy: energy.value })}
             />
           ))}
         </div>
@@ -399,6 +436,7 @@ export function QuickLogCard({
   const completedLabels = useMemo(() => {
     const labels = [];
     if (entry?.mood) labels.push("心情");
+    if (entry?.energy) labels.push("能量");
     if (entry?.symptoms !== undefined) labels.push("症状");
     if (bleedingLevel !== undefined) labels.push("出血");
     if (entry?.periodSignal && entry.periodSignal !== "none") labels.push("经期信号");
@@ -419,21 +457,47 @@ export function QuickLogCard({
             <p className={cn("text-sm font-medium", uiTextStyles.muted)}>{progressText}</p>
           </div>
           <div className="mt-4 rounded-[calc(var(--radius-xl)+10px)] bg-[linear-gradient(180deg,rgba(255,255,255,0.84),rgba(255,255,255,0.56))] px-3 py-4">
-            <div className="grid grid-cols-5 justify-items-center gap-3">
+            <div className="relative mx-auto h-[7.5rem] w-full max-w-[19rem] sm:h-[8.25rem] sm:max-w-[21rem]">
               {moods.map((mood) => (
                 <MoodSticker
                   key={mood.value}
                   active={entry?.mood === mood.value}
-                  emoji={mood.emoji}
+                  imageSrc={mood.imageSrc}
                   label={mood.label}
                   value={mood.value}
                   onClick={() => {
                     updateEntry(date, { mood: mood.value });
-                    setStepOverride("symptoms");
+                    setStepOverride("energy");
                   }}
                 />
               ))}
             </div>
+          </div>
+        </>
+      );
+    }
+
+    if (step === "energy") {
+      return (
+        <>
+          <div className="flex items-start justify-between gap-3">
+            <p className={questionClassName}>感觉体内的能量如何？</p>
+            <p className={cn("text-sm font-medium", uiTextStyles.muted)}>{progressText}</p>
+          </div>
+          <div className="mt-4 grid grid-cols-4 gap-2">
+            {energyOptions.map((energy) => (
+              <button
+                key={energy.value}
+                type="button"
+                onClick={() => {
+                  updateEntry(date, { energy: energy.value });
+                  setStepOverride("symptoms");
+                }}
+                className={getChoiceTileClass(entry?.energy === energy.value)}
+              >
+                {energy.label}
+              </button>
+            ))}
           </div>
         </>
       );
