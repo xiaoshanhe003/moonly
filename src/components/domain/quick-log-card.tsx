@@ -1,9 +1,14 @@
-import { useMemo, useState } from "react";
-import { Check, ChevronRight } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ChevronRight } from "lucide-react";
 import energyFullSticker from "../../assets/energy/full.png";
 import energyHighSticker from "../../assets/energy/high.png";
 import energyLowSticker from "../../assets/energy/low.png";
 import energyMidSticker from "../../assets/energy/mid.png";
+import flowHeavySticker from "../../assets/flow/heavy.png";
+import flowLightSticker from "../../assets/flow/light.png";
+import flowMediumSticker from "../../assets/flow/medium.png";
+import flowNoneSticker from "../../assets/flow/none.png";
+import flowSpottingSticker from "../../assets/flow/spotting.png";
 import selectedSticker from "../../assets/stickers/selected.png";
 import { Card } from "../ui/card";
 import { Button } from "../ui/button";
@@ -12,7 +17,7 @@ import { getBleedingLevel, getCycleSummary, getLogProgress, getSuggestedStep } f
 import type { DailyEntry, QuickLogStep } from "../../features/cycle/types";
 import { cn } from "../../lib/utils";
 import { useCycleStore } from "../../features/cycle/store";
-import { getChoiceTileClass, uiSpacingStyles, uiTextStyles } from "../ui/styles";
+import { uiSpacingStyles, uiTextStyles } from "../ui/styles";
 import { formatFullDate } from "../../lib/utils";
 import { getMoodOption, moodOptions, type MoodValue } from "./mood-options";
 import { stickerShadowStyles } from "./mood-sticker-styles";
@@ -42,13 +47,15 @@ const energyOptions = [
 const symptomOptions = ["疲惫", "头痛", "乳房胀痛", "腹痛", "腰痛"];
 const symptomStickerRotations = ["-rotate-[3deg]", "rotate-[2deg]", "-rotate-[1deg]", "rotate-[3deg]", "-rotate-[2deg]", "rotate-[1deg]"] as const;
 const flowOptions = [
-  { label: "无", value: "none" },
-  { label: "点滴", value: "spotting" },
-  { label: "少量", value: "light" },
-  { label: "中等", value: "medium" },
-  { label: "较多", value: "heavy" }
+  { label: "无", value: "none", imageSrc: flowNoneSticker, rotate: "-rotate-[5deg]", imageClassName: "h-[3.85rem] sm:h-[4.25rem]" },
+  { label: "点滴", value: "spotting", imageSrc: flowSpottingSticker, rotate: "rotate-[4deg]", imageClassName: "h-[3.75rem] sm:h-[4.15rem]" },
+  { label: "少量", value: "light", imageSrc: flowLightSticker, rotate: "-rotate-[4deg]", imageClassName: "h-[4.65rem] sm:h-[5.1rem]" },
+  { label: "中等", value: "medium", imageSrc: flowMediumSticker, rotate: "rotate-[3deg]", imageClassName: "h-[4.65rem] sm:h-[5.1rem]" },
+  { label: "较多", value: "heavy", imageSrc: flowHeavySticker, rotate: "-rotate-[2deg]", imageClassName: "h-[4.65rem] sm:h-[5.1rem]" }
 ] as const;
 const stepOrder: QuickLogStep[] = ["mood", "energy", "symptoms", "flow"];
+const autoAdvanceDelayMs = 520;
+type FlowOption = (typeof flowOptions)[number];
 
 type CompletedLogDetailsProps = {
   entry?: DailyEntry;
@@ -61,32 +68,6 @@ type CompletedRecordSheetContentProps = {
   allowEditing?: boolean;
   onSave: (entry: DailyEntry) => void;
 };
-
-function SelectionPill({
-  active,
-  label,
-  onClick
-}: {
-  active: boolean;
-  label: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "inline-flex items-center gap-[var(--space-2)] rounded-full border px-[var(--space-4)] py-[var(--space-2)] text-sm transition",
-        active
-          ? "border-[color:var(--foreground)] bg-[color:var(--muted-strong)] text-[color:var(--foreground)] shadow-[0_0_0_1px_var(--foreground)_inset]"
-          : "border-[color:var(--border)] bg-[color:var(--muted)] text-[color:var(--foreground)]"
-      )}
-    >
-      {active ? <Check className="size-4" /> : <span className="size-4 rounded-full border border-[color:var(--border)]" aria-hidden="true" />}
-      {label}
-    </button>
-  );
-}
 
 function SelectedStickerMark({ className }: { className?: string }) {
   return (
@@ -224,6 +205,62 @@ function EnergyStickerButton({
   );
 }
 
+function FlowStickerButton({
+  active,
+  dimInactive = false,
+  option,
+  onClick
+}: {
+  active: boolean;
+  dimInactive?: boolean;
+  option: FlowOption;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={option.label}
+      title={option.label}
+      className={cn(
+        "relative inline-flex min-h-[6.25rem] flex-col items-center justify-center gap-2 rounded-[var(--radius-lg)] bg-transparent px-1.5 py-1 transition duration-200 active:scale-[0.98]",
+        active ? "z-10" : cn("hover:-translate-y-0.5", dimInactive && "opacity-[0.55] hover:opacity-[0.8]")
+      )}
+    >
+      <span className={cn("relative inline-flex items-center justify-center", option.rotate)}>
+        {active ? <SelectedStickerMark className="right-1 top-1" /> : null}
+        <img
+          src={option.imageSrc}
+          alt=""
+          className={cn("w-auto object-contain", stickerShadowStyles.regular, option.imageClassName)}
+          aria-hidden="true"
+        />
+      </span>
+      <span className="text-xs font-semibold text-[color:var(--foreground)]">{option.label}</span>
+    </button>
+  );
+}
+
+function FlowValue({ bleedingLevel }: { bleedingLevel?: DailyEntry["bleedingLevel"] }) {
+  const flowItem = flowOptions.find((item) => item.value === bleedingLevel);
+
+  if (!flowItem) {
+    return <>未记录</>;
+  }
+
+  return (
+    <span className="inline-flex items-center gap-2">
+      <img
+        src={flowItem.imageSrc}
+        alt=""
+        className={cn("h-8 w-auto object-contain", stickerShadowStyles.compact)}
+        aria-hidden="true"
+      />
+      <span>{flowItem.label}</span>
+    </span>
+  );
+}
+
 function OutlinedStickerText({ label }: { label: string }) {
   const width = label.length * 24 + 32;
 
@@ -303,7 +340,6 @@ function parseDateKey(dateKey: string) {
 
 export function LogAnswerSummary({ entry }: { entry?: DailyEntry }) {
   const bleedingLevel = getBleedingLevel(entry);
-  const flowLabel = flowOptions.find((item) => item.value === bleedingLevel)?.label ?? "未记录";
   const symptomLabel =
     entry?.symptoms === undefined
       ? "未记录"
@@ -335,7 +371,9 @@ export function LogAnswerSummary({ entry }: { entry?: DailyEntry }) {
       </div>
       <div>
         <p className={uiTextStyles.sectionLabel}>出血情况</p>
-        <p className="mt-2 text-base font-medium text-[color:var(--foreground)]">{flowLabel}</p>
+        <p className="mt-2 text-base font-medium text-[color:var(--foreground)]">
+          <FlowValue bleedingLevel={bleedingLevel} />
+        </p>
         {periodSignalLabel ? <p className={cn("mt-1 text-sm", uiTextStyles.muted)}>{periodSignalLabel}</p> : null}
       </div>
     </div>
@@ -362,6 +400,7 @@ export function CompletedLogDetails({ entry, onChange }: CompletedLogDetailsProp
   const bleedingLevel = getBleedingLevel(entry);
   const canShowPeriodSignal = Boolean(bleedingLevel && bleedingLevel !== "none");
   const noSymptomSelected = entry?.symptoms !== undefined && entry.symptoms.length === 0;
+  const hasSelectedSymptoms = entry?.symptoms !== undefined;
   const questionClassName = "text-base font-medium text-[color:var(--foreground)]";
   const entryDate = entry?.date ? parseDateKey(entry.date) : null;
   const flowQuestion =
@@ -378,7 +417,7 @@ export function CompletedLogDetails({ entry, onChange }: CompletedLogDetailsProp
             <MoodSticker
               key={mood.value}
               active={entry?.mood === mood.value}
-              dimInactive
+              dimInactive={Boolean(entry?.mood)}
               imageSrc={mood.imageSrc}
               label={mood.label}
               value={mood.value}
@@ -395,7 +434,7 @@ export function CompletedLogDetails({ entry, onChange }: CompletedLogDetailsProp
             <EnergyStickerButton
               key={energy.value}
               active={entry?.energy === energy.value}
-              dimInactive
+              dimInactive={Boolean(entry?.energy)}
               imageSrc={energy.imageSrc}
               label={energy.label}
               rotate={energy.rotate}
@@ -410,7 +449,7 @@ export function CompletedLogDetails({ entry, onChange }: CompletedLogDetailsProp
         <div className="flex flex-wrap gap-2.5">
           <SymptomStickerButton
             active={noSymptomSelected}
-            dimInactive
+            dimInactive={hasSelectedSymptoms}
             label={noSymptomLabel}
             rotate="rotate-[2deg]"
             onClick={() => onChange({ symptoms: [] })}
@@ -419,7 +458,7 @@ export function CompletedLogDetails({ entry, onChange }: CompletedLogDetailsProp
             <SymptomStickerButton
               key={symptom}
               active={Boolean(entry?.symptoms?.includes(symptom))}
-              dimInactive
+              dimInactive={hasSelectedSymptoms}
               label={symptom}
               rotate={symptomStickerRotations[index % symptomStickerRotations.length]}
               onClick={() => {
@@ -441,12 +480,13 @@ export function CompletedLogDetails({ entry, onChange }: CompletedLogDetailsProp
 
       <div className="grid gap-3">
         <p className={questionClassName}>{flowQuestion}</p>
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-5 gap-1.5">
           {flowOptions.map((flow) =>
-            <SelectionPill
+            <FlowStickerButton
               key={flow.value}
               active={bleedingLevel === flow.value}
-              label={flow.label}
+              dimInactive={bleedingLevel !== undefined}
+              option={flow}
               onClick={() =>
                 onChange({
                   flow: flow.value === "spotting" ? undefined : flow.value,
@@ -582,6 +622,7 @@ export function QuickLogCard({
   const updateEntry = useCycleStore((state) => state.updateEntry);
   const [isExpanded, setIsExpanded] = useState(false);
   const [stepOverride, setStepOverride] = useState<QuickLogStep | null>(null);
+  const autoAdvanceTimeoutRef = useRef<number | null>(null);
   const progress = getLogProgress(entry);
   const nextStep = getSuggestedStep(entry);
   const currentStep = stepOverride ?? nextStep ?? "mood";
@@ -602,6 +643,26 @@ export function QuickLogCard({
   }, [bleedingLevel, entry]);
   const canShowPeriodSignal = Boolean(bleedingLevel && bleedingLevel !== "none");
   const noSymptomSelected = entry?.symptoms !== undefined && entry.symptoms.length === 0;
+  const hasSelectedSymptoms = entry?.symptoms !== undefined;
+
+  useEffect(() => {
+    return () => {
+      if (autoAdvanceTimeoutRef.current !== null) {
+        window.clearTimeout(autoAdvanceTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const scheduleStepOverride = (step: QuickLogStep | null) => {
+    if (autoAdvanceTimeoutRef.current !== null) {
+      window.clearTimeout(autoAdvanceTimeoutRef.current);
+    }
+
+    autoAdvanceTimeoutRef.current = window.setTimeout(() => {
+      setStepOverride(step);
+      autoAdvanceTimeoutRef.current = null;
+    }, autoAdvanceDelayMs);
+  };
 
   const renderStep = (step: QuickLogStep) => {
     const progressText = `${currentStepIndex}/${stepOrder.length}`;
@@ -620,13 +681,14 @@ export function QuickLogCard({
                 <MoodSticker
                   key={mood.value}
                   active={entry?.mood === mood.value}
-                  dimInactive
+                  dimInactive={Boolean(entry?.mood)}
                   imageSrc={mood.imageSrc}
                   label={mood.label}
                   value={mood.value}
                   onClick={() => {
+                    setStepOverride("mood");
                     updateEntry(date, { mood: mood.value });
-                    setStepOverride("energy");
+                    scheduleStepOverride("energy");
                   }}
                 />
               ))}
@@ -649,13 +711,14 @@ export function QuickLogCard({
                 <EnergyStickerButton
                   key={energy.value}
                   active={entry?.energy === energy.value}
-                  dimInactive
+                  dimInactive={Boolean(entry?.energy)}
                   imageSrc={energy.imageSrc}
                   label={energy.label}
                   rotate={energy.rotate}
                   onClick={() => {
+                    setStepOverride("energy");
                     updateEntry(date, { energy: energy.value });
-                    setStepOverride("symptoms");
+                    scheduleStepOverride("symptoms");
                   }}
                 />
               ))}
@@ -675,7 +738,7 @@ export function QuickLogCard({
           <div className="mt-4 flex flex-wrap gap-2.5">
             <SymptomStickerButton
               active={noSymptomSelected}
-              dimInactive
+              dimInactive={hasSelectedSymptoms}
               label={noSymptomLabel}
               rotate="rotate-[2deg]"
               onClick={() => {
@@ -689,7 +752,7 @@ export function QuickLogCard({
                 <SymptomStickerButton
                   key={symptom}
                   active={Boolean(active)}
-                  dimInactive
+                  dimInactive={hasSelectedSymptoms}
                   label={symptom}
                   rotate={symptomStickerRotations[index % symptomStickerRotations.length]}
                   onClick={() => {
@@ -728,11 +791,13 @@ export function QuickLogCard({
           <p className={questionClassName}>{flowQuestion}</p>
           <p className={cn("text-sm font-medium", uiTextStyles.muted)}>{progressText}</p>
         </div>
-        <div className="mt-4 grid grid-cols-2 gap-3">
+        <div className="mt-4 grid grid-cols-5 gap-1.5">
           {flowOptions.map((flow) => (
-            <button
+            <FlowStickerButton
               key={flow.value}
-              type="button"
+              active={bleedingLevel === flow.value}
+              dimInactive={bleedingLevel !== undefined}
+              option={flow}
               onClick={() =>
                 updateEntry(date, {
                   flow: flow.value === "spotting" ? undefined : flow.value,
@@ -741,10 +806,7 @@ export function QuickLogCard({
                   isPeriodStart: false
                 })
               }
-              className={getChoiceTileClass(bleedingLevel === flow.value)}
-            >
-              {flow.label}
-            </button>
+            />
           ))}
         </div>
         {canShowPeriodSignal ? (
