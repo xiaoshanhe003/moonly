@@ -81,7 +81,13 @@ export function AppShell({ initialView }: AppShellProps) {
       )}
     >
       {profile ? (
-        <div className="sticky top-0 z-40 w-full bg-[var(--color-canvas)] backdrop-blur" data-sticky-shell-header>
+        <div
+          className={cn(
+            "sticky top-0 z-40 w-full",
+            currentView === "calendar" && "bg-[var(--color-canvas)] backdrop-blur"
+          )}
+          data-sticky-shell-header
+        >
           <header className="mx-auto max-w-md px-4 pt-4 sm:px-6">
             <div className="flex items-center justify-center">
               <SegmentedControl

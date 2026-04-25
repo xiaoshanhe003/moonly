@@ -14,7 +14,7 @@ type SegmentedControlProps = {
 
 export function SegmentedControl({ value, onChange, items }: SegmentedControlProps) {
   return (
-    <div className="inline-flex rounded-2xl bg-[color:var(--muted)] p-1">
+    <div className="inline-flex rounded-2xl border border-white/45 bg-[color-mix(in_srgb,var(--muted)_86%,transparent)] p-1 backdrop-blur-xl">
       {items.map((item) => {
         const Icon = item.icon;
         const active = item.value === value;
@@ -27,7 +27,7 @@ export function SegmentedControl({ value, onChange, items }: SegmentedControlPro
             className={cn(
               "inline-flex items-center gap-2 rounded-[12px] px-4 py-2 text-sm transition",
               active
-                ? "bg-[color:var(--card-elevated)] text-[color:var(--foreground)] shadow-sm"
+                ? "bg-[color-mix(in_srgb,var(--card-elevated)_88%,transparent)] text-[color:var(--foreground)] shadow-[0_1px_4px_rgba(17,24,39,0.08)] backdrop-blur"
                 : uiTextStyles.muted
             )}
           >
