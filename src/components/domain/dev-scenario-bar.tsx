@@ -8,6 +8,10 @@ import { getOptionPillClass, uiTextStyles } from "../ui/styles";
 const PANEL_GAP = 8;
 const DEFAULT_TOP = 96;
 
+function isInteractiveTarget(target: EventTarget | null) {
+  return target instanceof Element && Boolean(target.closest("button, a, input, select, textarea"));
+}
+
 export function DevScenarioBar() {
   const activeScenario = useCycleStore((state) => state.activeScenario);
   const loadScenario = useCycleStore((state) => state.loadScenario);
@@ -49,7 +53,7 @@ export function DevScenarioBar() {
   }, []);
 
   const handlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
-    if (!panelRef.current) {
+    if (!panelRef.current || isInteractiveTarget(event.target)) {
       return;
     }
 

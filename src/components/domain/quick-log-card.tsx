@@ -101,12 +101,14 @@ function SelectedStickerMark({ className }: { className?: string }) {
 
 function MoodSticker({
   active,
+  dimInactive = false,
   imageSrc,
   label,
   value,
   onClick
 }: {
   active: boolean;
+  dimInactive?: boolean;
   imageSrc: string;
   label: string;
   value: MoodValue;
@@ -124,7 +126,7 @@ function MoodSticker({
         "absolute inline-flex shrink-0 items-center justify-center rounded-[var(--radius-lg)] border border-transparent bg-transparent transition duration-200 active:scale-[0.98]",
         layout.placement,
         layout.rotate,
-        active ? "z-10" : "hover:-translate-y-0.5"
+        active ? "z-10" : cn("hover:-translate-y-0.5", dimInactive && "opacity-[0.55] hover:opacity-[0.8]")
       )}
     >
       {active ? <SelectedStickerMark className="-right-0.5 -top-0.5" /> : null}
@@ -184,12 +186,14 @@ function EnergyValue({ energy }: { energy?: DailyEntry["energy"] }) {
 
 function EnergyStickerButton({
   active,
+  dimInactive = false,
   imageSrc,
   label,
   rotate,
   onClick
 }: {
   active: boolean;
+  dimInactive?: boolean;
   imageSrc: string;
   label: string;
   rotate: string;
@@ -204,7 +208,7 @@ function EnergyStickerButton({
       className={cn(
         "relative inline-flex min-h-[4.25rem] items-center justify-center rounded-[var(--radius-lg)] border border-transparent bg-transparent p-1.5 transition duration-200 active:scale-[0.98]",
         rotate,
-        active ? "z-10" : "hover:-translate-y-0.5"
+        active ? "z-10" : cn("hover:-translate-y-0.5", dimInactive && "opacity-[0.55] hover:opacity-[0.8]")
       )}
     >
       <span className="relative inline-flex">
@@ -262,11 +266,13 @@ function OutlinedStickerText({ label }: { label: string }) {
 
 function SymptomStickerButton({
   active,
+  dimInactive = false,
   label,
   rotate,
   onClick
 }: {
   active: boolean;
+  dimInactive?: boolean;
   label: string;
   rotate: string;
   onClick: () => void;
@@ -279,11 +285,11 @@ function SymptomStickerButton({
         "relative inline-flex min-h-10 items-center justify-center rounded-full bg-transparent px-1 py-0.5 transition duration-200 active:scale-[0.98]",
         "drop-shadow-[0_2px_2px_rgba(15,23,42,0.1)]",
         rotate,
-        active ? "z-10" : "hover:-translate-y-0.5"
+        active ? "z-10" : cn("hover:-translate-y-0.5", dimInactive && "opacity-[0.55] hover:opacity-[0.8]")
       )}
     >
       <span className="relative inline-flex">
-        {active ? <SelectedStickerMark className="-right-0.5 top-1" /> : null}
+        {active ? <SelectedStickerMark className="right-1.5 top-2.5" /> : null}
         <OutlinedStickerText label={label} />
       </span>
     </button>
@@ -372,6 +378,7 @@ export function CompletedLogDetails({ entry, onChange }: CompletedLogDetailsProp
             <MoodSticker
               key={mood.value}
               active={entry?.mood === mood.value}
+              dimInactive
               imageSrc={mood.imageSrc}
               label={mood.label}
               value={mood.value}
@@ -388,6 +395,7 @@ export function CompletedLogDetails({ entry, onChange }: CompletedLogDetailsProp
             <EnergyStickerButton
               key={energy.value}
               active={entry?.energy === energy.value}
+              dimInactive
               imageSrc={energy.imageSrc}
               label={energy.label}
               rotate={energy.rotate}
@@ -402,6 +410,7 @@ export function CompletedLogDetails({ entry, onChange }: CompletedLogDetailsProp
         <div className="flex flex-wrap gap-2.5">
           <SymptomStickerButton
             active={noSymptomSelected}
+            dimInactive
             label={noSymptomLabel}
             rotate="rotate-[2deg]"
             onClick={() => onChange({ symptoms: [] })}
@@ -410,6 +419,7 @@ export function CompletedLogDetails({ entry, onChange }: CompletedLogDetailsProp
             <SymptomStickerButton
               key={symptom}
               active={Boolean(entry?.symptoms?.includes(symptom))}
+              dimInactive
               label={symptom}
               rotate={symptomStickerRotations[index % symptomStickerRotations.length]}
               onClick={() => {
@@ -610,6 +620,7 @@ export function QuickLogCard({
                 <MoodSticker
                   key={mood.value}
                   active={entry?.mood === mood.value}
+                  dimInactive
                   imageSrc={mood.imageSrc}
                   label={mood.label}
                   value={mood.value}
@@ -638,6 +649,7 @@ export function QuickLogCard({
                 <EnergyStickerButton
                   key={energy.value}
                   active={entry?.energy === energy.value}
+                  dimInactive
                   imageSrc={energy.imageSrc}
                   label={energy.label}
                   rotate={energy.rotate}
@@ -663,6 +675,7 @@ export function QuickLogCard({
           <div className="mt-4 flex flex-wrap gap-2.5">
             <SymptomStickerButton
               active={noSymptomSelected}
+              dimInactive
               label={noSymptomLabel}
               rotate="rotate-[2deg]"
               onClick={() => {
@@ -676,6 +689,7 @@ export function QuickLogCard({
                 <SymptomStickerButton
                   key={symptom}
                   active={Boolean(active)}
+                  dimInactive
                   label={symptom}
                   rotate={symptomStickerRotations[index % symptomStickerRotations.length]}
                   onClick={() => {
