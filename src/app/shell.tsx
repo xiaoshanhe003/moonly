@@ -24,7 +24,9 @@ export function AppShell({ initialView }: AppShellProps) {
   const profile = useCycleStore((state) => state.profile);
   const entries = useCycleStore((state) => state.entries);
   const currentView = location.pathname.includes("calendar") ? "calendar" : initialView;
+  const previousProfileRef = useRef(profile);
   const previousViewRef = useRef(currentView);
+  const [animateQuickLog, setAnimateQuickLog] = useState(false);
   const [visibleCalendarMonthKey, setVisibleCalendarMonthKey] = useState(() =>
     new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()
   );
@@ -39,6 +41,17 @@ export function AppShell({ initialView }: AppShellProps) {
       setVisibleCalendarMonthKey(new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString());
     }
   }, [currentView]);
+
+  useLayoutEffect(() => {
+    if (!previousProfileRef.current && profile) {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      setAnimateQuickLog(true);
+    } else if (!profile) {
+      setAnimateQuickLog(false);
+    }
+
+    previousProfileRef.current = profile;
+  }, [profile]);
 
   useLayoutEffect(() => {
     if (previousViewRef.current === "calendar" && currentView === "today") {
@@ -59,7 +72,14 @@ export function AppShell({ initialView }: AppShellProps) {
   }, [currentView]);
 
   return (
-    <main className="min-h-screen bg-[var(--color-canvas)] text-[var(--color-ink)]">
+    <main
+      className={cn(
+        "text-[var(--color-ink)]",
+        profile
+          ? "min-h-screen bg-[var(--color-canvas)]"
+          : "h-dvh overflow-hidden bg-[var(--color-canvas)]"
+      )}
+    >
       {profile ? (
         <div className="sticky top-0 z-40 w-full bg-[var(--color-canvas)] backdrop-blur" data-sticky-shell-header>
           <header className="mx-auto max-w-md px-4 pt-4 sm:px-6">
@@ -125,16 +145,20 @@ export function AppShell({ initialView }: AppShellProps) {
       ) : null}
 
       <div
-        className={`mx-auto flex min-h-screen max-w-md flex-col gap-4 px-4 sm:px-6 ${
-          currentView === "today" ? "py-3" : "py-6"
-        }`}
+        className={
+          profile
+            ? `mx-auto flex min-h-screen max-w-md flex-col gap-4 px-4 sm:px-6 ${
+                currentView === "today" ? "py-3" : "py-6"
+              }`
+            : "mx-auto flex h-dvh max-w-md flex-col overflow-hidden"
+        }
       >
         {isDev ? <DevScenarioBar /> : null}
 
         {!profile ? (
           <OnboardingPage />
         ) : currentView === "today" ? (
-          <TodayPage />
+          <TodayPage animateQuickLog={animateQuickLog} />
         ) : (
           <CalendarPage onVisibleMonthChange={setVisibleCalendarMonthKey} />
         )}

@@ -4,7 +4,11 @@ import { QuickLogCard } from "../components/domain/quick-log-card";
 import { getCycleSummary } from "../features/cycle/cycle";
 import { useCycleStore } from "../features/cycle/store";
 
-export function TodayPage() {
+type TodayPageProps = {
+  animateQuickLog?: boolean;
+};
+
+export function TodayPage({ animateQuickLog = false }: TodayPageProps) {
   const profile = useCycleStore((state) => state.profile)!;
   const entries = useCycleStore((state) => state.entries);
   const today = new Date();
@@ -22,7 +26,7 @@ export function TodayPage() {
         <QuickLogCard
           date={dateKey}
           entry={entry}
-          className={uiSurfaceStyles.elevated}
+          className={`${uiSurfaceStyles.elevated} ${animateQuickLog ? "motion-safe:animate-[quick-log-enter_620ms_cubic-bezier(0.16,1,0.3,1)_both]" : ""}`}
         />
       </div>
     </div>

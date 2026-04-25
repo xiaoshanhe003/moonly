@@ -103,6 +103,18 @@ a[href],
   min-height: 100vh;
 }
 
+@keyframes quick-log-enter {
+  from {
+    opacity: 0;
+    transform: translateY(56px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .scrollbar-none::-webkit-scrollbar {
   display: none;
 }
