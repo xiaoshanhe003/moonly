@@ -3,6 +3,7 @@ import type { CycleProfile, DailyEntry } from "../../features/cycle/types";
 import { cn } from "../../lib/utils";
 import { uiTextStyles } from "../ui/styles";
 import { getMoodOption } from "./mood-options";
+import { stickerShadowStyles } from "./mood-sticker-styles";
 
 type CalendarMonthCardProps = {
   monthDate: Date;
@@ -108,7 +109,7 @@ function DayCellContent({
           src={moodSticker.imageSrc}
           alt=""
           title={moodSticker.label}
-          className="mt-1.5 h-8 w-8 object-contain"
+          className={cn("mt-1.5 h-8 w-8 object-contain", stickerShadowStyles.compact)}
           aria-hidden="true"
         />
       ) : null}

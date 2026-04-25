@@ -1,5 +1,9 @@
 import { useMemo, useState } from "react";
 import { Check, ChevronRight } from "lucide-react";
+import energyFullSticker from "../../assets/energy/full.png";
+import energyHighSticker from "../../assets/energy/high.png";
+import energyLowSticker from "../../assets/energy/low.png";
+import energyMidSticker from "../../assets/energy/mid.png";
 import { Card } from "../ui/card";
 import { Button } from "../ui/button";
 import { Sheet } from "../ui/sheet";
@@ -10,6 +14,7 @@ import { useCycleStore } from "../../features/cycle/store";
 import { getChoiceTileClass, uiSpacingStyles, uiTextStyles } from "../ui/styles";
 import { formatFullDate } from "../../lib/utils";
 import { getMoodOption, moodOptions, type MoodValue } from "./mood-options";
+import { stickerShadowStyles } from "./mood-sticker-styles";
 
 const moodStickerLayout: Record<
   MoodValue,
@@ -20,20 +25,21 @@ const moodStickerLayout: Record<
   }
 > = {
   great: { rotate: "-rotate-[7deg]", placement: "-left-1 top-1" },
-  happy: { rotate: "-rotate-[4deg]", placement: "left-[20%] top-[3.5rem] sm:top-16", imageSize: "h-[3.75rem] sm:h-[4.25rem]" },
-  calm: { rotate: "rotate-[8deg]", placement: "left-1/2 top-2 -translate-x-1/2" },
+  happy: { rotate: "-rotate-[4deg]", placement: "left-[20%] top-[3.5rem] sm:top-16", imageSize: "h-[4.25rem] sm:h-[4.75rem]" },
+  calm: { rotate: "rotate-[8deg]", placement: "left-1/2 top-2 -translate-x-1/2", imageSize: "h-[3rem] sm:h-[3.5rem]" },
   unhappy: { rotate: "rotate-[5deg]", placement: "right-[19%] top-[3.7rem] sm:top-[4.15rem]" },
   sad: { rotate: "rotate-[6deg]", placement: "-right-1 top-1" }
 };
 
 const noSymptomLabel = "没有不适";
 const energyOptions = [
-  { label: "低", value: "low" },
-  { label: "中", value: "medium" },
-  { label: "较高", value: "higher" },
-  { label: "高", value: "high" }
+  { label: "低", value: "low", imageSrc: energyLowSticker, rotate: "-rotate-[5deg]" },
+  { label: "中", value: "medium", imageSrc: energyMidSticker, rotate: "rotate-[3deg]" },
+  { label: "较高", value: "higher", imageSrc: energyHighSticker, rotate: "-rotate-[2deg]" },
+  { label: "高", value: "high", imageSrc: energyFullSticker, rotate: "rotate-[4deg]" }
 ] as const;
-const symptomOptions = ["疲惫", "头痛", "乳房胀痛", "腹胀", "腹痛", "腰酸"];
+const symptomOptions = ["疲惫", "头痛", "乳房胀痛", "腹痛", "腰痛"];
+const symptomStickerRotations = ["-rotate-[3deg]", "rotate-[2deg]", "-rotate-[1deg]", "rotate-[3deg]", "-rotate-[2deg]", "rotate-[1deg]"] as const;
 const flowOptions = [
   { label: "无", value: "none" },
   { label: "点滴", value: "spotting" },
@@ -114,7 +120,11 @@ function MoodSticker({
       <img
         src={imageSrc}
         alt=""
-        className={cn("w-auto object-contain", layout.imageSize ?? "h-14 sm:h-16")}
+        className={cn(
+          "w-auto object-contain",
+          stickerShadowStyles.regular,
+          layout.imageSize ?? "h-14 sm:h-16"
+        )}
         aria-hidden="true"
       />
     </button>
@@ -130,14 +140,141 @@ function MoodValue({ mood }: { mood?: DailyEntry["mood"] }) {
 
   return (
     <span className="inline-flex items-center gap-2">
-      <img src={moodItem.imageSrc} alt="" className="h-8 w-8 object-contain" aria-hidden="true" />
+      <img
+        src={moodItem.imageSrc}
+        alt=""
+        className={cn("h-8 w-8 object-contain", stickerShadowStyles.compact)}
+        aria-hidden="true"
+      />
       <span>{moodItem.label}</span>
     </span>
   );
 }
 
 function EnergyValue({ energy }: { energy?: DailyEntry["energy"] }) {
-  return energyOptions.find((item) => item.value === energy)?.label ?? "未记录";
+  const energyItem = energyOptions.find((item) => item.value === energy);
+
+  if (!energyItem) {
+    return <>未记录</>;
+  }
+
+  return (
+    <span className="inline-flex items-center gap-2">
+      <img
+        src={energyItem.imageSrc}
+        alt=""
+        className={cn("h-7 w-auto object-contain", stickerShadowStyles.compact)}
+        aria-hidden="true"
+      />
+      <span>{energyItem.label}</span>
+    </span>
+  );
+}
+
+function EnergyStickerButton({
+  active,
+  imageSrc,
+  label,
+  rotate,
+  onClick
+}: {
+  active: boolean;
+  imageSrc: string;
+  label: string;
+  rotate: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      title={label}
+      className={cn(
+        "inline-flex min-h-[4.25rem] items-center justify-center rounded-[var(--radius-lg)] border bg-transparent p-1.5 transition duration-200 active:scale-[0.98]",
+        rotate,
+        active
+          ? "border-[color:var(--foreground)] shadow-[0_0_0_1px_var(--foreground)_inset]"
+          : "border-transparent hover:-translate-y-0.5"
+      )}
+    >
+      <img
+        src={imageSrc}
+        alt=""
+        className={cn("h-[3.4rem] w-auto object-contain sm:h-[3.7rem]", stickerShadowStyles.regular)}
+        aria-hidden="true"
+      />
+    </button>
+  );
+}
+
+function OutlinedStickerText({ label }: { label: string }) {
+  const width = label.length * 24 + 32;
+
+  return (
+    <svg
+      width={width}
+      height="42"
+      viewBox={`0 0 ${width} 42`}
+      className="block overflow-visible"
+      aria-hidden="true"
+    >
+      <text
+        x={width / 2}
+        y="29"
+        textAnchor="middle"
+        fontSize="19"
+        fontWeight="900"
+        fontFamily="inherit"
+        stroke="white"
+        strokeWidth="8"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      >
+        {label}
+      </text>
+      <text
+        x={width / 2}
+        y="29"
+        textAnchor="middle"
+        fontSize="19"
+        fontWeight="900"
+        fontFamily="inherit"
+        fill="var(--foreground)"
+      >
+        {label}
+      </text>
+    </svg>
+  );
+}
+
+function SymptomStickerButton({
+  active,
+  label,
+  rotate,
+  onClick
+}: {
+  active: boolean;
+  label: string;
+  rotate: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "inline-flex min-h-10 items-center justify-center rounded-full bg-transparent px-1 py-0.5 transition duration-200 active:scale-[0.98]",
+        "drop-shadow-[0_2px_2px_rgba(15,23,42,0.1)]",
+        rotate,
+        active
+          ? "shadow-[0_0_0_1px_var(--foreground)_inset]"
+          : "hover:-translate-y-0.5"
+      )}
+    >
+      <OutlinedStickerText label={label} />
+    </button>
+  );
 }
 
 function parseDateKey(dateKey: string) {
@@ -233,12 +370,14 @@ export function CompletedLogDetails({ entry, onChange }: CompletedLogDetailsProp
 
       <div className="grid gap-3">
         <p className={questionClassName}>感觉体内的能量如何？</p>
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-4 gap-1.5">
           {energyOptions.map((energy) => (
-            <SelectionPill
+            <EnergyStickerButton
               key={energy.value}
               active={entry?.energy === energy.value}
+              imageSrc={energy.imageSrc}
               label={energy.label}
+              rotate={energy.rotate}
               onClick={() => onChange({ energy: energy.value })}
             />
           ))}
@@ -247,13 +386,19 @@ export function CompletedLogDetails({ entry, onChange }: CompletedLogDetailsProp
 
       <div className="grid gap-3">
         <p className={questionClassName}>身体有什么信号？</p>
-        <div className="flex flex-wrap gap-2">
-          <SelectionPill active={noSymptomSelected} label={noSymptomLabel} onClick={() => onChange({ symptoms: [] })} />
-          {symptomOptions.map((symptom) =>
-            <SelectionPill
+        <div className="flex flex-wrap gap-2.5">
+          <SymptomStickerButton
+            active={noSymptomSelected}
+            label={noSymptomLabel}
+            rotate="rotate-[2deg]"
+            onClick={() => onChange({ symptoms: [] })}
+          />
+          {symptomOptions.map((symptom, index) =>
+            <SymptomStickerButton
               key={symptom}
               active={Boolean(entry?.symptoms?.includes(symptom))}
               label={symptom}
+              rotate={symptomStickerRotations[index % symptomStickerRotations.length]}
               onClick={() => {
                 const previous = new Set(entry?.symptoms ?? []);
                 if (noSymptomSelected) {
@@ -472,20 +617,22 @@ export function QuickLogCard({
             <p className={questionClassName}>感觉体内的能量如何？</p>
             <p className={cn("text-sm font-medium", uiTextStyles.muted)}>{progressText}</p>
           </div>
-          <div className="mt-4 grid grid-cols-4 gap-2">
-            {energyOptions.map((energy) => (
-              <button
-                key={energy.value}
-                type="button"
-                onClick={() => {
-                  updateEntry(date, { energy: energy.value });
-                  setStepOverride("symptoms");
-                }}
-                className={getChoiceTileClass(entry?.energy === energy.value)}
-              >
-                {energy.label}
-              </button>
-            ))}
+          <div className="mt-4 rounded-[calc(var(--radius-xl)+10px)] bg-[linear-gradient(180deg,rgba(255,255,255,0.84),rgba(255,255,255,0.56))] px-2 py-3">
+            <div className="grid grid-cols-4 gap-1.5">
+              {energyOptions.map((energy) => (
+                <EnergyStickerButton
+                  key={energy.value}
+                  active={entry?.energy === energy.value}
+                  imageSrc={energy.imageSrc}
+                  label={energy.label}
+                  rotate={energy.rotate}
+                  onClick={() => {
+                    updateEntry(date, { energy: energy.value });
+                    setStepOverride("symptoms");
+                  }}
+                />
+              ))}
+            </div>
           </div>
         </>
       );
@@ -498,22 +645,24 @@ export function QuickLogCard({
             <p className={questionClassName}>身体有什么信号？</p>
             <p className={cn("text-sm font-medium", uiTextStyles.muted)}>{progressText}</p>
           </div>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <SelectionPill
+          <div className="mt-4 flex flex-wrap gap-2.5">
+            <SymptomStickerButton
               active={noSymptomSelected}
               label={noSymptomLabel}
+              rotate="rotate-[2deg]"
               onClick={() => {
                 updateEntry(date, { symptoms: [] });
                 setStepOverride("symptoms");
               }}
             />
-            {symptomOptions.map((symptom) => {
+            {symptomOptions.map((symptom, index) => {
               const active = entry?.symptoms?.includes(symptom);
               return (
-                <SelectionPill
+                <SymptomStickerButton
                   key={symptom}
                   active={Boolean(active)}
                   label={symptom}
+                  rotate={symptomStickerRotations[index % symptomStickerRotations.length]}
                   onClick={() => {
                     const previous = new Set(entry?.symptoms ?? []);
                     if (noSymptomSelected) {
@@ -531,7 +680,7 @@ export function QuickLogCard({
               );
             })}
           </div>
-          <div className={cn(uiSpacingStyles.sectionTop, "flex flex-wrap items-center", uiSpacingStyles.gapSm)}>
+          <div className={cn(uiSpacingStyles.sectionTop, "flex flex-wrap items-center justify-end", uiSpacingStyles.gapSm)}>
             <Button
               variant="primary"
               onClick={() => setStepOverride(null)}

@@ -1,9 +1,9 @@
 import type { DailyEntry } from "../../features/cycle/types";
-import boredSticker from "../../assets/mood/bored.png";
 import calmSticker from "../../assets/mood/calm.png";
+import greatSticker from "../../assets/mood/great.png";
 import happySticker from "../../assets/mood/happy.png";
-import notHappySticker from "../../assets/mood/not_happy.png";
 import sadSticker from "../../assets/mood/sad.png";
+import unhappySticker from "../../assets/mood/unhappy.png";
 
 export type MoodValue = NonNullable<DailyEntry["mood"]>;
 
@@ -12,10 +12,10 @@ export const moodOptions: Array<{
   value: MoodValue;
   imageSrc: string;
 }> = [
-  { label: "超开心", value: "great", imageSrc: happySticker },
-  { label: "开心", value: "happy", imageSrc: calmSticker },
-  { label: "平静", value: "calm", imageSrc: boredSticker },
-  { label: "不乐", value: "unhappy", imageSrc: notHappySticker },
+  { label: "超开心", value: "great", imageSrc: greatSticker },
+  { label: "开心", value: "happy", imageSrc: happySticker },
+  { label: "平静", value: "calm", imageSrc: calmSticker },
+  { label: "不乐", value: "unhappy", imageSrc: unhappySticker },
   { label: "难过", value: "sad", imageSrc: sadSticker }
 ];
 
