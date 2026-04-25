@@ -4,6 +4,7 @@ import energyFullSticker from "../../assets/energy/full.png";
 import energyHighSticker from "../../assets/energy/high.png";
 import energyLowSticker from "../../assets/energy/low.png";
 import energyMidSticker from "../../assets/energy/mid.png";
+import selectedSticker from "../../assets/stickers/selected.png";
 import { Card } from "../ui/card";
 import { Button } from "../ui/button";
 import { Sheet } from "../ui/sheet";
@@ -87,6 +88,17 @@ function SelectionPill({
   );
 }
 
+function SelectedStickerMark({ className }: { className?: string }) {
+  return (
+    <img
+      src={selectedSticker}
+      alt=""
+      className={cn("pointer-events-none absolute z-20 h-5 w-5 object-contain", stickerShadowStyles.compact, className)}
+      aria-hidden="true"
+    />
+  );
+}
+
 function MoodSticker({
   active,
   imageSrc,
@@ -109,14 +121,13 @@ function MoodSticker({
       aria-label={label}
       title={label}
       className={cn(
-        "absolute inline-flex shrink-0 items-center justify-center rounded-[var(--radius-lg)] border bg-transparent transition duration-200 active:scale-[0.98]",
+        "absolute inline-flex shrink-0 items-center justify-center rounded-[var(--radius-lg)] border border-transparent bg-transparent transition duration-200 active:scale-[0.98]",
         layout.placement,
         layout.rotate,
-        active
-          ? "border-[color:var(--foreground)] shadow-[0_0_0_1px_var(--foreground)_inset,0_18px_36px_rgba(15,23,42,0.12)]"
-          : "border-transparent hover:-translate-y-0.5"
+        active ? "z-10" : "hover:-translate-y-0.5"
       )}
     >
+      {active ? <SelectedStickerMark className="-right-0.5 -top-0.5" /> : null}
       <img
         src={imageSrc}
         alt=""
@@ -191,19 +202,20 @@ function EnergyStickerButton({
       aria-label={label}
       title={label}
       className={cn(
-        "inline-flex min-h-[4.25rem] items-center justify-center rounded-[var(--radius-lg)] border bg-transparent p-1.5 transition duration-200 active:scale-[0.98]",
+        "relative inline-flex min-h-[4.25rem] items-center justify-center rounded-[var(--radius-lg)] border border-transparent bg-transparent p-1.5 transition duration-200 active:scale-[0.98]",
         rotate,
-        active
-          ? "border-[color:var(--foreground)] shadow-[0_0_0_1px_var(--foreground)_inset]"
-          : "border-transparent hover:-translate-y-0.5"
+        active ? "z-10" : "hover:-translate-y-0.5"
       )}
     >
-      <img
-        src={imageSrc}
-        alt=""
-        className={cn("h-[3.4rem] w-auto object-contain sm:h-[3.7rem]", stickerShadowStyles.regular)}
-        aria-hidden="true"
-      />
+      <span className="relative inline-flex">
+        {active ? <SelectedStickerMark className="-right-1 top-0" /> : null}
+        <img
+          src={imageSrc}
+          alt=""
+          className={cn("h-[3.4rem] w-auto object-contain sm:h-[3.7rem]", stickerShadowStyles.regular)}
+          aria-hidden="true"
+        />
+      </span>
     </button>
   );
 }
@@ -264,15 +276,16 @@ function SymptomStickerButton({
       type="button"
       onClick={onClick}
       className={cn(
-        "inline-flex min-h-10 items-center justify-center rounded-full bg-transparent px-1 py-0.5 transition duration-200 active:scale-[0.98]",
+        "relative inline-flex min-h-10 items-center justify-center rounded-full bg-transparent px-1 py-0.5 transition duration-200 active:scale-[0.98]",
         "drop-shadow-[0_2px_2px_rgba(15,23,42,0.1)]",
         rotate,
-        active
-          ? "shadow-[0_0_0_1px_var(--foreground)_inset]"
-          : "hover:-translate-y-0.5"
+        active ? "z-10" : "hover:-translate-y-0.5"
       )}
     >
-      <OutlinedStickerText label={label} />
+      <span className="relative inline-flex">
+        {active ? <SelectedStickerMark className="-right-0.5 top-1" /> : null}
+        <OutlinedStickerText label={label} />
+      </span>
     </button>
   );
 }
@@ -483,8 +496,10 @@ export function CompletedRecordSheetContent({
   if (isEditing) {
     return (
       <div className="grid gap-4">
-        <CompletedLogDetails entry={draftEntry} onChange={updateDraftEntry} />
-        <div className="-mx-6 mt-2 border-t border-[color:var(--border)] px-6 pt-4">
+        <div className="pb-20">
+          <CompletedLogDetails entry={draftEntry} onChange={updateDraftEntry} />
+        </div>
+        <div className="sticky bottom-0 z-10 -mx-6 -mb-6 mt-2 border-t border-[color:var(--border)] bg-[color:var(--card-elevated)] px-6 py-4 backdrop-blur-xl">
           <div className="grid grid-cols-2 gap-3">
             <Button
               variant="secondary"
