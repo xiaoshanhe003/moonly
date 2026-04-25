@@ -9,22 +9,10 @@ import { cn } from "../../lib/utils";
 import { useCycleStore } from "../../features/cycle/store";
 import { getChoiceTileClass, uiSpacingStyles, uiTextStyles } from "../ui/styles";
 import { formatFullDate } from "../../lib/utils";
-import boredSticker from "../../assets/mood/bored.png";
-import calmSticker from "../../assets/mood/calm.png";
-import happySticker from "../../assets/mood/happy.png";
-import notHappySticker from "../../assets/mood/not_happy.png";
-import sadSticker from "../../assets/mood/sad.png";
-
-const moods = [
-  { label: "超开心", value: "great", imageSrc: happySticker },
-  { label: "开心", value: "happy", imageSrc: calmSticker },
-  { label: "平静", value: "calm", imageSrc: boredSticker },
-  { label: "鼻酸", value: "low", imageSrc: notHappySticker },
-  { label: "想哭", value: "tense", imageSrc: sadSticker }
-] as const;
+import { getMoodOption, moodOptions, type MoodValue } from "./mood-options";
 
 const moodStickerLayout: Record<
-  (typeof moods)[number]["value"],
+  MoodValue,
   {
     rotate: string;
     placement: string;
@@ -34,8 +22,8 @@ const moodStickerLayout: Record<
   great: { rotate: "-rotate-[7deg]", placement: "-left-1 top-1" },
   happy: { rotate: "-rotate-[4deg]", placement: "left-[20%] top-[3.5rem] sm:top-16", imageSize: "h-[3.75rem] sm:h-[4.25rem]" },
   calm: { rotate: "rotate-[8deg]", placement: "left-1/2 top-2 -translate-x-1/2" },
-  low: { rotate: "rotate-[5deg]", placement: "right-[19%] top-[3.7rem] sm:top-[4.15rem]" },
-  tense: { rotate: "rotate-[6deg]", placement: "-right-1 top-1" }
+  unhappy: { rotate: "rotate-[5deg]", placement: "right-[19%] top-[3.7rem] sm:top-[4.15rem]" },
+  sad: { rotate: "rotate-[6deg]", placement: "-right-1 top-1" }
 };
 
 const noSymptomLabel = "没有不适";
@@ -103,7 +91,7 @@ function MoodSticker({
   active: boolean;
   imageSrc: string;
   label: string;
-  value: (typeof moods)[number]["value"];
+  value: MoodValue;
   onClick: () => void;
 }) {
   const layout = moodStickerLayout[value];
@@ -134,7 +122,7 @@ function MoodSticker({
 }
 
 function MoodValue({ mood }: { mood?: DailyEntry["mood"] }) {
-  const moodItem = moods.find((item) => item.value === mood);
+  const moodItem = getMoodOption(mood);
 
   if (!moodItem) {
     return <>未记录</>;
@@ -230,7 +218,7 @@ export function CompletedLogDetails({ entry, onChange }: CompletedLogDetailsProp
       <div className="grid gap-3">
         <p className={questionClassName}>今天心情如何？</p>
         <div className="relative mx-auto h-[7.5rem] w-full max-w-[19rem] sm:h-[8.25rem] sm:max-w-[21rem]">
-          {moods.map((mood) => (
+          {moodOptions.map((mood) => (
             <MoodSticker
               key={mood.value}
               active={entry?.mood === mood.value}
@@ -458,7 +446,7 @@ export function QuickLogCard({
           </div>
           <div className="mt-4 rounded-[calc(var(--radius-xl)+10px)] bg-[linear-gradient(180deg,rgba(255,255,255,0.84),rgba(255,255,255,0.56))] px-3 py-4">
             <div className="relative mx-auto h-[7.5rem] w-full max-w-[19rem] sm:h-[8.25rem] sm:max-w-[21rem]">
-              {moods.map((mood) => (
+              {moodOptions.map((mood) => (
                 <MoodSticker
                   key={mood.value}
                   active={entry?.mood === mood.value}

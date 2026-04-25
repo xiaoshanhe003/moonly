@@ -15,6 +15,36 @@ type CycleState = {
 
 const defaultScenario = scenarios["today-pending"];
 
+type LegacyMood = DailyEntry["mood"] | "low" | "tense";
+type LegacyDailyEntry = Omit<DailyEntry, "mood"> & {
+  mood?: LegacyMood;
+};
+
+function normalizeMood(mood?: LegacyMood): DailyEntry["mood"] | undefined {
+  if (mood === "low") {
+    return "unhappy";
+  }
+
+  if (mood === "tense") {
+    return "sad";
+  }
+
+  return mood;
+}
+
+function normalizeEntry(entry: LegacyDailyEntry): DailyEntry {
+  return {
+    ...entry,
+    mood: normalizeMood(entry.mood)
+  };
+}
+
+function normalizeEntries(entries: Record<string, LegacyDailyEntry>) {
+  return Object.fromEntries(
+    Object.entries(entries).map(([date, entry]) => [date, normalizeEntry(entry)])
+  );
+}
+
 function buildScenarioEntries(scenario: (typeof scenarios)[AppScenario]) {
   if (scenario.entries) {
     return Object.fromEntries(scenario.entries.map((entry) => [entry.date, entry]));
@@ -58,7 +88,16 @@ export const useCycleStore = create<CycleState>()(
         })
     }),
     {
-      name: "moonly-store"
+      name: "moonly-store",
+      version: 1,
+      migrate: (persistedState) => {
+        const state = persistedState as Partial<CycleState>;
+
+        return {
+          ...state,
+          entries: normalizeEntries((state.entries ?? {}) as Record<string, LegacyDailyEntry>)
+        };
+      }
     }
   )
 );

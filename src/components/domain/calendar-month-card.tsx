@@ -2,6 +2,7 @@ import { buildMonthGrid } from "../../features/cycle/cycle";
 import type { CycleProfile, DailyEntry } from "../../features/cycle/types";
 import { cn } from "../../lib/utils";
 import { uiTextStyles } from "../ui/styles";
+import { getMoodOption } from "./mood-options";
 
 type CalendarMonthCardProps = {
   monthDate: Date;
@@ -14,14 +15,6 @@ type CalendarMonthCardProps = {
 type CalendarCellTone = {
   background: string;
   color?: string;
-};
-
-const moodEmojiMap: Record<NonNullable<DailyEntry["mood"]>, string> = {
-  great: "😆",
-  happy: "☺️",
-  calm: "🙂",
-  low: "🥲",
-  tense: "😭"
 };
 
 const phaseFamilyMap: Record<string, string> = {
@@ -97,23 +90,27 @@ function DayCellContent({
   dayOfMonth,
   isToday,
   tone,
-  moodEmoji,
+  moodSticker,
   onEntryClick
 }: {
   dateKey: string;
   dayOfMonth: number;
   isToday: boolean;
   tone: CalendarCellTone;
-  moodEmoji: string | null;
+  moodSticker: { imageSrc: string; label: string } | null;
   onEntryClick?: (dateKey: string) => void;
 }) {
   const content = (
     <>
       <DayMarker dayOfMonth={dayOfMonth} isToday={isToday} tone={tone} />
-      {moodEmoji ? (
-        <span className={cn("mt-2 leading-none", uiTextStyles.xl)} aria-hidden="true">
-          {moodEmoji}
-        </span>
+      {moodSticker ? (
+        <img
+          src={moodSticker.imageSrc}
+          alt=""
+          title={moodSticker.label}
+          className="mt-1.5 h-8 w-8 object-contain"
+          aria-hidden="true"
+        />
       ) : null}
     </>
   );
@@ -171,7 +168,7 @@ export function CalendarMonthCard({
         {cells.map((cell, index) => {
           const dateKey = formatDateKey(cell.date);
           const entry = entries[dateKey];
-          const moodEmoji = entry?.mood ? moodEmojiMap[entry.mood] : null;
+          const moodSticker = entry?.mood ? getMoodOption(entry.mood) ?? null : null;
           const isLastRow = index >= cells.length - 7;
           const tone = cell.isToday
             ? getTodayCellTone(cell.phase.color)
@@ -195,7 +192,7 @@ export function CalendarMonthCard({
                   dayOfMonth={cell.dayOfMonth}
                   isToday={cell.isToday}
                   tone={tone}
-                  moodEmoji={moodEmoji}
+                  moodSticker={moodSticker}
                   onEntryClick={entry ? onEntryClick : undefined}
                 />
               ) : null}

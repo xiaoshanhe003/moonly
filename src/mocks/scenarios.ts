@@ -46,7 +46,7 @@ export const scenarios: Record<
     entries: [
       {
         date: daysAgo(18),
-        mood: "tense",
+        mood: "sad",
         symptoms: ["腹痛", "疲惫"],
         flow: "heavy",
         bleedingLevel: "heavy",
@@ -82,7 +82,7 @@ export const scenarios: Record<
       },
       {
         date: daysAgo(3),
-        mood: "tense",
+        mood: "sad",
         symptoms: ["头痛", "疲惫"],
         flow: "none",
         bleedingLevel: "none"
