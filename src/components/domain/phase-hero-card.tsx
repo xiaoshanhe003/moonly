@@ -30,7 +30,7 @@ export function PhaseHeroCard({ summary }: PhaseHeroCardProps) {
   const titleText = summary.phase.tone.replace(/[。！？.!?]+$/u, "");
 
   return (
-    <section className="relative overflow-hidden px-2 pt-6">
+    <section className="relative px-2 pb-2 pt-6">
       <div className={cn("relative mx-auto flex max-w-[21rem] flex-col items-center text-center", uiSpacingStyles.gapMd)}>
         <div className={cn("inline-flex items-center gap-1 font-medium", uiTextStyles.sm, uiTextStyles.muted)}>
           <button

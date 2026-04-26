@@ -1,4 +1,4 @@
-import type { BleedingLevel, CycleProfile, DailyEntry, PeriodSignal } from "./types";
+import type { BleedingLevel, CycleProfile, DailyEntry, LegacyFlowLevel, PeriodSignal } from "./types";
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
 
@@ -270,7 +270,7 @@ function normalizePeriodSignal(entry?: DailyEntry): PeriodSignal {
   return entry?.isPeriodStart ? "possible_start" : "none";
 }
 
-export function getBleedingLevel(entry?: DailyEntry): BleedingLevel | undefined {
+export function getBleedingLevel(entry?: DailyEntry & { flow?: LegacyFlowLevel }): BleedingLevel | undefined {
   if (entry?.bleedingLevel) {
     return entry.bleedingLevel;
   }

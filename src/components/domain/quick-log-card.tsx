@@ -491,7 +491,6 @@ export function CompletedLogDetails({ entry, onChange }: CompletedLogDetailsProp
               option={flow}
               onClick={() =>
                 onChange({
-                  flow: flow.value === "spotting" ? undefined : flow.value,
                   bleedingLevel: flow.value,
                   periodSignal: flow.value === "none" ? "none" : entry?.periodSignal ?? "none",
                   isPeriodStart: false
@@ -508,10 +507,6 @@ export function CompletedLogDetails({ entry, onChange }: CompletedLogDetailsProp
                 checked={entry?.periodSignal === "possible_start"}
                 onChange={() =>
                   onChange({
-                    flow:
-                      bleedingLevel && bleedingLevel !== "none" && bleedingLevel !== "spotting"
-                        ? bleedingLevel
-                        : undefined,
                     bleedingLevel,
                     periodSignal: entry?.periodSignal === "possible_start" ? "none" : "possible_start",
                     isPeriodStart: false
@@ -802,7 +797,6 @@ export function QuickLogCard({
               option={flow}
               onClick={() =>
                 updateEntry(date, {
-                  flow: flow.value === "spotting" ? undefined : flow.value,
                   bleedingLevel: flow.value,
                   periodSignal: flow.value === "none" ? "none" : entry?.periodSignal ?? "none",
                   isPeriodStart: false
@@ -817,10 +811,6 @@ export function QuickLogCard({
               variant={entry?.periodSignal === "possible_start" ? "primary" : "soft"}
               onClick={() =>
                 updateEntry(date, {
-                  flow:
-                    bleedingLevel && bleedingLevel !== "none" && bleedingLevel !== "spotting"
-                      ? bleedingLevel
-                      : undefined,
                   bleedingLevel,
                   periodSignal: entry?.periodSignal === "possible_start" ? "none" : "possible_start",
                   isPeriodStart: false

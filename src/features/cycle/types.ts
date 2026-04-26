@@ -7,6 +7,7 @@ export type CycleProfile = {
 };
 
 export type BleedingLevel = "none" | "spotting" | "light" | "medium" | "heavy";
+export type LegacyFlowLevel = Exclude<BleedingLevel, "spotting">;
 
 export type PeriodSignal = "none" | "possible_start" | "confirmed_start";
 
@@ -14,7 +15,6 @@ export type DailyEntry = {
   date: string;
   mood?: "great" | "happy" | "calm" | "unhappy" | "sad";
   energy?: "low" | "medium" | "higher" | "high";
-  flow?: "none" | "light" | "medium" | "heavy";
   bleedingLevel?: BleedingLevel;
   symptoms?: string[];
   periodSignal?: PeriodSignal;

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { AppScenario, CycleProfile, DailyEntry } from "./types";
+import type { AppScenario, CycleProfile, DailyEntry, LegacyFlowLevel } from "./types";
 import { scenarios } from "../../mocks/scenarios";
 
 type CycleState = {
@@ -16,8 +16,10 @@ type CycleState = {
 const defaultScenario = scenarios["today-pending"];
 
 type LegacyMood = DailyEntry["mood"] | "low" | "tense";
-type LegacyDailyEntry = Omit<DailyEntry, "mood"> & {
+type LegacyDailyEntry = Omit<DailyEntry, "mood" | "bleedingLevel"> & {
   mood?: LegacyMood;
+  bleedingLevel?: DailyEntry["bleedingLevel"];
+  flow?: LegacyFlowLevel;
 };
 
 function normalizeMood(mood?: LegacyMood): DailyEntry["mood"] | undefined {
@@ -33,9 +35,12 @@ function normalizeMood(mood?: LegacyMood): DailyEntry["mood"] | undefined {
 }
 
 function normalizeEntry(entry: LegacyDailyEntry): DailyEntry {
+  const { flow, ...nextEntry } = entry;
+
   return {
-    ...entry,
-    mood: normalizeMood(entry.mood)
+    ...nextEntry,
+    mood: normalizeMood(entry.mood),
+    bleedingLevel: entry.bleedingLevel ?? flow
   };
 }
 
@@ -89,7 +94,7 @@ export const useCycleStore = create<CycleState>()(
     }),
     {
       name: "moonly-store",
-      version: 1,
+      version: 2,
       migrate: (persistedState) => {
         const state = persistedState as Partial<CycleState>;
 
