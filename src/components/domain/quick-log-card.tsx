@@ -318,6 +318,8 @@ function SymptomStickerButton({
     <button
       type="button"
       onClick={onClick}
+      aria-label={label}
+      title={label}
       className={cn(
         "relative inline-flex min-h-10 items-center justify-center rounded-full bg-transparent px-1 py-0.5 transition duration-200 active:scale-[0.98]",
         "drop-shadow-[0_2px_2px_rgba(15,23,42,0.1)]",
