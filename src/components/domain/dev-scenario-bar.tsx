@@ -7,6 +7,7 @@ import { getOptionPillClass, uiTextStyles } from "../ui/styles";
 
 const PANEL_GAP = 8;
 const DEFAULT_TOP = 96;
+const visibleScenarioKeys = ["first-run", "today-pending", "today-complete"] as const;
 
 function isInteractiveTarget(target: EventTarget | null) {
   return target instanceof Element && Boolean(target.closest("button, a, input, select, textarea"));
@@ -155,16 +156,20 @@ export function DevScenarioBar() {
           )}
           aria-hidden={isCollapsed}
         >
-          {Object.entries(scenarios).map(([key, scenario]) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => loadScenario(key as keyof typeof scenarios)}
-              className={cn(getOptionPillClass(activeScenario === key), uiTextStyles.xs, "px-3 py-1.5")}
-            >
-              {scenario.label}
-            </button>
-          ))}
+          {visibleScenarioKeys.map((key) => {
+            const scenario = scenarios[key];
+
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => loadScenario(key)}
+                className={cn(getOptionPillClass(activeScenario === key), uiTextStyles.xs, "px-3 py-1.5")}
+              >
+                {scenario.label}
+              </button>
+            );
+          })}
         </div>
       </aside>
     </div>

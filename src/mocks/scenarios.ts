@@ -47,6 +47,7 @@ export const scenarios: Record<
       {
         date: daysAgo(18),
         mood: "sad",
+        energy: "low",
         symptoms: ["腹痛", "疲惫"],
         bleedingLevel: "heavy",
         periodSignal: "possible_start"
@@ -54,36 +55,42 @@ export const scenarios: Record<
       {
         date: daysAgo(17),
         mood: "calm",
+        energy: "medium",
         symptoms: ["腹胀"],
         bleedingLevel: "medium"
       },
       {
         date: daysAgo(16),
         mood: "calm",
+        energy: "medium",
         symptoms: ["疲惫"],
         bleedingLevel: "light"
       },
       {
         date: daysAgo(12),
         mood: "happy",
+        energy: "higher",
         symptoms: [],
         bleedingLevel: "none"
       },
       {
         date: daysAgo(7),
         mood: "happy",
+        energy: "high",
         symptoms: ["腹胀"],
         bleedingLevel: "none"
       },
       {
         date: daysAgo(3),
         mood: "sad",
+        energy: "low",
         symptoms: ["头痛", "疲惫"],
         bleedingLevel: "none"
       },
       {
         date: isoToday,
         mood: "calm",
+        energy: "medium",
         symptoms: ["腹胀", "疲惫"],
         bleedingLevel: "none"
       }
