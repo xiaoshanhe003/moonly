@@ -1,9 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronRight } from "lucide-react";
-import energyFullSticker from "../../assets/energy/full.png";
-import energyHighSticker from "../../assets/energy/high.png";
-import energyLowSticker from "../../assets/energy/low.png";
-import energyMidSticker from "../../assets/energy/mid.png";
 import flowHeavySticker from "../../assets/flow/heavy.png";
 import flowLightSticker from "../../assets/flow/light.png";
 import flowMediumSticker from "../../assets/flow/medium.png";
@@ -14,35 +10,37 @@ import { Card } from "../ui/card";
 import { Button } from "../ui/button";
 import { Sheet } from "../ui/sheet";
 import { getBleedingLevel, getCycleSummary, getLogProgress, getSuggestedStep } from "../../features/cycle/cycle";
-import type { DailyEntry, QuickLogStep } from "../../features/cycle/types";
+import type { CycleProfile, DailyEntry, QuickLogStep } from "../../features/cycle/types";
 import { cn } from "../../lib/utils";
 import { useCycleStore } from "../../features/cycle/store";
 import { uiSpacingStyles, uiTextStyles } from "../ui/styles";
 import { formatFullDate } from "../../lib/utils";
 import { getMoodOption, moodOptions, type MoodValue } from "./mood-options";
+import { MoodStickerGraphic } from "./mood-sticker-graphic";
+import { EnergyStickerGraphic } from "./energy-sticker-graphic";
 import { stickerShadowStyles } from "./mood-sticker-styles";
+import { getPhaseEnergyColors, getPhaseStickerFillColor } from "./phase-colors";
 
 const moodStickerLayout: Record<
   MoodValue,
   {
     rotate: string;
     placement: string;
-    imageSize?: string;
   }
 > = {
   great: { rotate: "-rotate-[7deg]", placement: "-left-1 top-1" },
-  happy: { rotate: "-rotate-[4deg]", placement: "left-[20%] top-[3.5rem] sm:top-16", imageSize: "h-[4.25rem] sm:h-[4.75rem]" },
-  calm: { rotate: "rotate-[8deg]", placement: "left-1/2 top-2 -translate-x-1/2", imageSize: "h-[3rem] sm:h-[3.5rem]" },
+  happy: { rotate: "-rotate-[4deg]", placement: "left-[20%] top-[3.5rem] sm:top-16" },
+  calm: { rotate: "rotate-[8deg]", placement: "left-1/2 top-2 -translate-x-1/2" },
   unhappy: { rotate: "rotate-[5deg]", placement: "right-[19%] top-[3.7rem] sm:top-[4.15rem]" },
   sad: { rotate: "rotate-[6deg]", placement: "-right-1 top-1" }
 };
 
 const noSymptomLabel = "没有不适";
 const energyOptions = [
-  { label: "低", value: "low", imageSrc: energyLowSticker, rotate: "-rotate-[5deg]" },
-  { label: "中", value: "medium", imageSrc: energyMidSticker, rotate: "rotate-[3deg]" },
-  { label: "较高", value: "higher", imageSrc: energyHighSticker, rotate: "-rotate-[2deg]" },
-  { label: "高", value: "high", imageSrc: energyFullSticker, rotate: "rotate-[4deg]" }
+  { label: "低", value: "low", rotate: "-rotate-[5deg]" },
+  { label: "中", value: "medium", rotate: "rotate-[3deg]" },
+  { label: "较高", value: "higher", rotate: "-rotate-[2deg]" },
+  { label: "高", value: "high", rotate: "rotate-[4deg]" }
 ] as const;
 const symptomOptions = ["疲惫", "头痛", "乳房胀痛", "腹痛", "腰痛"];
 const symptomStickerRotations = ["-rotate-[3deg]", "rotate-[2deg]", "-rotate-[1deg]", "rotate-[3deg]", "-rotate-[2deg]", "rotate-[1deg]"] as const;
@@ -83,14 +81,14 @@ function SelectedStickerMark({ className }: { className?: string }) {
 function MoodSticker({
   active,
   dimInactive = false,
-  imageSrc,
+  fillColor,
   label,
   value,
   onClick
 }: {
   active: boolean;
   dimInactive?: boolean;
-  imageSrc: string;
+  fillColor: string;
   label: string;
   value: MoodValue;
   onClick: () => void;
@@ -111,21 +109,19 @@ function MoodSticker({
       )}
     >
       {active ? <SelectedStickerMark className="-right-0.5 -top-0.5" /> : null}
-      <img
-        src={imageSrc}
-        alt=""
+      <MoodStickerGraphic
+        mood={value}
+        fillColor={fillColor}
         className={cn(
-          "w-auto object-contain",
-          stickerShadowStyles.regular,
-          layout.imageSize ?? "h-14 sm:h-16"
+          "h-14 sm:h-16",
+          stickerShadowStyles.regular
         )}
-        aria-hidden="true"
       />
     </button>
   );
 }
 
-function MoodValue({ mood }: { mood?: DailyEntry["mood"] }) {
+function MoodValue({ mood, fillColor }: { mood?: DailyEntry["mood"]; fillColor: string }) {
   const moodItem = getMoodOption(mood);
 
   if (!moodItem) {
@@ -134,18 +130,25 @@ function MoodValue({ mood }: { mood?: DailyEntry["mood"] }) {
 
   return (
     <span className="inline-flex items-center gap-2">
-      <img
-        src={moodItem.imageSrc}
-        alt=""
-        className={cn("h-8 w-8 object-contain", stickerShadowStyles.compact)}
-        aria-hidden="true"
+      <MoodStickerGraphic
+        mood={moodItem.value}
+        fillColor={fillColor}
+        className={cn("h-8", stickerShadowStyles.compact)}
       />
       <span>{moodItem.label}</span>
     </span>
   );
 }
 
-function EnergyValue({ energy }: { energy?: DailyEntry["energy"] }) {
+function EnergyValue({
+  energy,
+  backgroundColor,
+  fillColor
+}: {
+  energy?: DailyEntry["energy"];
+  backgroundColor: string;
+  fillColor: string;
+}) {
   const energyItem = energyOptions.find((item) => item.value === energy);
 
   if (!energyItem) {
@@ -154,11 +157,11 @@ function EnergyValue({ energy }: { energy?: DailyEntry["energy"] }) {
 
   return (
     <span className="inline-flex items-center gap-2">
-      <img
-        src={energyItem.imageSrc}
-        alt=""
-        className={cn("h-7 w-auto object-contain", stickerShadowStyles.compact)}
-        aria-hidden="true"
+      <EnergyStickerGraphic
+        energy={energyItem.value}
+        backgroundColor={backgroundColor}
+        fillColor={fillColor}
+        className={cn("h-7", stickerShadowStyles.compact)}
       />
       <span>{energyItem.label}</span>
     </span>
@@ -168,15 +171,19 @@ function EnergyValue({ energy }: { energy?: DailyEntry["energy"] }) {
 function EnergyStickerButton({
   active,
   dimInactive = false,
-  imageSrc,
+  backgroundColor,
+  fillColor,
   label,
+  value,
   rotate,
   onClick
 }: {
   active: boolean;
   dimInactive?: boolean;
-  imageSrc: string;
+  backgroundColor: string;
+  fillColor: string;
   label: string;
+  value: NonNullable<DailyEntry["energy"]>;
   rotate: string;
   onClick: () => void;
 }) {
@@ -194,11 +201,11 @@ function EnergyStickerButton({
     >
       <span className="relative inline-flex">
         {active ? <SelectedStickerMark className="-right-1 top-0" /> : null}
-        <img
-          src={imageSrc}
-          alt=""
-          className={cn("h-[3.4rem] w-auto object-contain sm:h-[3.7rem]", stickerShadowStyles.regular)}
-          aria-hidden="true"
+        <EnergyStickerGraphic
+          energy={value}
+          backgroundColor={backgroundColor}
+          fillColor={fillColor}
+          className={cn("h-[3.4rem] sm:h-[3.7rem]", stickerShadowStyles.regular)}
         />
       </span>
     </button>
@@ -340,8 +347,26 @@ function parseDateKey(dateKey: string) {
   return new Date(year, month - 1, day);
 }
 
+function getEntryMoodFillColor(
+  profile: CycleProfile | null,
+  entries: Record<string, DailyEntry>,
+  dateKey?: string
+) {
+  if (!profile || !dateKey) {
+    return getPhaseStickerFillColor();
+  }
+
+  return getPhaseStickerFillColor(getCycleSummary(profile, entries, parseDateKey(dateKey)).phase.color);
+}
+
 export function LogAnswerSummary({ entry }: { entry?: DailyEntry }) {
+  const profile = useCycleStore((state) => state.profile);
+  const entries = useCycleStore((state) => state.entries);
   const bleedingLevel = getBleedingLevel(entry);
+  const moodFillColor = getEntryMoodFillColor(profile, entries, entry?.date);
+  const energyColors = getPhaseEnergyColors(
+    profile && entry?.date ? getCycleSummary(profile, entries, parseDateKey(entry.date)).phase.color : undefined
+  );
   const symptomLabel =
     entry?.symptoms === undefined
       ? "未记录"
@@ -358,13 +383,13 @@ export function LogAnswerSummary({ entry }: { entry?: DailyEntry }) {
       <div>
         <p className={uiTextStyles.sectionLabel}>心情</p>
         <div className="mt-2 text-base font-medium text-[color:var(--foreground)]">
-          <MoodValue mood={entry?.mood} />
+          <MoodValue mood={entry?.mood} fillColor={moodFillColor} />
         </div>
       </div>
       <div>
         <p className={uiTextStyles.sectionLabel}>能量</p>
         <p className="mt-2 text-base font-medium text-[color:var(--foreground)]">
-          <EnergyValue energy={entry?.energy} />
+          <EnergyValue energy={entry?.energy} {...energyColors} />
         </p>
       </div>
       <div>
@@ -405,6 +430,10 @@ export function CompletedLogDetails({ entry, onChange }: CompletedLogDetailsProp
   const hasSelectedSymptoms = entry?.symptoms !== undefined;
   const questionClassName = "text-base font-medium text-[color:var(--foreground)]";
   const entryDate = entry?.date ? parseDateKey(entry.date) : null;
+  const moodFillColor = getEntryMoodFillColor(profile, entries, entry?.date);
+  const energyColors = getPhaseEnergyColors(
+    profile && entryDate ? getCycleSummary(profile, entries, entryDate).phase.color : undefined
+  );
   const flowQuestion =
     profile && entryDate && getCycleSummary(profile, entries, entryDate).phase.label === "月经期"
       ? "今天经血量如何？"
@@ -420,7 +449,7 @@ export function CompletedLogDetails({ entry, onChange }: CompletedLogDetailsProp
               key={mood.value}
               active={entry?.mood === mood.value}
               dimInactive={Boolean(entry?.mood)}
-              imageSrc={mood.imageSrc}
+              fillColor={moodFillColor}
               label={mood.label}
               value={mood.value}
               onClick={() => onChange({ mood: mood.value })}
@@ -437,8 +466,10 @@ export function CompletedLogDetails({ entry, onChange }: CompletedLogDetailsProp
               key={energy.value}
               active={entry?.energy === energy.value}
               dimInactive={Boolean(entry?.energy)}
-              imageSrc={energy.imageSrc}
+              backgroundColor={energyColors.backgroundColor}
+              fillColor={energyColors.fillColor}
               label={energy.label}
+              value={energy.value}
               rotate={energy.rotate}
               onClick={() => onChange({ energy: energy.value })}
             />
@@ -626,7 +657,10 @@ export function QuickLogCard({
   const currentStepIndex = stepOrder.indexOf(currentStep) + 1;
   const bleedingLevel = getBleedingLevel(entry);
   const currentDate = parseDateKey(date);
-  const phaseLabel = profile ? getCycleSummary(profile, entries, currentDate).phase.label : null;
+  const phase = profile ? getCycleSummary(profile, entries, currentDate).phase : null;
+  const phaseLabel = phase?.label ?? null;
+  const moodFillColor = getPhaseStickerFillColor(phase?.color);
+  const energyColors = getPhaseEnergyColors(phase?.color);
   const flowQuestion = phaseLabel === "月经期" ? "今天经血量如何？" : "今天有经血吗？";
 
   const completedLabels = useMemo(() => {
@@ -679,7 +713,7 @@ export function QuickLogCard({
                   key={mood.value}
                   active={entry?.mood === mood.value}
                   dimInactive={Boolean(entry?.mood)}
-                  imageSrc={mood.imageSrc}
+                  fillColor={moodFillColor}
                   label={mood.label}
                   value={mood.value}
                   onClick={() => {
@@ -709,8 +743,10 @@ export function QuickLogCard({
                   key={energy.value}
                   active={entry?.energy === energy.value}
                   dimInactive={Boolean(entry?.energy)}
-                  imageSrc={energy.imageSrc}
+                  backgroundColor={energyColors.backgroundColor}
+                  fillColor={energyColors.fillColor}
                   label={energy.label}
+                  value={energy.value}
                   rotate={energy.rotate}
                   onClick={() => {
                     setStepOverride("energy");

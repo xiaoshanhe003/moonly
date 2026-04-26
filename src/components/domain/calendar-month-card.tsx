@@ -3,7 +3,9 @@ import type { CycleProfile, DailyEntry } from "../../features/cycle/types";
 import { cn } from "../../lib/utils";
 import { uiTextStyles } from "../ui/styles";
 import { getMoodOption } from "./mood-options";
+import { MoodStickerGraphic } from "./mood-sticker-graphic";
 import { stickerShadowStyles } from "./mood-sticker-styles";
+import { getPhaseShadeColor, getPhaseStickerFillColor } from "./phase-colors";
 
 type CalendarMonthCardProps = {
   monthDate: Date;
@@ -17,23 +19,6 @@ type CalendarCellTone = {
   background: string;
   color?: string;
 };
-
-const phaseFamilyMap: Record<string, string> = {
-  "var(--phase-menstrual)": "menstrual",
-  "var(--phase-follicular)": "follicular",
-  "var(--phase-ovulation)": "ovulation",
-  "var(--phase-luteal)": "luteal"
-};
-
-function getPhaseShadeColor(phaseColor: string, shade: 100 | 200 | 400) {
-  const family = phaseFamilyMap[phaseColor];
-
-  if (!family) {
-    return phaseColor;
-  }
-
-  return `var(--phase-${family}-${shade})`;
-}
 
 function getCalendarCellTone(isPredictable: boolean, phaseColor: string): CalendarCellTone {
   return {
@@ -91,6 +76,7 @@ function DayCellContent({
   dayOfMonth,
   isToday,
   tone,
+  phaseFillColor,
   moodSticker,
   onEntryClick
 }: {
@@ -98,19 +84,19 @@ function DayCellContent({
   dayOfMonth: number;
   isToday: boolean;
   tone: CalendarCellTone;
-  moodSticker: { imageSrc: string; label: string } | null;
+  phaseFillColor: string;
+  moodSticker: { value: NonNullable<DailyEntry["mood"]>; label: string } | null;
   onEntryClick?: (dateKey: string) => void;
 }) {
   const content = (
     <>
       <DayMarker dayOfMonth={dayOfMonth} isToday={isToday} tone={tone} />
       {moodSticker ? (
-        <img
-          src={moodSticker.imageSrc}
-          alt=""
+        <MoodStickerGraphic
+          mood={moodSticker.value}
           title={moodSticker.label}
-          className={cn("mt-1.5 h-8 w-auto max-w-[70%] object-contain", stickerShadowStyles.compact)}
-          aria-hidden="true"
+          fillColor={phaseFillColor}
+          className={cn("mt-1.5 h-8 max-w-[70%]", stickerShadowStyles.compact)}
         />
       ) : null}
     </>
@@ -174,6 +160,7 @@ export function CalendarMonthCard({
           const tone = cell.isToday
             ? getTodayCellTone(cell.phase.color)
             : getCalendarCellTone(cell.isPredictable, cell.phase.color);
+          const phaseFillColor = getPhaseStickerFillColor(cell.phase.color);
 
           return (
             <div
@@ -193,6 +180,7 @@ export function CalendarMonthCard({
                   dayOfMonth={cell.dayOfMonth}
                   isToday={cell.isToday}
                   tone={tone}
+                  phaseFillColor={phaseFillColor}
                   moodSticker={moodSticker}
                   onEntryClick={entry ? onEntryClick : undefined}
                 />
