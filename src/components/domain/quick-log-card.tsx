@@ -47,7 +47,7 @@ const flowOptions = [
   { label: "较多", value: "heavy", rotate: "-rotate-[2deg]" }
 ] as const;
 const stepOrder: QuickLogStep[] = ["mood", "energy", "symptoms", "flow"];
-const autoAdvanceDelayMs = 520;
+const cardSlideAnimationMs = 440;
 type FlowOption = (typeof flowOptions)[number];
 
 type CompletedLogDetailsProps = {
@@ -307,12 +307,14 @@ function CompletedAnswerStickerRow({
   entry,
   bleedingLevel,
   energyColors,
-  moodFillColor
+  moodFillColor,
+  className
 }: {
   entry?: DailyEntry;
   bleedingLevel?: DailyEntry["bleedingLevel"];
   energyColors: ReturnType<typeof getPhaseEnergyColors>;
   moodFillColor: string;
+  className?: string;
 }) {
   const moodItem = getMoodOption(entry?.mood);
   const energyItem = energyOptions.find((item) => item.value === entry?.energy);
@@ -322,7 +324,7 @@ function CompletedAnswerStickerRow({
     : entry.symptoms[0] ?? noSymptomLabel;
 
   return (
-    <div className="mt-3 flex min-h-9 items-center gap-2 overflow-visible" aria-label="今日记录答案">
+    <div className={cn("flex min-h-9 min-w-0 flex-1 items-center justify-end gap-2 overflow-visible", className)} aria-label="今日记录答案">
       {moodItem ? (
         <span className="flex h-9 w-9 items-center justify-center">
           <MoodStickerGraphic
@@ -703,11 +705,13 @@ export function QuickLogCard({
   const updateEntry = useCycleStore((state) => state.updateEntry);
   const [isExpanded, setIsExpanded] = useState(false);
   const [stepOverride, setStepOverride] = useState<QuickLogStep | null>(null);
-  const autoAdvanceTimeoutRef = useRef<number | null>(null);
+  const [isCardSwitching, setIsCardSwitching] = useState(false);
+  const [transitionTargetStep, setTransitionTargetStep] = useState<QuickLogStep | null>(null);
+  const [isCompletionSwitching, setIsCompletionSwitching] = useState(false);
+  const cardTransitionTimeoutRef = useRef<number | null>(null);
   const progress = getLogProgress(entry);
   const nextStep = getSuggestedStep(entry);
   const currentStep = stepOverride ?? nextStep ?? "mood";
-  const currentStepIndex = stepOrder.indexOf(currentStep) + 1;
   const bleedingLevel = getBleedingLevel(entry);
   const currentDate = parseDateKey(date);
   const phase = profile ? getCycleSummary(profile, entries, currentDate).phase : null;
@@ -722,190 +726,222 @@ export function QuickLogCard({
 
   useEffect(() => {
     return () => {
-      if (autoAdvanceTimeoutRef.current !== null) {
-        window.clearTimeout(autoAdvanceTimeoutRef.current);
+      if (cardTransitionTimeoutRef.current !== null) {
+        window.clearTimeout(cardTransitionTimeoutRef.current);
       }
     };
   }, []);
 
-  const scheduleStepOverride = (step: QuickLogStep | null) => {
-    if (autoAdvanceTimeoutRef.current !== null) {
-      window.clearTimeout(autoAdvanceTimeoutRef.current);
+  const scheduleStepOverride = (step: QuickLogStep | null, targetStep: QuickLogStep) => {
+    if (cardTransitionTimeoutRef.current !== null) {
+      window.clearTimeout(cardTransitionTimeoutRef.current);
     }
 
-    autoAdvanceTimeoutRef.current = window.setTimeout(() => {
+    setTransitionTargetStep(targetStep);
+    setIsCardSwitching(true);
+    cardTransitionTimeoutRef.current = window.setTimeout(() => {
       setStepOverride(step);
-      autoAdvanceTimeoutRef.current = null;
-    }, autoAdvanceDelayMs);
+      setIsCardSwitching(false);
+      setTransitionTargetStep(null);
+      cardTransitionTimeoutRef.current = null;
+    }, cardSlideAnimationMs);
+  };
+
+  const scheduleCompletion = () => {
+    if (cardTransitionTimeoutRef.current !== null) {
+      window.clearTimeout(cardTransitionTimeoutRef.current);
+    }
+
+    setIsCardSwitching(true);
+    setIsCompletionSwitching(true);
+    cardTransitionTimeoutRef.current = window.setTimeout(() => {
+      setStepOverride(null);
+      setIsCardSwitching(false);
+      setIsCompletionSwitching(false);
+      cardTransitionTimeoutRef.current = null;
+    }, cardSlideAnimationMs);
   };
 
   const renderStep = (step: QuickLogStep) => {
-    const progressText = `${currentStepIndex}/${stepOrder.length}`;
+    const progressText = `${stepOrder.indexOf(step) + 1}/${stepOrder.length}`;
     const questionClassName = "text-sm font-medium text-[color:var(--foreground)]";
+    const progressClassName = cn("text-sm leading-none", uiTextStyles.muted);
+    const stepLayoutClassName = "flex h-full flex-col";
+    const stepBodyClassName = "flex flex-1 items-center";
 
     if (step === "mood") {
       return (
-        <>
+        <div className={stepLayoutClassName}>
           <div className="flex items-start justify-between gap-3">
             <p className={questionClassName}>今天心情如何？</p>
-            <p className={cn("text-sm font-medium", uiTextStyles.muted)}>{progressText}</p>
+            <p className={progressClassName}>{progressText}</p>
           </div>
-          <div className="mt-4 rounded-[calc(var(--radius-xl)+10px)] bg-[linear-gradient(180deg,rgba(255,255,255,0.84),rgba(255,255,255,0.56))] px-3 py-4">
-            <div className="relative mx-auto h-[7.5rem] w-full max-w-[19rem] sm:h-[8.25rem] sm:max-w-[21rem]">
-              {moodOptions.map((mood) => (
-                <MoodSticker
-                  key={mood.value}
-                  active={entry?.mood === mood.value}
-                  dimInactive={Boolean(entry?.mood)}
-                  fillColor={moodFillColor}
-                  label={mood.label}
-                  value={mood.value}
-                  onClick={() => {
-                    setStepOverride("mood");
-                    updateEntry(date, { mood: mood.value });
-                    scheduleStepOverride("energy");
-                  }}
-                />
-              ))}
+          <div className={stepBodyClassName}>
+            <div className="w-full rounded-[calc(var(--radius-xl)+10px)] bg-[linear-gradient(180deg,rgba(255,255,255,0.84),rgba(255,255,255,0.56))] px-3 py-4">
+              <div className="relative mx-auto h-[7.5rem] w-full max-w-[19rem] sm:h-[8.25rem] sm:max-w-[21rem]">
+                {moodOptions.map((mood) => (
+                  <MoodSticker
+                    key={mood.value}
+                    active={entry?.mood === mood.value}
+                    dimInactive={Boolean(entry?.mood)}
+                    fillColor={moodFillColor}
+                    label={mood.label}
+                    value={mood.value}
+                    onClick={() => {
+                      setStepOverride("mood");
+                      updateEntry(date, { mood: mood.value });
+                      scheduleStepOverride("energy", "energy");
+                    }}
+                  />
+                ))}
+              </div>
             </div>
           </div>
-        </>
+        </div>
       );
     }
 
     if (step === "energy") {
       return (
-        <>
+        <div className={stepLayoutClassName}>
           <div className="flex items-start justify-between gap-3">
             <p className={questionClassName}>感觉体内的能量如何？</p>
-            <p className={cn("text-sm font-medium", uiTextStyles.muted)}>{progressText}</p>
+            <p className={progressClassName}>{progressText}</p>
           </div>
-          <div className="mt-4 rounded-[calc(var(--radius-xl)+10px)] bg-[linear-gradient(180deg,rgba(255,255,255,0.84),rgba(255,255,255,0.56))] px-2 py-3">
-            <div className="grid grid-cols-4 gap-1.5">
-              {energyOptions.map((energy) => (
-                <EnergyStickerButton
-                  key={energy.value}
-                  active={entry?.energy === energy.value}
-                  dimInactive={Boolean(entry?.energy)}
-                  backgroundColor={energyColors.backgroundColor}
-                  fillColor={energyColors.fillColor}
-                  label={energy.label}
-                  value={energy.value}
-                  rotate={energy.rotate}
-                  onClick={() => {
-                    setStepOverride("energy");
-                    updateEntry(date, { energy: energy.value });
-                    scheduleStepOverride("symptoms");
-                  }}
-                />
-              ))}
+          <div className={stepBodyClassName}>
+            <div className="w-full rounded-[calc(var(--radius-xl)+10px)] bg-[linear-gradient(180deg,rgba(255,255,255,0.84),rgba(255,255,255,0.56))] px-2 py-3">
+              <div className="grid grid-cols-4 gap-1.5">
+                {energyOptions.map((energy) => (
+                  <EnergyStickerButton
+                    key={energy.value}
+                    active={entry?.energy === energy.value}
+                    dimInactive={Boolean(entry?.energy)}
+                    backgroundColor={energyColors.backgroundColor}
+                    fillColor={energyColors.fillColor}
+                    label={energy.label}
+                    value={energy.value}
+                    rotate={energy.rotate}
+                    onClick={() => {
+                      setStepOverride("energy");
+                      updateEntry(date, { energy: energy.value });
+                      scheduleStepOverride("symptoms", "symptoms");
+                    }}
+                  />
+                ))}
+              </div>
             </div>
           </div>
-        </>
+        </div>
       );
     }
 
     if (step === "symptoms") {
       return (
-        <>
+        <div className={stepLayoutClassName}>
           <div className="flex items-start justify-between gap-3">
             <p className={questionClassName}>身体有什么信号？</p>
-            <p className={cn("text-sm font-medium", uiTextStyles.muted)}>{progressText}</p>
+            <p className={progressClassName}>{progressText}</p>
           </div>
-          <div className="mt-4 flex flex-wrap gap-2.5">
-            <SymptomStickerButton
-              active={noSymptomSelected}
-              dimInactive={hasSelectedSymptoms}
-              label={noSymptomLabel}
-              rotate="rotate-[2deg]"
-              onClick={() => {
-                updateEntry(date, { symptoms: [] });
-                setStepOverride("symptoms");
-              }}
-            />
-            {symptomOptions.map((symptom, index) => {
-              const active = entry?.symptoms?.includes(symptom);
-              return (
-                <SymptomStickerButton
-                  key={symptom}
-                  active={Boolean(active)}
-                  dimInactive={hasSelectedSymptoms}
-                  label={symptom}
-                  rotate={symptomStickerRotations[index % symptomStickerRotations.length]}
-                  onClick={() => {
-                    const previous = new Set(entry?.symptoms ?? []);
-                    if (noSymptomSelected) {
-                      previous.clear();
-                    }
-                    if (previous.has(symptom)) {
-                      previous.delete(symptom);
-                    } else {
-                      previous.add(symptom);
-                    }
-                    updateEntry(date, { symptoms: [...previous] });
-                    setStepOverride("symptoms");
-                  }}
-                />
-              );
-            })}
+          <div className="flex flex-1 flex-col justify-center gap-4">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <SymptomStickerButton
+                active={noSymptomSelected}
+                dimInactive={hasSelectedSymptoms}
+                label={noSymptomLabel}
+                rotate="rotate-[2deg]"
+                onClick={() => {
+                  updateEntry(date, { symptoms: [] });
+                  setStepOverride("symptoms");
+                }}
+              />
+              {symptomOptions.map((symptom, index) => {
+                const active = entry?.symptoms?.includes(symptom);
+                return (
+                  <SymptomStickerButton
+                    key={symptom}
+                    active={Boolean(active)}
+                    dimInactive={hasSelectedSymptoms}
+                    label={symptom}
+                    rotate={symptomStickerRotations[index % symptomStickerRotations.length]}
+                    onClick={() => {
+                      const previous = new Set(entry?.symptoms ?? []);
+                      if (noSymptomSelected) {
+                        previous.clear();
+                      }
+                      if (previous.has(symptom)) {
+                        previous.delete(symptom);
+                      } else {
+                        previous.add(symptom);
+                      }
+                      updateEntry(date, { symptoms: [...previous] });
+                      setStepOverride("symptoms");
+                    }}
+                  />
+                );
+              })}
+            </div>
+            <div className={cn("flex flex-wrap items-center justify-end", uiSpacingStyles.gapSm)}>
+              <Button
+                variant="primary"
+                onClick={() => scheduleStepOverride(null, "flow")}
+                disabled={entry?.symptoms === undefined}
+              >
+                下一步
+              </Button>
+            </div>
           </div>
-          <div className={cn(uiSpacingStyles.sectionTop, "flex flex-wrap items-center justify-end", uiSpacingStyles.gapSm)}>
-            <Button
-              variant="primary"
-              onClick={() => setStepOverride(null)}
-              disabled={entry?.symptoms === undefined}
-            >
-              下一步
-            </Button>
-          </div>
-        </>
+        </div>
       );
     }
 
     return (
-      <>
+      <div className={stepLayoutClassName}>
         <div className="flex items-start justify-between gap-3">
           <p className={questionClassName}>{flowQuestion}</p>
-          <p className={cn("text-sm font-medium", uiTextStyles.muted)}>{progressText}</p>
+          <p className={progressClassName}>{progressText}</p>
         </div>
-        <div className="mt-4 grid grid-cols-5 gap-1.5">
-          {flowOptions.map((flow) => (
-            <FlowStickerButton
-              key={flow.value}
-              active={bleedingLevel === flow.value}
-              dimInactive={bleedingLevel !== undefined}
-              option={flow}
-              onClick={() =>
-                updateEntry(date, {
-                  bleedingLevel: flow.value,
-                  periodSignal: flow.value === "none" ? "none" : entry?.periodSignal ?? "none",
-                  isPeriodStart: false
-                })
-              }
-            />
-          ))}
-        </div>
-        {canShowPeriodSignal ? (
-          <div className="mt-4 flex flex-wrap items-center gap-3">
-            <Button
-              variant={entry?.periodSignal === "possible_start" ? "primary" : "soft"}
-              onClick={() =>
-                updateEntry(date, {
-                  bleedingLevel,
-                  periodSignal: entry?.periodSignal === "possible_start" ? "none" : "possible_start",
-                  isPeriodStart: false
-                })
-              }
-            >
-              这次感觉像经期开始
-            </Button>
+        <div className="flex flex-1 flex-col justify-center gap-4">
+          <div className="grid grid-cols-5 gap-1.5">
+            {flowOptions.map((flow) => (
+              <FlowStickerButton
+                key={flow.value}
+                active={bleedingLevel === flow.value}
+                dimInactive={bleedingLevel !== undefined}
+                option={flow}
+                onClick={() => {
+                  setStepOverride("flow");
+                  updateEntry(date, {
+                    bleedingLevel: flow.value,
+                    periodSignal: flow.value === "none" ? "none" : entry?.periodSignal ?? "none",
+                    isPeriodStart: false
+                  });
+                  scheduleCompletion();
+                }}
+              />
+            ))}
           </div>
-        ) : null}
-      </>
+          {canShowPeriodSignal ? (
+            <div className="flex flex-wrap items-center gap-3">
+              <Button
+                variant={entry?.periodSignal === "possible_start" ? "primary" : "soft"}
+                onClick={() =>
+                  updateEntry(date, {
+                    bleedingLevel,
+                    periodSignal: entry?.periodSignal === "possible_start" ? "none" : "possible_start",
+                    isPeriodStart: false
+                  })
+                }
+              >
+                这次感觉像经期开始
+              </Button>
+            </div>
+          ) : null}
+        </div>
+      </div>
     );
   };
 
-  if (progress === "complete") {
+  if (progress === "complete" && !isCompletionSwitching) {
     if (completedDisplay === "expanded") {
       const content = (
         <>
@@ -916,6 +952,7 @@ export function QuickLogCard({
               bleedingLevel={bleedingLevel}
               energyColors={energyColors}
               moodFillColor={moodFillColor}
+              className="mt-3 justify-start"
             />
           </div>
           <div className={uiSpacingStyles.sectionTop}>
@@ -924,7 +961,7 @@ export function QuickLogCard({
         </>
       );
 
-      return surface === "plain" ? content : <Card>{content}</Card>;
+      return surface === "plain" ? content : <Card className="rounded-[var(--radius-record-card)]">{content}</Card>;
     }
 
     return (
@@ -933,7 +970,7 @@ export function QuickLogCard({
           type="button"
           className={cn(
             uiSurfaceStyles.card,
-            "block w-full text-left transition-transform active:scale-[0.99]",
+            "quick-log-complete-card quick-log-card--enter-up block w-full rounded-[var(--radius-record-card)] text-left transition-transform active:scale-[0.99]",
             className
           )}
           onClick={() => {
@@ -941,16 +978,16 @@ export function QuickLogCard({
           }}
           aria-label="查看今日记录"
         >
-          <div className={cn("flex items-center", uiSpacingStyles.gapSm)}>
-            <div>
+          <div className="flex items-center justify-between gap-4">
+            <div className="shrink-0">
               <p className={cn("text-sm", uiTextStyles.muted)}>今日记录</p>
-              <CompletedAnswerStickerRow
-                entry={entry}
-                bleedingLevel={bleedingLevel}
-                energyColors={energyColors}
-                moodFillColor={moodFillColor}
-              />
             </div>
+            <CompletedAnswerStickerRow
+              entry={entry}
+              bleedingLevel={bleedingLevel}
+              energyColors={energyColors}
+              moodFillColor={moodFillColor}
+            />
           </div>
         </button>
 
@@ -971,9 +1008,32 @@ export function QuickLogCard({
     );
   }
 
+  const activeCard = (
+    <Card
+      className={cn(
+        "quick-log-card rounded-[var(--radius-record-card)] quick-log-card--front",
+        isCardSwitching && "quick-log-card--slide-out",
+        className
+      )}
+    >
+      <div key={currentStep} className="h-full">
+        {renderStep(currentStep)}
+      </div>
+    </Card>
+  );
+
   return surface === "plain" ? (
     <div className={className}>{renderStep(currentStep)}</div>
   ) : (
-    <Card className={className}>{renderStep(currentStep)}</Card>
+    <div className="quick-log-deck">
+      {isCardSwitching && transitionTargetStep ? (
+        <Card className={cn("quick-log-card rounded-[var(--radius-record-card)] quick-log-card--behind", className)}>
+          <div className="h-full">
+            {renderStep(transitionTargetStep)}
+          </div>
+        </Card>
+      ) : null}
+      {activeCard}
+    </div>
   );
 }
