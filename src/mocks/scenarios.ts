@@ -56,7 +56,7 @@ export const scenarios: Record<
         date: daysAgo(17),
         mood: "calm",
         energy: "medium",
-        symptoms: ["腹胀"],
+        symptoms: ["腰痛"],
         bleedingLevel: "medium"
       },
       {
@@ -77,7 +77,7 @@ export const scenarios: Record<
         date: daysAgo(7),
         mood: "happy",
         energy: "high",
-        symptoms: ["腹胀"],
+        symptoms: ["乳房胀痛"],
         bleedingLevel: "none"
       },
       {
@@ -91,7 +91,7 @@ export const scenarios: Record<
         date: isoToday,
         mood: "calm",
         energy: "medium",
-        symptoms: ["腹胀", "疲惫"],
+        symptoms: ["腹痛", "疲惫"],
         bleedingLevel: "none"
       }
     ]

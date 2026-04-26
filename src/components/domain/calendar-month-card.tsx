@@ -12,24 +12,28 @@ type CalendarMonthCardProps = {
   profile: CycleProfile;
   entries: Record<string, DailyEntry>;
   today: Date;
-  onEntryClick?: (dateKey: string) => void;
+  selectedEmptyDateKey?: string | null;
+  selectedEmptyDateBubbleId?: number | null;
+  isEmptyDateBubbleLeaving?: boolean;
+  onDateClick?: (dateKey: string) => void;
 };
 
 type CalendarCellTone = {
   background: string;
-  color?: string;
+  dotClassName: string;
 };
 
 function getCalendarCellTone(isPredictable: boolean, phaseColor: string): CalendarCellTone {
   return {
-    background: getPhaseShadeColor(phaseColor, isPredictable ? 200 : 100)
+    background: getPhaseShadeColor(phaseColor, 200),
+    dotClassName: isPredictable ? "h-1.5 w-1.5" : "h-2.5 w-2.5"
   };
 }
 
 function getTodayCellTone(phaseColor: string): CalendarCellTone {
   return {
-    background: getPhaseShadeColor(phaseColor, 400),
-    color: "white"
+    background: getPhaseShadeColor(phaseColor, 200),
+    dotClassName: "h-2.5 w-2.5"
   };
 }
 
@@ -42,27 +46,19 @@ function formatDateKey(date: Date) {
 
 function DayMarker({
   dayOfMonth,
-  isToday,
-  tone
+  isToday
 }: {
   dayOfMonth: number;
   isToday: boolean;
-  tone: CalendarCellTone;
 }) {
   return (
-    <div className="relative h-5 w-full">
+    <div className="flex h-5 w-full items-center justify-center">
       <span
         className={cn(
-          "absolute bottom-0 mx-auto rounded-full",
-          isToday ? "inset-x-0 h-5 w-[70%]" : "inset-x-0 h-2 w-[70%]"
-        )}
-        style={{ background: tone.background }}
-        aria-hidden="true"
-      />
-      <span
-        className={cn(
-          "absolute inset-0 z-10 inline-flex items-center justify-center text-[length:var(--text-md)] font-semibold leading-none",
-          isToday ? "text-white" : "text-[color:var(--foreground)]"
+          "inline-flex items-center justify-center rounded-full text-[length:var(--text-md)] font-semibold leading-none",
+          isToday
+            ? "h-5 min-w-5 px-1.5 bg-[color:var(--foreground)] text-[color:var(--background)]"
+            : "text-[color:var(--foreground)]"
         )}
       >
         {dayOfMonth}
@@ -76,35 +72,69 @@ function DayCellContent({
   dayOfMonth,
   isToday,
   tone,
+  phaseLabel,
   phaseFillColor,
   moodSticker,
-  onEntryClick
+  showPhaseBubble,
+  phaseBubbleId,
+  isPhaseBubbleLeaving,
+  onDateClick
 }: {
   dateKey: string;
   dayOfMonth: number;
   isToday: boolean;
   tone: CalendarCellTone;
+  phaseLabel: string;
   phaseFillColor: string;
   moodSticker: { value: NonNullable<DailyEntry["mood"]>; label: string } | null;
-  onEntryClick?: (dateKey: string) => void;
+  showPhaseBubble: boolean;
+  phaseBubbleId?: number | null;
+  isPhaseBubbleLeaving?: boolean;
+  onDateClick?: (dateKey: string) => void;
 }) {
   const content = (
     <>
-      <DayMarker dayOfMonth={dayOfMonth} isToday={isToday} tone={tone} />
-      {moodSticker ? (
-        <MoodStickerGraphic
-          mood={moodSticker.value}
-          title={moodSticker.label}
-          fillColor={phaseFillColor}
-          className={cn("mt-1.5 h-8 max-w-[70%]", stickerShadowStyles.compact)}
-        />
+      {showPhaseBubble ? (
+        <span
+          key={phaseBubbleId}
+          className={cn(
+            "absolute left-1/2 top-0 z-10 whitespace-nowrap rounded-[0.65rem] border border-[color:var(--border)] bg-[color:var(--card-elevated)] px-2.5 py-1.5 text-xs font-medium leading-none text-[color:var(--foreground)] shadow-[var(--shadow-card)]",
+            isPhaseBubbleLeaving
+              ? "[animation:phase-bubble-fade_200ms_ease-in_forwards]"
+              : "[animation:phase-bubble-float_160ms_ease-out_forwards]"
+          )}
+          role="status"
+        >
+          {phaseLabel}
+          <span
+            className="absolute left-1/2 top-full h-2 w-2 -translate-x-1/2 -translate-y-1/2 rotate-45 border-b border-r border-[color:var(--border)] bg-[color:var(--card-elevated)]"
+            aria-hidden="true"
+          />
+        </span>
       ) : null}
+      <DayMarker dayOfMonth={dayOfMonth} isToday={isToday} />
+      <div className="mt-1.5 flex h-8 w-full items-center justify-center">
+        {moodSticker ? (
+          <MoodStickerGraphic
+            mood={moodSticker.value}
+            title={moodSticker.label}
+            fillColor={phaseFillColor}
+            className={cn("h-8 max-w-[70%]", stickerShadowStyles.compact)}
+          />
+        ) : (
+          <span
+            className={cn("rounded-full", tone.dotClassName)}
+            style={{ background: tone.background }}
+            aria-hidden="true"
+          />
+        )}
+      </div>
     </>
   );
 
-  if (!onEntryClick) {
+  if (!onDateClick) {
     return (
-      <div className="flex w-full flex-col items-center" data-calendar-day-content>
+      <div className="relative flex w-full flex-col items-center" data-calendar-day-content>
         {content}
       </div>
     );
@@ -113,8 +143,8 @@ function DayCellContent({
   return (
     <button
       type="button"
-      onClick={() => onEntryClick(dateKey)}
-      className="flex w-full flex-col items-center transition-transform active:scale-95"
+      onClick={() => onDateClick(dateKey)}
+      className="relative flex w-full flex-col items-center transition-transform active:scale-95"
       data-calendar-day-content
       aria-label={`查看 ${dateKey} 的记录`}
     >
@@ -128,7 +158,10 @@ export function CalendarMonthCard({
   profile,
   entries,
   today,
-  onEntryClick
+  selectedEmptyDateKey,
+  selectedEmptyDateBubbleId,
+  isEmptyDateBubbleLeaving,
+  onDateClick
 }: CalendarMonthCardProps) {
   const cells = buildMonthGrid(profile, entries, monthDate, today);
   const monthStartColumn = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1).getDay() + 1;
@@ -161,6 +194,7 @@ export function CalendarMonthCard({
             ? getTodayCellTone(cell.phase.color)
             : getCalendarCellTone(cell.isPredictable, cell.phase.color);
           const phaseFillColor = getPhaseStickerFillColor(cell.phase.color);
+          const showPhaseBubble = selectedEmptyDateKey === dateKey && !entry;
 
           return (
             <div
@@ -180,9 +214,13 @@ export function CalendarMonthCard({
                   dayOfMonth={cell.dayOfMonth}
                   isToday={cell.isToday}
                   tone={tone}
+                  phaseLabel={cell.phase.label}
                   phaseFillColor={phaseFillColor}
                   moodSticker={moodSticker}
-                  onEntryClick={entry ? onEntryClick : undefined}
+                  showPhaseBubble={showPhaseBubble}
+                  phaseBubbleId={selectedEmptyDateBubbleId}
+                  isPhaseBubbleLeaving={isEmptyDateBubbleLeaving}
+                  onDateClick={onDateClick}
                 />
               ) : null}
             </div>

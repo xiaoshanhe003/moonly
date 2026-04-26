@@ -1,10 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronRight } from "lucide-react";
-import flowHeavySticker from "../../assets/flow/heavy.png";
-import flowLightSticker from "../../assets/flow/light.png";
-import flowMediumSticker from "../../assets/flow/medium.png";
-import flowNoneSticker from "../../assets/flow/none.png";
-import flowSpottingSticker from "../../assets/flow/spotting.png";
+import { useEffect, useRef, useState } from "react";
 import selectedSticker from "../../assets/stickers/selected.png";
 import { Card } from "../ui/card";
 import { Button } from "../ui/button";
@@ -13,11 +7,12 @@ import { getBleedingLevel, getCycleSummary, getLogProgress, getSuggestedStep } f
 import type { CycleProfile, DailyEntry, QuickLogStep } from "../../features/cycle/types";
 import { cn } from "../../lib/utils";
 import { useCycleStore } from "../../features/cycle/store";
-import { uiSpacingStyles, uiTextStyles } from "../ui/styles";
+import { uiSpacingStyles, uiSurfaceStyles, uiTextStyles } from "../ui/styles";
 import { formatFullDate } from "../../lib/utils";
 import { getMoodOption, moodOptions, type MoodValue } from "./mood-options";
 import { MoodStickerGraphic } from "./mood-sticker-graphic";
 import { EnergyStickerGraphic } from "./energy-sticker-graphic";
+import { FlowStickerGraphic } from "./flow-sticker-graphic";
 import { stickerShadowStyles } from "./mood-sticker-styles";
 import { getPhaseEnergyColors, getPhaseStickerFillColor } from "./phase-colors";
 
@@ -45,11 +40,11 @@ const energyOptions = [
 const symptomOptions = ["疲惫", "头痛", "乳房胀痛", "腹痛", "腰痛"];
 const symptomStickerRotations = ["-rotate-[3deg]", "rotate-[2deg]", "-rotate-[1deg]", "rotate-[3deg]", "-rotate-[2deg]", "rotate-[1deg]"] as const;
 const flowOptions = [
-  { label: "无", value: "none", imageSrc: flowNoneSticker, rotate: "-rotate-[5deg]", imageClassName: "h-[3.85rem] sm:h-[4.25rem]" },
-  { label: "点滴", value: "spotting", imageSrc: flowSpottingSticker, rotate: "rotate-[4deg]", imageClassName: "h-[3.75rem] sm:h-[4.15rem]" },
-  { label: "少量", value: "light", imageSrc: flowLightSticker, rotate: "-rotate-[4deg]", imageClassName: "h-[4.65rem] sm:h-[5.1rem]" },
-  { label: "中等", value: "medium", imageSrc: flowMediumSticker, rotate: "rotate-[3deg]", imageClassName: "h-[4.65rem] sm:h-[5.1rem]" },
-  { label: "较多", value: "heavy", imageSrc: flowHeavySticker, rotate: "-rotate-[2deg]", imageClassName: "h-[4.65rem] sm:h-[5.1rem]" }
+  { label: "无", value: "none", rotate: "-rotate-[5deg]" },
+  { label: "点滴", value: "spotting", rotate: "rotate-[4deg]" },
+  { label: "少量", value: "light", rotate: "-rotate-[4deg]" },
+  { label: "中等", value: "medium", rotate: "rotate-[3deg]" },
+  { label: "较多", value: "heavy", rotate: "-rotate-[2deg]" }
 ] as const;
 const stepOrder: QuickLogStep[] = ["mood", "energy", "symptoms", "flow"];
 const autoAdvanceDelayMs = 520;
@@ -230,17 +225,15 @@ function FlowStickerButton({
       aria-label={option.label}
       title={option.label}
       className={cn(
-        "relative inline-flex min-h-[6.25rem] flex-col items-center justify-center gap-2 rounded-[var(--radius-lg)] bg-transparent px-1.5 py-1 transition duration-200 active:scale-[0.98]",
+        "relative inline-flex min-h-[5.35rem] flex-col items-center justify-center gap-1.5 rounded-[var(--radius-lg)] bg-transparent px-1.5 py-1 transition duration-200 active:scale-[0.98]",
         active ? "z-10" : cn("hover:-translate-y-0.5", dimInactive && "opacity-[0.55] hover:opacity-[0.8]")
       )}
     >
       <span className={cn("relative inline-flex items-center justify-center", option.rotate)}>
-        {active ? <SelectedStickerMark className="right-1 top-1" /> : null}
-        <img
-          src={option.imageSrc}
-          alt=""
-          className={cn("w-auto object-contain", stickerShadowStyles.regular, option.imageClassName)}
-          aria-hidden="true"
+        {active ? <SelectedStickerMark className="-right-1 top-0" /> : null}
+        <FlowStickerGraphic
+          level={option.value}
+          className={cn("h-[3.4rem] sm:h-[3.7rem]", stickerShadowStyles.regular)}
         />
       </span>
       <span className="text-xs font-semibold text-[color:var(--foreground)]">{option.label}</span>
@@ -257,37 +250,39 @@ function FlowValue({ bleedingLevel }: { bleedingLevel?: DailyEntry["bleedingLeve
 
   return (
     <span className="inline-flex items-center gap-2">
-      <img
-        src={flowItem.imageSrc}
-        alt=""
-        className={cn("h-8 w-auto object-contain", stickerShadowStyles.compact)}
-        aria-hidden="true"
+      <FlowStickerGraphic
+        level={flowItem.value}
+        className={cn("h-8", stickerShadowStyles.compact)}
       />
       <span>{flowItem.label}</span>
     </span>
   );
 }
 
-function OutlinedStickerText({ label }: { label: string }) {
-  const width = label.length * 24 + 32;
+function OutlinedStickerText({ label, compact = false }: { label: string; compact?: boolean }) {
+  const width = label.length * (compact ? 16 : 24) + (compact ? 18 : 32);
+  const height = compact ? 34 : 42;
+  const baseline = compact ? 24 : 29;
+  const fontSize = compact ? 15 : 19;
+  const strokeWidth = compact ? 7 : 8;
 
   return (
     <svg
       width={width}
-      height="42"
-      viewBox={`0 0 ${width} 42`}
+      height={height}
+      viewBox={`0 0 ${width} ${height}`}
       className="block overflow-visible"
       aria-hidden="true"
     >
       <text
         x={width / 2}
-        y="29"
+        y={baseline}
         textAnchor="middle"
-        fontSize="19"
+        fontSize={fontSize}
         fontWeight="900"
         fontFamily="inherit"
         stroke="white"
-        strokeWidth="8"
+        strokeWidth={strokeWidth}
         strokeLinejoin="round"
         strokeLinecap="round"
       >
@@ -295,9 +290,9 @@ function OutlinedStickerText({ label }: { label: string }) {
       </text>
       <text
         x={width / 2}
-        y="29"
+        y={baseline}
         textAnchor="middle"
-        fontSize="19"
+        fontSize={fontSize}
         fontWeight="900"
         fontFamily="inherit"
         fill="var(--foreground)"
@@ -305,6 +300,64 @@ function OutlinedStickerText({ label }: { label: string }) {
         {label}
       </text>
     </svg>
+  );
+}
+
+function CompletedAnswerStickerRow({
+  entry,
+  bleedingLevel,
+  energyColors,
+  moodFillColor
+}: {
+  entry?: DailyEntry;
+  bleedingLevel?: DailyEntry["bleedingLevel"];
+  energyColors: ReturnType<typeof getPhaseEnergyColors>;
+  moodFillColor: string;
+}) {
+  const moodItem = getMoodOption(entry?.mood);
+  const energyItem = energyOptions.find((item) => item.value === entry?.energy);
+  const flowItem = flowOptions.find((item) => item.value === bleedingLevel);
+  const symptomLabel = entry?.symptoms === undefined
+    ? null
+    : entry.symptoms[0] ?? noSymptomLabel;
+
+  return (
+    <div className="mt-3 flex min-h-9 items-center gap-2 overflow-visible" aria-label="今日记录答案">
+      {moodItem ? (
+        <span className="flex h-9 w-9 items-center justify-center">
+          <MoodStickerGraphic
+            mood={moodItem.value}
+            fillColor={moodFillColor}
+            title={moodItem.label}
+            className={cn("h-8", stickerShadowStyles.compact)}
+          />
+        </span>
+      ) : null}
+      {energyItem ? (
+        <span className="flex h-9 w-9 items-center justify-center">
+          <EnergyStickerGraphic
+            energy={energyItem.value}
+            backgroundColor={energyColors.backgroundColor}
+            fillColor={energyColors.fillColor}
+            className={cn("h-7", stickerShadowStyles.compact)}
+          />
+        </span>
+      ) : null}
+      {symptomLabel ? (
+        <span className={cn("flex h-9 items-center justify-center", stickerShadowStyles.compact)} title={symptomLabel}>
+          <OutlinedStickerText label={symptomLabel} compact />
+        </span>
+      ) : null}
+      {flowItem ? (
+        <span className="flex h-9 w-9 items-center justify-center">
+          <FlowStickerGraphic
+            level={flowItem.value}
+            title={flowItem.label}
+            className={cn("h-7", stickerShadowStyles.compact)}
+          />
+        </span>
+      ) : null}
+    </div>
   );
 }
 
@@ -663,15 +716,6 @@ export function QuickLogCard({
   const energyColors = getPhaseEnergyColors(phase?.color);
   const flowQuestion = phaseLabel === "月经期" ? "今天经血量如何？" : "今天有经血吗？";
 
-  const completedLabels = useMemo(() => {
-    const labels = [];
-    if (entry?.mood) labels.push("心情");
-    if (entry?.energy) labels.push("能量");
-    if (entry?.symptoms !== undefined) labels.push("症状");
-    if (bleedingLevel !== undefined) labels.push("出血");
-    if (entry?.periodSignal && entry.periodSignal !== "none") labels.push("经期信号");
-    return labels.join(" · ");
-  }, [bleedingLevel, entry]);
   const canShowPeriodSignal = Boolean(bleedingLevel && bleedingLevel !== "none");
   const noSymptomSelected = entry?.symptoms !== undefined && entry.symptoms.length === 0;
   const hasSelectedSymptoms = entry?.symptoms !== undefined;
@@ -866,8 +910,13 @@ export function QuickLogCard({
       const content = (
         <>
           <div>
-            <p className={cn("text-sm", uiTextStyles.muted)}>今日记录已完成</p>
-            <p className="mt-1 text-sm font-medium text-[color:var(--foreground)]">{completedLabels}</p>
+            <p className={cn("text-sm", uiTextStyles.muted)}>今日记录</p>
+            <CompletedAnswerStickerRow
+              entry={entry}
+              bleedingLevel={bleedingLevel}
+              energyColors={energyColors}
+              moodFillColor={moodFillColor}
+            />
           </div>
           <div className={uiSpacingStyles.sectionTop}>
             <CompletedLogDetails entry={entry} onChange={(patch) => updateEntry(date, patch)} />
@@ -880,22 +929,30 @@ export function QuickLogCard({
 
     return (
       <>
-        <Card className={className}>
-          <div className={cn("flex items-center justify-between", uiSpacingStyles.gapSm)}>
+        <button
+          type="button"
+          className={cn(
+            uiSurfaceStyles.card,
+            "block w-full text-left transition-transform active:scale-[0.99]",
+            className
+          )}
+          onClick={() => {
+            setIsExpanded(true);
+          }}
+          aria-label="查看今日记录"
+        >
+          <div className={cn("flex items-center", uiSpacingStyles.gapSm)}>
             <div>
-              <p className={cn("text-sm", uiTextStyles.muted)}>今日记录已完成</p>
+              <p className={cn("text-sm", uiTextStyles.muted)}>今日记录</p>
+              <CompletedAnswerStickerRow
+                entry={entry}
+                bleedingLevel={bleedingLevel}
+                energyColors={energyColors}
+                moodFillColor={moodFillColor}
+              />
             </div>
-            <Button
-              variant="secondary"
-              onClick={() => {
-                setIsExpanded(true);
-              }}
-            >
-              查看
-              <ChevronRight className="ml-1 size-4" />
-            </Button>
           </div>
-        </Card>
+        </button>
 
         {isExpanded ? (
           <Sheet

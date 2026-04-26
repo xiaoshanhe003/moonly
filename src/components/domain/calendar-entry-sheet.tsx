@@ -11,13 +11,13 @@ import { useCycleStore } from "../../features/cycle/store";
 
 type CalendarEntrySheetProps = {
   date: string;
-  entry: DailyEntry;
+  entry?: DailyEntry;
   isToday: boolean;
   onClose: () => void;
 };
 
 export function CalendarEntrySheet({ date, entry, isToday, onClose }: CalendarEntrySheetProps) {
-  const progress = getLogProgress(entry);
+  const progress = entry ? getLogProgress(entry) : null;
 
   return (
     <Sheet
@@ -26,7 +26,9 @@ export function CalendarEntrySheet({ date, entry, isToday, onClose }: CalendarEn
       }}
       header={<CompletedRecordSheetHeader date={date} />}
     >
-      {isToday && progress === "complete" ? (
+      {!entry ? (
+        <p className="text-base font-medium text-[color:var(--foreground)]">无记录</p>
+      ) : isToday && progress === "complete" ? (
         <CompletedRecordSheetContent
           date={date}
           entry={entry}

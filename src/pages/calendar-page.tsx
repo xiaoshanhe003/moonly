@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CalendarEntrySheet } from "../components/domain/calendar-entry-sheet";
 import { CalendarMonthCard } from "../components/domain/calendar-month-card";
 import { useCycleStore } from "../features/cycle/store";
@@ -31,6 +31,12 @@ type CalendarPageProps = {
   onVisibleMonthChange?: (monthKey: string) => void;
 };
 
+type SelectedEmptyDateBubble = {
+  dateKey: string;
+  id: number;
+  isLeaving: boolean;
+};
+
 const STICKY_HEADER_BUFFER = 8;
 const INITIAL_CALENDAR_SCROLL_NUDGE = 4;
 
@@ -49,15 +55,55 @@ export function CalendarPage({ onVisibleMonthChange }: CalendarPageProps) {
   const months = buildCalendarMonths(profile.lastPeriodStart, today);
   const currentMonthKey = startOfMonth(today).toISOString();
   const hasScrolledToCurrentMonth = useRef(false);
+  const emptyBubbleId = useRef(0);
   const monthRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [selectedDateKey, setSelectedDateKey] = useState<string | null>(null);
+  const [selectedEmptyDateBubble, setSelectedEmptyDateBubble] = useState<SelectedEmptyDateBubble | null>(null);
   const [visibleMonthKey, setVisibleMonthKey] = useState(currentMonthKey);
   const [stickyHeaderOffset, setStickyHeaderOffset] = useState(0);
   const selectedEntry = selectedDateKey ? entries[selectedDateKey] : undefined;
-  const selectedDateValue = useMemo(
-    () => (selectedDateKey ? parseDateKey(selectedDateKey) : null),
-    [selectedDateKey]
-  );
+
+  const handleDateClick = (dateKey: string) => {
+    if (entries[dateKey]) {
+      setSelectedDateKey(dateKey);
+      setSelectedEmptyDateBubble(null);
+      return;
+    }
+
+    setSelectedDateKey(null);
+    emptyBubbleId.current += 1;
+    setSelectedEmptyDateBubble({
+      dateKey,
+      id: emptyBubbleId.current,
+      isLeaving: false
+    });
+  };
+
+  useEffect(() => {
+    if (!selectedEmptyDateBubble) {
+      return;
+    }
+
+    if (selectedEmptyDateBubble.isLeaving) {
+      const removeTimeoutId = window.setTimeout(() => {
+        setSelectedEmptyDateBubble((current) => (current?.id === selectedEmptyDateBubble.id ? null : current));
+      }, 200);
+
+      return () => {
+        window.clearTimeout(removeTimeoutId);
+      };
+    }
+
+    const leaveTimeoutId = window.setTimeout(() => {
+      setSelectedEmptyDateBubble((current) =>
+        current?.id === selectedEmptyDateBubble.id ? { ...current, isLeaving: true } : current
+      );
+    }, 1000);
+
+    return () => {
+      window.clearTimeout(leaveTimeoutId);
+    };
+  }, [selectedEmptyDateBubble]);
 
   useEffect(() => {
     const updateStickyHeaderOffset = () => {
@@ -151,7 +197,10 @@ export function CalendarPage({ onVisibleMonthChange }: CalendarPageProps) {
               profile={profile}
               entries={entries}
               today={today}
-              onEntryClick={setSelectedDateKey}
+              selectedEmptyDateKey={selectedEmptyDateBubble?.dateKey}
+              selectedEmptyDateBubbleId={selectedEmptyDateBubble?.id}
+              isEmptyDateBubbleLeaving={selectedEmptyDateBubble?.isLeaving}
+              onDateClick={handleDateClick}
             />
           </div>
         ))}
@@ -166,14 +215,14 @@ export function CalendarPage({ onVisibleMonthChange }: CalendarPageProps) {
         >
           {legendItems.map((item) => (
             <div key={item.label} className="flex items-center gap-2">
-              <span className="size-3 rounded-full" style={{ backgroundColor: item.color }} />
+              <span className="size-2.5 rounded-full" style={{ backgroundColor: item.color }} />
               {item.label}
             </div>
           ))}
         </Card>
       </div>
 
-      {selectedDateKey && selectedEntry && selectedDateValue ? (
+      {selectedDateKey && selectedEntry ? (
         <CalendarEntrySheet
           date={selectedDateKey}
           entry={selectedEntry}

@@ -115,6 +115,30 @@ a[href],
   }
 }
 
+@keyframes phase-bubble-float {
+  from {
+    opacity: 0;
+    transform: translate(-50%, calc(-100% + 0.15rem));
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, calc(-100% - 0.35rem));
+  }
+}
+
+@keyframes phase-bubble-fade {
+  from {
+    opacity: 1;
+    transform: translate(-50%, calc(-100% - 0.35rem));
+  }
+
+  to {
+    opacity: 0;
+    transform: translate(-50%, calc(-100% - 0.55rem));
+  }
+}
+
 .scrollbar-none::-webkit-scrollbar {
   display: none;
 }
