@@ -1,6 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Calendar, CircleDot } from "lucide-react";
 import { TodayPage } from "../pages/today-page";
 import { CalendarPage } from "../pages/calendar-page";
 import { OnboardingPage } from "../pages/onboarding-page";
@@ -94,8 +93,8 @@ export function AppShell({ initialView }: AppShellProps) {
                 value={currentView}
                 onChange={(next) => navigate(next === "today" ? "/today" : "/calendar")}
                 items={[
-                  { value: "today", label: "今天", icon: CircleDot },
-                  { value: "calendar", label: "日历", icon: Calendar }
+                  { value: "today", label: "今天" },
+                  { value: "calendar", label: "日历" }
                 ]}
               />
             </div>

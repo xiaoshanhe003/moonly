@@ -1,4 +1,3 @@
-import type { LucideIcon } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { uiTextStyles } from "../ui/styles";
 
@@ -8,7 +7,6 @@ type SegmentedControlProps = {
   items: Array<{
     value: "today" | "calendar";
     label: string;
-    icon: LucideIcon;
   }>;
 };
 
@@ -16,7 +14,6 @@ export function SegmentedControl({ value, onChange, items }: SegmentedControlPro
   return (
     <div className="inline-flex rounded-2xl border border-white/45 bg-[color-mix(in_srgb,var(--muted)_86%,transparent)] p-1 backdrop-blur-xl">
       {items.map((item) => {
-        const Icon = item.icon;
         const active = item.value === value;
 
         return (
@@ -25,13 +22,12 @@ export function SegmentedControl({ value, onChange, items }: SegmentedControlPro
             type="button"
             onClick={() => onChange(item.value)}
             className={cn(
-              "inline-flex items-center gap-2 rounded-[12px] px-4 py-2 text-sm transition",
+              "inline-flex items-center rounded-[12px] px-5 py-2 text-sm transition",
               active
                 ? "bg-[color-mix(in_srgb,var(--card-elevated)_88%,transparent)] text-[color:var(--foreground)] shadow-[0_1px_4px_rgba(17,24,39,0.08)] backdrop-blur"
                 : uiTextStyles.muted
             )}
           >
-            <Icon className="size-4" />
             {item.label}
           </button>
         );
