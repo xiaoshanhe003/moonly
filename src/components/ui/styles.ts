@@ -36,7 +36,7 @@ export const uiLayoutStyles = {
   sheetOverlay:
     "fixed inset-0 z-50 flex items-end bg-[color:var(--overlay)] p-0 backdrop-blur-sm sm:items-center sm:justify-center sm:p-6",
   sheetBody:
-    "max-h-[88vh] w-full overflow-hidden rounded-t-[var(--radius-sheet)] bg-[color:var(--card-elevated)] shadow-[var(--shadow-card)] sm:max-w-2xl sm:rounded-[var(--radius-sheet)]",
+    "max-h-[88vh] w-full overflow-hidden rounded-t-[var(--radius-record-sheet)] bg-[color:var(--card-elevated)] shadow-[var(--shadow-card)] sm:max-w-2xl sm:rounded-[var(--radius-record-sheet)]",
   sheetHeader:
     "flex items-center justify-between border-b border-[color:var(--border)] px-[var(--space-5)] py-[var(--space-4)]",
   sheetContent: "max-h-[calc(88vh-5rem)] overflow-y-auto p-[var(--space-5)]",
