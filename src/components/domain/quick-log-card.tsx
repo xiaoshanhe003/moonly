@@ -308,13 +308,15 @@ function CompletedAnswerStickerRow({
   bleedingLevel,
   energyColors,
   moodFillColor,
-  className
+  className,
+  animate = false
 }: {
   entry?: DailyEntry;
   bleedingLevel?: DailyEntry["bleedingLevel"];
   energyColors: ReturnType<typeof getPhaseEnergyColors>;
   moodFillColor: string;
   className?: string;
+  animate?: boolean;
 }) {
   const moodItem = getMoodOption(entry?.mood);
   const energyItem = energyOptions.find((item) => item.value === entry?.energy);
@@ -326,7 +328,7 @@ function CompletedAnswerStickerRow({
   return (
     <div className={cn("flex min-h-9 min-w-0 flex-1 items-center justify-end gap-2 overflow-visible", className)} aria-label="今日记录答案">
       {moodItem ? (
-        <span className="flex h-9 w-9 items-center justify-center">
+        <span className={cn("flex h-9 w-9 items-center justify-center", animate && "quick-log-sticker-pop")}>
           <MoodStickerGraphic
             mood={moodItem.value}
             fillColor={moodFillColor}
@@ -336,7 +338,7 @@ function CompletedAnswerStickerRow({
         </span>
       ) : null}
       {energyItem ? (
-        <span className="flex h-9 w-9 items-center justify-center">
+        <span className={cn("flex h-9 w-9 items-center justify-center", animate && "quick-log-sticker-pop")}>
           <EnergyStickerGraphic
             energy={energyItem.value}
             backgroundColor={energyColors.backgroundColor}
@@ -346,12 +348,12 @@ function CompletedAnswerStickerRow({
         </span>
       ) : null}
       {symptomLabel ? (
-        <span className={cn("flex h-9 items-center justify-center", stickerShadowStyles.compact)} title={symptomLabel}>
+        <span className={cn("flex h-9 items-center justify-center", stickerShadowStyles.compact, animate && "quick-log-sticker-pop")} title={symptomLabel}>
           <OutlinedStickerText label={symptomLabel} compact />
         </span>
       ) : null}
       {flowItem ? (
-        <span className="flex h-9 w-9 items-center justify-center">
+        <span className={cn("flex h-9 w-9 items-center justify-center", animate && "quick-log-sticker-pop")}>
           <FlowStickerGraphic
             level={flowItem.value}
             title={flowItem.label}
@@ -708,6 +710,7 @@ export function QuickLogCard({
   const [isCardSwitching, setIsCardSwitching] = useState(false);
   const [transitionTargetStep, setTransitionTargetStep] = useState<QuickLogStep | null>(null);
   const [isCompletionSwitching, setIsCompletionSwitching] = useState(false);
+  const [isReviewingFlowSignal, setIsReviewingFlowSignal] = useState(false);
   const cardTransitionTimeoutRef = useRef<number | null>(null);
   const progress = getLogProgress(entry);
   const nextStep = getSuggestedStep(entry);
@@ -741,6 +744,7 @@ export function QuickLogCard({
     setIsCardSwitching(true);
     cardTransitionTimeoutRef.current = window.setTimeout(() => {
       setStepOverride(step);
+      setIsReviewingFlowSignal(false);
       setIsCardSwitching(false);
       setTransitionTargetStep(null);
       cardTransitionTimeoutRef.current = null;
@@ -756,6 +760,7 @@ export function QuickLogCard({
     setIsCompletionSwitching(true);
     cardTransitionTimeoutRef.current = window.setTimeout(() => {
       setStepOverride(null);
+      setIsReviewingFlowSignal(false);
       setIsCardSwitching(false);
       setIsCompletionSwitching(false);
       cardTransitionTimeoutRef.current = null;
@@ -910,29 +915,41 @@ export function QuickLogCard({
                 option={flow}
                 onClick={() => {
                   setStepOverride("flow");
+                  setIsReviewingFlowSignal(flow.value !== "none");
                   updateEntry(date, {
                     bleedingLevel: flow.value,
                     periodSignal: flow.value === "none" ? "none" : entry?.periodSignal ?? "none",
                     isPeriodStart: false
                   });
-                  scheduleCompletion();
+                  if (flow.value === "none") {
+                    scheduleCompletion();
+                  }
                 }}
               />
             ))}
           </div>
           {canShowPeriodSignal ? (
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <label className="inline-flex min-h-11 items-center gap-3 text-sm font-medium text-[color:var(--foreground)]">
+                <input
+                  type="checkbox"
+                  checked={entry?.periodSignal === "possible_start"}
+                  onChange={() =>
+                    updateEntry(date, {
+                      bleedingLevel,
+                      periodSignal: entry?.periodSignal === "possible_start" ? "none" : "possible_start",
+                      isPeriodStart: false
+                    })
+                  }
+                  className="size-4 rounded border-[color:var(--border)] text-[color:var(--foreground)] accent-[color:var(--foreground)]"
+                />
+                <span>这次感觉像经期开始</span>
+              </label>
               <Button
-                variant={entry?.periodSignal === "possible_start" ? "primary" : "soft"}
-                onClick={() =>
-                  updateEntry(date, {
-                    bleedingLevel,
-                    periodSignal: entry?.periodSignal === "possible_start" ? "none" : "possible_start",
-                    isPeriodStart: false
-                  })
-                }
+                variant="primary"
+                onClick={scheduleCompletion}
               >
-                这次感觉像经期开始
+                完成
               </Button>
             </div>
           ) : null}
@@ -941,7 +958,7 @@ export function QuickLogCard({
     );
   };
 
-  if (progress === "complete" && !isCompletionSwitching) {
+  if (progress === "complete" && !isCompletionSwitching && !isReviewingFlowSignal) {
     if (completedDisplay === "expanded") {
       const content = (
         <>
@@ -987,6 +1004,7 @@ export function QuickLogCard({
               bleedingLevel={bleedingLevel}
               energyColors={energyColors}
               moodFillColor={moodFillColor}
+              animate
             />
           </div>
         </button>
