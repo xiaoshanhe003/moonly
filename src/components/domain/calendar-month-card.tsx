@@ -2,7 +2,7 @@ import { buildMonthGrid } from "../../features/cycle/cycle";
 import type { CycleProfile, DailyEntry } from "../../features/cycle/types";
 import { cn } from "../../lib/utils";
 import { uiTextStyles } from "../ui/styles";
-import { getMoodOption, type MoodValue } from "./mood-options";
+import { getMoodOption } from "./mood-options";
 import { stickerShadowStyles } from "./mood-sticker-styles";
 
 type CalendarMonthCardProps = {
@@ -23,13 +23,6 @@ const phaseFamilyMap: Record<string, string> = {
   "var(--phase-follicular)": "follicular",
   "var(--phase-ovulation)": "ovulation",
   "var(--phase-luteal)": "luteal"
-};
-const calendarMoodStickerClass: Record<MoodValue, string> = {
-  great: "h-[1.875rem] w-[1.875rem]",
-  happy: "h-[1.875rem] w-[1.875rem]",
-  calm: "h-9 w-9",
-  unhappy: "h-[1.875rem] w-[1.875rem]",
-  sad: "h-[1.875rem] w-[1.875rem]"
 };
 
 function getPhaseShadeColor(phaseColor: string, shade: 100 | 200 | 400) {
@@ -105,7 +98,7 @@ function DayCellContent({
   dayOfMonth: number;
   isToday: boolean;
   tone: CalendarCellTone;
-  moodSticker: { imageSrc: string; label: string; value: MoodValue } | null;
+  moodSticker: { imageSrc: string; label: string } | null;
   onEntryClick?: (dateKey: string) => void;
 }) {
   const content = (
@@ -116,7 +109,7 @@ function DayCellContent({
           src={moodSticker.imageSrc}
           alt=""
           title={moodSticker.label}
-          className={cn("mt-1.5 object-contain", stickerShadowStyles.compact, calendarMoodStickerClass[moodSticker.value])}
+          className={cn("mt-1.5 h-8 w-auto max-w-[70%] object-contain", stickerShadowStyles.compact)}
           aria-hidden="true"
         />
       ) : null}
