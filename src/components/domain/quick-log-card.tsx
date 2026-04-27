@@ -432,7 +432,7 @@ export function LogAnswerSummary({ entry }: { entry?: DailyEntry }) {
         : "今天没有明显不适";
   const periodSignalLabel =
     bleedingLevel && bleedingLevel !== "none" && entry?.periodSignal && entry.periodSignal !== "none"
-      ? "这次感觉像经期开始"
+      ? "这是经期第一天"
       : undefined;
 
   return (
@@ -580,8 +580,7 @@ export function CompletedLogDetails({ entry, onChange }: CompletedLogDetailsProp
               onClick={() =>
                 onChange({
                   bleedingLevel: flow.value,
-                  periodSignal: flow.value === "none" ? "none" : entry?.periodSignal ?? "none",
-                  isPeriodStart: false
+                  periodSignal: flow.value === "none" ? "none" : entry?.periodSignal ?? "none"
                 })
               }
             />
@@ -592,17 +591,16 @@ export function CompletedLogDetails({ entry, onChange }: CompletedLogDetailsProp
             <label className="inline-flex items-center gap-3 text-sm font-medium text-[color:var(--foreground)]">
               <input
                 type="checkbox"
-                checked={entry?.periodSignal === "possible_start"}
+                checked={entry?.periodSignal === "confirmed_start"}
                 onChange={() =>
                   onChange({
                     bleedingLevel,
-                    periodSignal: entry?.periodSignal === "possible_start" ? "none" : "possible_start",
-                    isPeriodStart: false
+                    periodSignal: entry?.periodSignal === "confirmed_start" ? "none" : "confirmed_start"
                   })
                 }
                 className="size-4 rounded border-[color:var(--border)] text-[color:var(--foreground)] accent-[color:var(--foreground)]"
               />
-              <span>这次感觉像经期开始</span>
+              <span>这是经期第一天</span>
             </label>
           </div>
         ) : null}
@@ -938,8 +936,7 @@ export function QuickLogCard({
                   setIsReviewingFlowSignal(flow.value !== "none");
                   updateEntry(date, {
                     bleedingLevel: flow.value,
-                    periodSignal: flow.value === "none" ? "none" : entry?.periodSignal ?? "none",
-                    isPeriodStart: false
+                    periodSignal: flow.value === "none" ? "none" : entry?.periodSignal ?? "none"
                   });
                   if (flow.value === "none") {
                     scheduleCompletion();
@@ -953,17 +950,16 @@ export function QuickLogCard({
               <label className="inline-flex min-h-11 items-center gap-3 text-sm font-medium text-[color:var(--foreground)]">
                 <input
                   type="checkbox"
-                  checked={entry?.periodSignal === "possible_start"}
+                  checked={entry?.periodSignal === "confirmed_start"}
                   onChange={() =>
                     updateEntry(date, {
                       bleedingLevel,
-                      periodSignal: entry?.periodSignal === "possible_start" ? "none" : "possible_start",
-                      isPeriodStart: false
+                      periodSignal: entry?.periodSignal === "confirmed_start" ? "none" : "confirmed_start"
                     })
                   }
                   className="size-4 rounded border-[color:var(--border)] text-[color:var(--foreground)] accent-[color:var(--foreground)]"
                 />
-                <span>这次感觉像经期开始</span>
+                <span>这是经期第一天</span>
               </label>
               <Button
                 variant="primary"

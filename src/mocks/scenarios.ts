@@ -50,7 +50,7 @@ export const scenarios: Record<
         energy: "low",
         symptoms: ["腹痛", "疲惫"],
         bleedingLevel: "heavy",
-        periodSignal: "possible_start"
+        periodSignal: "confirmed_start"
       },
       {
         date: daysAgo(17),
@@ -93,6 +93,29 @@ export const scenarios: Record<
         energy: "medium",
         symptoms: ["腹痛", "疲惫"],
         bleedingLevel: "none"
+      }
+    ]
+  },
+  "spotting-to-period": {
+    label: "点滴转经期",
+    profile: {
+      ...baseProfile,
+      lastPeriodStart: daysAgo(21)
+    },
+    entries: [
+      {
+        date: daysAgo(2),
+        mood: "calm",
+        energy: "medium",
+        symptoms: ["腹胀"],
+        bleedingLevel: "spotting"
+      },
+      {
+        date: isoToday,
+        mood: "unhappy",
+        energy: "low",
+        symptoms: ["腹痛", "疲惫"],
+        bleedingLevel: "medium"
       }
     ]
   },

@@ -7,7 +7,7 @@ import { getOptionPillClass, uiTextStyles } from "../ui/styles";
 
 const PANEL_GAP = 8;
 const DEFAULT_TOP = 96;
-const visibleScenarioKeys = ["first-run", "today-pending", "today-complete"] as const;
+const visibleScenarioKeys = ["first-run", "today-pending", "today-complete", "spotting-to-period"] as const;
 
 function isInteractiveTarget(target: EventTarget | null) {
   return target instanceof Element && Boolean(target.closest("button, a, input, select, textarea"));

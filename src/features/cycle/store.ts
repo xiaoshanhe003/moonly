@@ -16,10 +16,13 @@ type CycleState = {
 const defaultScenario = scenarios["today-pending"];
 
 type LegacyMood = DailyEntry["mood"] | "low" | "tense";
-type LegacyDailyEntry = Omit<DailyEntry, "mood" | "bleedingLevel"> & {
+type LegacyPeriodSignal = DailyEntry["periodSignal"] | "possible_start";
+type LegacyDailyEntry = Omit<DailyEntry, "mood" | "bleedingLevel" | "periodSignal"> & {
   mood?: LegacyMood;
   bleedingLevel?: DailyEntry["bleedingLevel"];
   flow?: LegacyFlowLevel;
+  periodSignal?: LegacyPeriodSignal;
+  isPeriodStart?: boolean;
 };
 
 function normalizeMood(mood?: LegacyMood): DailyEntry["mood"] | undefined {
@@ -35,12 +38,17 @@ function normalizeMood(mood?: LegacyMood): DailyEntry["mood"] | undefined {
 }
 
 function normalizeEntry(entry: LegacyDailyEntry): DailyEntry {
-  const { flow, ...nextEntry } = entry;
+  const { flow, isPeriodStart, ...nextEntry } = entry;
+  const periodSignal =
+    entry.periodSignal === "confirmed_start" || entry.periodSignal === "possible_start" || isPeriodStart
+      ? "confirmed_start"
+      : entry.periodSignal;
 
   return {
     ...nextEntry,
     mood: normalizeMood(entry.mood),
-    bleedingLevel: entry.bleedingLevel ?? flow
+    bleedingLevel: entry.bleedingLevel ?? flow,
+    periodSignal
   };
 }
 
@@ -94,7 +102,7 @@ export const useCycleStore = create<CycleState>()(
     }),
     {
       name: "moonly-store",
-      version: 2,
+      version: 3,
       migrate: (persistedState) => {
         const state = persistedState as Partial<CycleState>;
 

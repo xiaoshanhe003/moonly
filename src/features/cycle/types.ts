@@ -9,7 +9,7 @@ export type CycleProfile = {
 export type BleedingLevel = "none" | "spotting" | "light" | "medium" | "heavy";
 export type LegacyFlowLevel = Exclude<BleedingLevel, "spotting">;
 
-export type PeriodSignal = "none" | "possible_start" | "confirmed_start";
+export type PeriodSignal = "none" | "confirmed_start";
 
 export type DailyEntry = {
   date: string;
@@ -18,7 +18,6 @@ export type DailyEntry = {
   bleedingLevel?: BleedingLevel;
   symptoms?: string[];
   periodSignal?: PeriodSignal;
-  isPeriodStart?: boolean;
 };
 
 export type QuickLogStep = "mood" | "energy" | "symptoms" | "flow";
@@ -28,4 +27,5 @@ export type AppScenario =
   | "today-pending"
   | "today-in-progress"
   | "today-complete"
+  | "spotting-to-period"
   | "calendar-forecast";

@@ -1,9 +1,13 @@
 import type { BleedingLevel, CycleProfile, DailyEntry, LegacyFlowLevel, PeriodSignal } from "./types";
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
+const MIN_CYCLE_LENGTH_DAYS = 21;
+const CONTINUATION_BUFFER_DAYS = 3;
+const MIN_CONTINUATION_WINDOW_DAYS = 8;
+const SPOTTING_CONFIRMATION_WINDOW_DAYS = 2;
 
 export type PhaseKey = "menstrual" | "follicular" | "ovulation" | "luteal";
-export type PeriodStartConfidence = "likely" | "confirmed" | "inferred";
+export type PeriodStartConfidence = "likely" | "confirmed";
 
 type BleedingStreak = {
   start: Date;
@@ -263,11 +267,7 @@ function isStrongBleeding(level: BleedingLevel) {
 }
 
 function normalizePeriodSignal(entry?: DailyEntry): PeriodSignal {
-  if (entry?.periodSignal) {
-    return entry.periodSignal;
-  }
-
-  return entry?.isPeriodStart ? "possible_start" : "none";
+  return entry?.periodSignal ?? "none";
 }
 
 export function getBleedingLevel(entry?: DailyEntry & { flow?: LegacyFlowLevel }): BleedingLevel | undefined {
@@ -337,7 +337,10 @@ function getBleedingStreaks(entries: Record<string, DailyEntry>, today: Date) {
       return [{ start: date, end: date, entries: [entry], levels: [level] }];
     }
 
-    if (diffInDays(date, current.end) <= 1) {
+    const gap = diffInDays(date, current.end);
+    const missingGapDayKey = formatDateKey(addDays(current.end, 1));
+
+    if (gap <= 1 || (gap === 2 && !entries[missingGapDayKey])) {
       current.end = date;
       current.entries.push(entry);
       current.levels.push(level);
@@ -359,43 +362,84 @@ function isLikelyOvulationSpotting(streak: BleedingStreak, profile: CycleProfile
   return Math.abs(baseSummary.dayOfCycle - ovulationDay) <= 1;
 }
 
+function getConfirmedPeriodStartEntry(streak: BleedingStreak) {
+  return streak.entries.find((entry) => normalizePeriodSignal(entry) === "confirmed_start");
+}
+
+function hasConsecutiveStrongBleeding(streak: BleedingStreak) {
+  return streak.entries.some((entry, index) => {
+    if (!isStrongBleeding(getBleedingLevel(entry)!)) {
+      return false;
+    }
+
+    const nextEntry = streak.entries[index + 1];
+    return Boolean(
+      nextEntry &&
+        isStrongBleeding(getBleedingLevel(nextEntry)!) &&
+        diffInDays(parseDateKey(nextEntry.date), parseDateKey(entry.date)) === 1
+    );
+  });
+}
+
+function getFirstStrongBleedingEntry(streak: BleedingStreak) {
+  return streak.entries.find((entry) => isStrongBleeding(getBleedingLevel(entry)!));
+}
+
+function getFirstStrongBleedingOffset(streak: BleedingStreak) {
+  const firstStrongEntry = streak.entries.find((entry) => isStrongBleeding(getBleedingLevel(entry)!));
+  return firstStrongEntry ? diffInDays(parseDateKey(firstStrongEntry.date), streak.start) : null;
+}
+
+function getContinuationWindow(profile: CycleProfile) {
+  return Math.max(profile.periodLength + CONTINUATION_BUFFER_DAYS, MIN_CONTINUATION_WINDOW_DAYS);
+}
+
+function getCorePeriodLength(streak: BleedingStreak, eventDate: Date) {
+  const strongEntriesFromStart = streak.entries.filter((entry) => {
+    const entryDate = parseDateKey(entry.date);
+    return entryDate >= eventDate && isStrongBleeding(getBleedingLevel(entry)!);
+  });
+  const lastStrongEntry = strongEntriesFromStart.at(-1);
+
+  return lastStrongEntry ? diffInDays(parseDateKey(lastStrongEntry.date), eventDate) + 1 : null;
+}
+
 function classifyPeriodStart(
   streak: BleedingStreak,
-  entries: Record<string, DailyEntry>,
-  profile: CycleProfile
+  profile: CycleProfile,
+  previousPeriodStart: Date
 ): PeriodStartEvent | null {
+  const confirmedEntry = getConfirmedPeriodStartEntry(streak);
+  if (confirmedEntry) {
+    const date = parseDateKey(confirmedEntry.date);
+    return { date, confidence: "confirmed" };
+  }
+
+  const firstLevel = streak.levels[0];
+  const firstStrongEntry = getFirstStrongBleedingEntry(streak);
+  const firstStrongOffset = getFirstStrongBleedingOffset(streak);
+  const spottingTurnsStrong =
+    firstLevel === "spotting" && firstStrongEntry && firstStrongOffset !== null && firstStrongOffset <= SPOTTING_CONFIRMATION_WINDOW_DAYS;
+  const candidateDate = spottingTurnsStrong ? parseDateKey(firstStrongEntry.date) : streak.start;
+  const daysSincePreviousStart = diffInDays(candidateDate, previousPeriodStart);
+
+  if (daysSincePreviousStart <= getContinuationWindow(profile) || daysSincePreviousStart < MIN_CYCLE_LENGTH_DAYS) {
+    return null;
+  }
+
+  if (spottingTurnsStrong) {
+    return { date: candidateDate, confidence: "confirmed" };
+  }
+
+  if (hasConsecutiveStrongBleeding(streak)) {
+    return { date: streak.start, confidence: "confirmed" };
+  }
+
   if (isLikelyOvulationSpotting(streak, profile)) {
     return null;
   }
 
-  const strongDayCount = streak.levels.filter(isStrongBleeding).length;
-  const firstLevel = streak.levels[0];
-  const firstEntry = streak.entries[0];
-  const hasUserSignal = streak.entries.some((entry) => normalizePeriodSignal(entry) !== "none");
-  const previousDayKey = addDays(streak.start, -1).toISOString().slice(0, 10);
-  const previousDayMissing = !entries[previousDayKey];
-
-  if (hasUserSignal && strongDayCount > 0) {
-    return { date: streak.start, confidence: "confirmed" };
-  }
-
-  if (strongDayCount >= 2) {
-    return { date: streak.start, confidence: "confirmed" };
-  }
-
-  if (firstLevel === "spotting" && strongDayCount > 0) {
-    return { date: streak.start, confidence: "confirmed" };
-  }
-
-  if (
-    (firstLevel === "medium" || firstLevel === "heavy") &&
-    previousDayMissing &&
-    streak.levels.length >= 2
-  ) {
-    return { date: streak.start, confidence: "inferred" };
-  }
-
-  if (normalizePeriodSignal(firstEntry) !== "none" || firstLevel === "spotting") {
+  if (firstLevel === "medium" || firstLevel === "heavy" || firstLevel === "spotting") {
     return { date: streak.start, confidence: "likely" };
   }
 
@@ -424,16 +468,22 @@ function resolveCycleMetrics(
   today: Date
 ) {
   const streaks = getBleedingStreaks(entries, today);
-  const periodEvents = streaks
-    .map((streak) => ({
-      streak,
-      event: classifyPeriodStart(streak, entries, profile)
-    }))
-    .filter((item): item is { streak: BleedingStreak; event: PeriodStartEvent } => Boolean(item.event));
+  const periodEvents: Array<{ streak: BleedingStreak; event: PeriodStartEvent }> = [];
+  let previousReliableStart = parseDateKey(profile.lastPeriodStart);
 
-  const reliableEvents = periodEvents.filter(
-    (item) => item.event.confidence === "confirmed" || item.event.confidence === "inferred"
-  );
+  for (const streak of streaks) {
+    const event = classifyPeriodStart(streak, profile, previousReliableStart);
+
+    if (event) {
+      periodEvents.push({ streak, event });
+
+      if (event.confidence === "confirmed") {
+        previousReliableStart = event.date;
+      }
+    }
+  }
+
+  const reliableEvents = periodEvents.filter((item) => item.event.confidence === "confirmed");
   const latestReliable = reliableEvents.at(-1);
   const completedReliableEvents = reliableEvents.filter((item, index) => {
     if (index < reliableEvents.length - 1) {
@@ -448,7 +498,10 @@ function resolveCycleMetrics(
   const recentIntervals = recentEventDates.slice(1).map((date, index) => diffInDays(date, recentEventDates[index]));
 
   const cycleLength = recentIntervals.length > 0 ? average(recentIntervals) : profile.cycleLength;
-  const periodLength = latestCompletedReliable?.streak.levels.length ?? profile.periodLength;
+  const latestCorePeriodLength = latestCompletedReliable
+    ? getCorePeriodLength(latestCompletedReliable.streak, latestCompletedReliable.event.date)
+    : null;
+  const periodLength = latestCorePeriodLength ?? profile.periodLength;
   const lastPeriodStart = latestReliable?.event.date ?? parseDateKey(profile.lastPeriodStart);
 
   return {
