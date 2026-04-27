@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
-import { Home } from "lucide-react";
+import { Copy, Home } from "lucide-react";
 import { Button } from "../ui/button";
 import { Sheet } from "../ui/sheet";
 import { cn } from "../../lib/utils";
 import { uiTextStyles } from "../ui/styles";
+import shareButtonImage from "../../assets/install/share-button.png";
+import addToHomeScreenImage from "../../assets/install/add-to-home-screen.png";
 
 type BeforeInstallPromptChoice = {
   outcome: "accepted" | "dismissed";
@@ -15,14 +17,10 @@ type BeforeInstallPromptEvent = Event & {
   userChoice: Promise<BeforeInstallPromptChoice>;
 };
 
-type InstallPlatform = "ios" | "android" | "mac-safari" | "desktop-chromium" | "generic";
-
-function isIosDevice() {
-  const userAgent = window.navigator.userAgent.toLowerCase();
-  const isTouchMac = window.navigator.platform === "MacIntel" && window.navigator.maxTouchPoints > 1;
-
-  return /iphone|ipad|ipod/.test(userAgent) || isTouchMac;
-}
+type CopyBubble = {
+  id: number;
+  isLeaving: boolean;
+};
 
 function isStandaloneDisplay() {
   return (
@@ -32,55 +30,12 @@ function isStandaloneDisplay() {
   );
 }
 
-function getInstallPlatform(): InstallPlatform {
-  const userAgent = window.navigator.userAgent.toLowerCase();
-  const isSafari = /^((?!chrome|android|crios|fxios|edgios).)*safari/.test(userAgent);
-  const isChromium = /chrome|crios|chromium|edg|edgios|opr|samsungbrowser/.test(userAgent);
-
-  if (isIosDevice()) {
-    return "ios";
-  }
-
-  if (/android/.test(userAgent)) {
-    return "android";
-  }
-
-  if (/macintosh/.test(userAgent) && isSafari) {
-    return "mac-safari";
-  }
-
-  if (isChromium) {
-    return "desktop-chromium";
-  }
-
-  return "generic";
-}
-
-function getInstallSteps(platform: InstallPlatform) {
-  if (platform === "ios") {
-    return ["点浏览器底部或顶部的分享按钮", "选择“添加到主屏幕”", "确认名称后点“添加”"];
-  }
-
-  if (platform === "android") {
-    return ["打开浏览器菜单", "选择“安装应用”或“添加到主屏幕”", "按提示确认添加"];
-  }
-
-  if (platform === "mac-safari") {
-    return ["在 Safari 菜单栏选择“文件”", "选择“添加到程序坞”", "确认名称后点“添加”"];
-  }
-
-  if (platform === "desktop-chromium") {
-    return ["点地址栏右侧的安装图标", "或打开浏览器菜单并选择“安装 Moonly”", "按提示确认安装"];
-  }
-
-  return ["打开浏览器菜单", "查找“安装应用”或“添加到主屏幕”", "如果没有这个选项，可以换用 Chrome、Edge 或 Safari 再试"];
-}
-
 export function InstallAppButton() {
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState(() => isStandaloneDisplay());
   const [isHelpOpen, setIsHelpOpen] = useState(false);
-  const installSteps = getInstallSteps(getInstallPlatform());
+  const [copyBubble, setCopyBubble] = useState<CopyBubble | null>(null);
+  const pageUrl = window.location.href;
 
   useEffect(() => {
     const handleDisplayModeChange = () => setIsInstalled(isStandaloneDisplay());
@@ -117,6 +72,47 @@ export function InstallAppButton() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!copyBubble) {
+      return;
+    }
+
+    if (copyBubble.isLeaving) {
+      const removeTimeoutId = window.setTimeout(() => {
+        setCopyBubble((current) => (current?.id === copyBubble.id ? null : current));
+      }, 200);
+
+      return () => window.clearTimeout(removeTimeoutId);
+    }
+
+    const leaveTimeoutId = window.setTimeout(() => {
+      setCopyBubble((current) => (current?.id === copyBubble.id ? { ...current, isLeaving: true } : current));
+    }, 1500);
+
+    return () => window.clearTimeout(leaveTimeoutId);
+  }, [copyBubble]);
+
+  const copyPageUrl = async () => {
+    try {
+      await navigator.clipboard.writeText(pageUrl);
+    } catch {
+      const textarea = document.createElement("textarea");
+      textarea.value = pageUrl;
+      textarea.setAttribute("readonly", "");
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.append(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      textarea.remove();
+    }
+
+    setCopyBubble({
+      id: Date.now(),
+      isLeaving: false
+    });
+  };
+
   const handleInstallClick = async () => {
     if (!installPrompt) {
       setIsHelpOpen(true);
@@ -149,23 +145,86 @@ export function InstallAppButton() {
       {isHelpOpen ? (
         <Sheet
           header={
-            <div>
-              <p className={cn("font-semibold", uiTextStyles.lg)}>添加到主屏幕</p>
-              <p className={cn("mt-1", uiTextStyles.sm, uiTextStyles.muted)}>当前浏览器需要手动完成添加</p>
-            </div>
+            <p className={cn("min-w-0 whitespace-nowrap pr-3 font-semibold leading-snug", uiTextStyles.xl)}>
+              如何将月信安装到手机主屏幕
+            </p>
           }
           bodyClassName="sm:max-w-md"
+          contentClassName="px-7 pb-8 pt-6 sm:px-6"
           onClose={() => setIsHelpOpen(false)}
         >
-          <ol className="space-y-3">
-            {installSteps.map((step, index) => (
-              <li key={step} className="flex gap-3">
-                <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[color:var(--foreground)] text-sm font-semibold text-[color:var(--background)]">
-                  {index + 1}
-                </span>
-                <span className={cn("pt-0.5 leading-relaxed", uiTextStyles.md)}>{step}</span>
-              </li>
-            ))}
+          <ol className="space-y-6">
+            <li className="grid grid-cols-[2.25rem_1fr] gap-3">
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-[8px] bg-[color:var(--muted)] text-base font-semibold text-[color:var(--foreground)]">
+                1
+              </span>
+              <div className="min-w-0 space-y-2">
+                <p className={cn("pt-1 leading-relaxed", uiTextStyles.md)}>
+                  用浏览器打开本网页，推荐 Safari 和 Chrome
+                </p>
+                <div className="relative">
+                  {copyBubble ? (
+                    <div
+                      key={copyBubble.id}
+                      className={cn(
+                        "absolute left-1/2 top-0 z-10 whitespace-nowrap rounded-[0.65rem] border border-[color:var(--border)] bg-[color:var(--card-elevated)] px-2.5 py-1.5 text-sm font-medium leading-none text-[color:var(--foreground)] shadow-[var(--shadow-card)]",
+                        copyBubble.isLeaving
+                          ? "[animation:phase-bubble-fade_200ms_ease-in_forwards]"
+                          : "[animation:phase-bubble-float_160ms_ease-out_forwards]"
+                      )}
+                      role="status"
+                    >
+                      已复制
+                      <span
+                        className="absolute left-1/2 top-full h-2 w-2 -translate-x-1/2 -translate-y-1/2 rotate-45 border-b border-r border-[color:var(--border)] bg-[color:var(--card-elevated)]"
+                        aria-hidden="true"
+                      />
+                    </div>
+                  ) : null}
+                  <button
+                    type="button"
+                    className="flex h-11 w-full items-center gap-3 rounded-[8px] border border-[color:var(--border)] bg-white px-3 text-left transition-colors hover:bg-[color:var(--muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ring)]"
+                    onClick={copyPageUrl}
+                    aria-label="复制当前网页地址"
+                  >
+                    <span className={cn("min-w-0 flex-1 truncate", uiTextStyles.sm, uiTextStyles.muted)}>
+                      {pageUrl}
+                    </span>
+                    <Copy className="size-4 shrink-0 text-[color:var(--muted-foreground)]" aria-hidden="true" />
+                  </button>
+                </div>
+              </div>
+            </li>
+            <li className="grid grid-cols-[2.25rem_1fr] gap-3">
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-[8px] bg-[color:var(--muted)] text-base font-semibold text-[color:var(--foreground)]">
+                2
+              </span>
+              <div className="min-w-0 space-y-3">
+                <p className={cn("pt-1 leading-relaxed", uiTextStyles.md)}>
+                  点击浏览器上方/下方工具栏中的分享按钮
+                </p>
+                <img
+                  src={shareButtonImage}
+                  alt="浏览器分享按钮位置示意"
+                  className="h-32 w-full rounded-[8px] object-cover sm:h-32"
+                />
+              </div>
+            </li>
+            <li className="grid grid-cols-[2.25rem_1fr] gap-3">
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-[8px] bg-[color:var(--muted)] text-base font-semibold text-[color:var(--foreground)]">
+                3
+              </span>
+              <div className="min-w-0 space-y-3">
+                <p className={cn("pt-1 leading-relaxed", uiTextStyles.md)}>
+                  在打开的弹窗中选择“添加到主屏幕”
+                </p>
+                <img
+                  src={addToHomeScreenImage}
+                  alt="添加到主屏幕菜单项示意"
+                  className="h-32 w-full rounded-[8px] object-cover sm:h-32"
+                />
+              </div>
+            </li>
           </ol>
         </Sheet>
       ) : null}

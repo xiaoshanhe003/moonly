@@ -39,7 +39,7 @@ export function Sheet({ header, onClose, bodyClassName, contentClassName, childr
       <div className={cn(uiLayoutStyles.sheetBody, bodyClassName)} onClick={(event) => event.stopPropagation()}>
         <div className={uiLayoutStyles.sheetHeader}>
           <div>{header}</div>
-          <Button variant="ghost" size="icon" onClick={onClose}>
+          <Button variant="ghost" size="icon" onClick={onClose} aria-label="关闭">
             <X className="size-5" />
           </Button>
         </div>
