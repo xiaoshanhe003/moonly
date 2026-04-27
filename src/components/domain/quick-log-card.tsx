@@ -710,8 +710,10 @@ export function QuickLogCard({
   const [isCardSwitching, setIsCardSwitching] = useState(false);
   const [transitionTargetStep, setTransitionTargetStep] = useState<QuickLogStep | null>(null);
   const [isCompletionSwitching, setIsCompletionSwitching] = useState(false);
+  const [isCompletionCelebrating, setIsCompletionCelebrating] = useState(false);
   const [isReviewingFlowSignal, setIsReviewingFlowSignal] = useState(false);
   const cardTransitionTimeoutRef = useRef<number | null>(null);
+  const completionCelebrationTimeoutRef = useRef<number | null>(null);
   const progress = getLogProgress(entry);
   const nextStep = getSuggestedStep(entry);
   const currentStep = stepOverride ?? nextStep ?? "mood";
@@ -732,8 +734,17 @@ export function QuickLogCard({
       if (cardTransitionTimeoutRef.current !== null) {
         window.clearTimeout(cardTransitionTimeoutRef.current);
       }
+      if (completionCelebrationTimeoutRef.current !== null) {
+        window.clearTimeout(completionCelebrationTimeoutRef.current);
+      }
     };
   }, []);
+
+  useEffect(() => {
+    if (progress !== "complete") {
+      setIsCompletionCelebrating(false);
+    }
+  }, [progress]);
 
   const scheduleStepOverride = (step: QuickLogStep | null, targetStep: QuickLogStep) => {
     if (cardTransitionTimeoutRef.current !== null) {
@@ -763,7 +774,16 @@ export function QuickLogCard({
       setIsReviewingFlowSignal(false);
       setIsCardSwitching(false);
       setIsCompletionSwitching(false);
+      setIsCompletionCelebrating(true);
       cardTransitionTimeoutRef.current = null;
+
+      if (completionCelebrationTimeoutRef.current !== null) {
+        window.clearTimeout(completionCelebrationTimeoutRef.current);
+      }
+      completionCelebrationTimeoutRef.current = window.setTimeout(() => {
+        setIsCompletionCelebrating(false);
+        completionCelebrationTimeoutRef.current = null;
+      }, 1200);
     }, cardSlideAnimationMs);
   };
 
@@ -987,7 +1007,8 @@ export function QuickLogCard({
           type="button"
           className={cn(
             uiSurfaceStyles.card,
-            "quick-log-complete-card quick-log-card--enter-up block w-full rounded-[var(--radius-record-card)] text-left transition-transform active:scale-[0.99]",
+            "quick-log-complete-card block w-full rounded-[var(--radius-record-card)] text-left transition-transform active:scale-[0.99]",
+            isCompletionCelebrating && "quick-log-card--enter-up",
             className
           )}
           onClick={() => {
@@ -1004,7 +1025,7 @@ export function QuickLogCard({
               bleedingLevel={bleedingLevel}
               energyColors={energyColors}
               moodFillColor={moodFillColor}
-              animate
+              animate={isCompletionCelebrating}
             />
           </div>
         </button>
