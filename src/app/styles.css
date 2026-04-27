@@ -61,6 +61,7 @@
   --radius-record-card: var(--radius-lg);
   --radius-record-sheet: var(--radius-lg);
   --quick-log-card-height: 13.25rem;
+  --quick-log-bottom-gap: calc(env(safe-area-inset-bottom, 0px) + 1rem);
   --line-thin: 1px;
 
   --color-canvas: var(--background);
@@ -258,6 +259,10 @@ a[href],
   animation: quick-log-sticker-pop 760ms cubic-bezier(0.2, 0.78, 0.24, 1) both;
   transform-origin: center;
   will-change: transform;
+}
+
+.quick-log-sticky-shell {
+  bottom: var(--quick-log-bottom-gap);
 }
 
 .quick-log-sticker-pop:nth-child(1) {

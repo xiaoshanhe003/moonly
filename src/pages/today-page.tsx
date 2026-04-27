@@ -18,11 +18,11 @@ export function TodayPage({ animateQuickLog = false }: TodayPageProps) {
   const summary = getCycleSummary(profile, entries, today);
 
   return (
-    <div className="flex flex-1 flex-col">
+    <div className="flex flex-1 flex-col pb-[var(--quick-log-bottom-gap)]">
       <div id="today-phase-hero" className="flex flex-1 flex-col justify-start pt-0">
         <PhaseHeroCard summary={summary} />
       </div>
-      <div className="sticky bottom-3 z-[45] mt-auto pt-4">
+      <div className="quick-log-sticky-shell sticky z-[45] mt-auto pt-4">
         <QuickLogCard
           date={dateKey}
           entry={entry}
