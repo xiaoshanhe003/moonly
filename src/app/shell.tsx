@@ -4,6 +4,7 @@ import { TodayPage } from "../pages/today-page";
 import { CalendarPage } from "../pages/calendar-page";
 import { OnboardingPage } from "../pages/onboarding-page";
 import { DevScenarioBar } from "../components/domain/dev-scenario-bar";
+import { InstallAppButton } from "../components/domain/install-app-button";
 import { SegmentedControl } from "../components/domain/segmented-control";
 import { useCycleStore } from "../features/cycle/store";
 import { getCycleSummary } from "../features/cycle/cycle";
@@ -168,6 +169,8 @@ export function AppShell({ initialView }: AppShellProps) {
           <CalendarPage onVisibleMonthChange={setVisibleCalendarMonthKey} />
         )}
       </div>
+
+      <InstallAppButton />
     </main>
   );
 }

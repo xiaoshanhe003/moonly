@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { ReactNode } from "react";
+import type { MouseEventHandler, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { Calendar } from "lucide-react";
 import { Button } from "../components/ui/button";
@@ -18,6 +18,10 @@ const questions = [
   "你的月经一般持续几天？",
   "你一般多久来一次月经？"
 ];
+
+function formatDateInputValue(value: string) {
+  return value.replaceAll("-", "/");
+}
 
 function MoonlyMark() {
   return (
@@ -51,11 +55,19 @@ function MoonlyMark() {
 type OnboardingInputProps = {
   children: ReactNode;
   suffix?: string;
+  onClick?: MouseEventHandler<HTMLDivElement>;
 };
 
-function OnboardingInput({ children, suffix }: OnboardingInputProps) {
+function OnboardingInput({ children, suffix, onClick }: OnboardingInputProps) {
   return (
-    <div className={cn("flex h-[72px] w-full items-center rounded-[10px] bg-white px-4 text-lg leading-none text-black", onboardingControlShadow)}>
+    <div
+      className={cn(
+        "flex h-[72px] w-full items-center rounded-[10px] bg-white px-4 text-lg leading-none text-black",
+        onClick && "cursor-pointer",
+        onboardingControlShadow
+      )}
+      onClick={onClick}
+    >
       <div className="min-w-0 flex-1">{children}</div>
       {suffix ? <span className="ml-3 shrink-0 text-[#6b7280]">{suffix}</span> : null}
     </div>
@@ -65,6 +77,7 @@ function OnboardingInput({ children, suffix }: OnboardingInputProps) {
 export function OnboardingPage() {
   const navigate = useNavigate();
   const setProfile = useCycleStore((state) => state.setProfile);
+  const lastPeriodInputRef = useRef<HTMLInputElement | null>(null);
   const periodLengthInputRef = useRef<HTMLInputElement | null>(null);
   const cycleLengthInputRef = useRef<HTMLInputElement | null>(null);
   const pendingFocusRef = useRef<"period" | "cycle" | null>(null);
@@ -89,6 +102,21 @@ export function OnboardingPage() {
 
   const nextStep = () => setStep((current) => Math.min(current + 1, totalSteps - 1) as OnboardingStep);
   const previousStep = () => setStep((current) => Math.max(current - 1, 0) as OnboardingStep);
+  const openLastPeriodPicker = () => {
+    const input = lastPeriodInputRef.current;
+
+    if (!input) {
+      return;
+    }
+
+    input.focus();
+
+    try {
+      input.showPicker();
+    } catch {
+      input.click();
+    }
+  };
   const selectInputValue = (input: HTMLInputElement | null) => {
     input?.focus();
     input?.select();
@@ -166,17 +194,20 @@ export function OnboardingPage() {
 
         <div className="mt-9 px-4">
           {step === 0 ? (
-            <OnboardingInput>
-              <label className="flex min-w-0 items-center gap-3">
+            <OnboardingInput onClick={openLastPeriodPicker}>
+              <div className="relative flex min-w-0 items-center">
                 <input
+                  ref={lastPeriodInputRef}
                   type="date"
                   value={lastPeriodStart}
                   onChange={(event) => setLastPeriodStart(event.target.value)}
-                  className="min-w-0 flex-1 appearance-none border-0 bg-transparent p-0 outline-none"
+                  className="pointer-events-none absolute inset-0 h-full w-full opacity-0"
                   aria-label={questions[step]}
+                  tabIndex={-1}
                 />
-                <Calendar className="size-5 shrink-0 text-[#6b7280]" aria-hidden="true" />
-              </label>
+                <span className="min-w-0 flex-1 select-none pr-9">{formatDateInputValue(lastPeriodStart)}</span>
+                <Calendar className="pointer-events-none absolute right-0 size-5 text-[#6b7280]" aria-hidden="true" />
+              </div>
             </OnboardingInput>
           ) : null}
 
