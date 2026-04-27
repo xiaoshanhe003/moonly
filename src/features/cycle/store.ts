@@ -13,7 +13,7 @@ type CycleState = {
   reset: () => void;
 };
 
-const defaultScenario = scenarios["today-pending"];
+const defaultScenario = scenarios["first-run"];
 
 type LegacyMood = DailyEntry["mood"] | "low" | "tense";
 type LegacyPeriodSignal = DailyEntry["periodSignal"] | "possible_start";
@@ -71,7 +71,7 @@ export const useCycleStore = create<CycleState>()(
     (set) => ({
       profile: defaultScenario.profile,
       entries: buildScenarioEntries(defaultScenario),
-      activeScenario: "today-pending",
+      activeScenario: "first-run",
       setProfile: (profile) => set({ profile }),
       updateEntry: (date, patch) =>
         set((state) => ({
