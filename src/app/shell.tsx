@@ -170,7 +170,7 @@ export function AppShell({ initialView }: AppShellProps) {
         )}
       </div>
 
-      <InstallAppButton />
+      <InstallAppButton isCompact={Boolean(profile)} />
     </main>
   );
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Copy, Home } from "lucide-react";
+import { Copy, Download } from "lucide-react";
 import { Button } from "../ui/button";
 import { Sheet } from "../ui/sheet";
 import { cn } from "../../lib/utils";
@@ -30,7 +30,11 @@ function isStandaloneDisplay() {
   );
 }
 
-export function InstallAppButton() {
+type InstallAppButtonProps = {
+  isCompact?: boolean;
+};
+
+export function InstallAppButton({ isCompact = false }: InstallAppButtonProps) {
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState(() => isStandaloneDisplay());
   const [isHelpOpen, setIsHelpOpen] = useState(false);
@@ -134,12 +138,18 @@ export function InstallAppButton() {
   return (
     <>
       <Button
-        className="fixed right-4 top-[calc(env(safe-area-inset-top,0px)+1rem)] z-50 gap-2 rounded-full border border-[color:var(--border-strong)] bg-[color:var(--card-elevated)] px-4 py-2.5 text-[color:var(--foreground)] shadow-[var(--shadow-elevated)] backdrop-blur-xl hover:bg-white"
+        className={cn(
+          "fixed top-[calc(env(safe-area-inset-top,0px)+1rem)] z-50 h-11 gap-2 overflow-hidden border border-[color:var(--border-strong)] bg-[color:var(--card-elevated)] text-[color:var(--foreground)] shadow-[var(--shadow-elevated)] backdrop-blur-xl transition-[right,width,padding,border-radius] duration-200 ease-out hover:bg-white",
+          isCompact
+            ? "right-0 w-11 rounded-l-full rounded-r-none border-r-0 px-3 sm:right-4 sm:w-auto sm:rounded-full sm:border-r sm:px-4"
+            : "right-4 w-auto rounded-full px-4"
+        )}
         variant="ghost"
         onClick={handleInstallClick}
+        aria-label="添加到主屏幕"
       >
-        <Home className="size-4" aria-hidden="true" />
-        添加到主屏幕
+        <Download className="size-4" aria-hidden="true" />
+        <span className={isCompact ? "sr-only sm:not-sr-only" : ""}>添加到主屏幕</span>
       </Button>
 
       {isHelpOpen ? (
