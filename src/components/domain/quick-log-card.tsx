@@ -32,10 +32,10 @@ const moodStickerLayout: Record<
 
 const noSymptomLabel = "没有不适";
 const energyOptions = [
-  { label: "低", value: "low", rotate: "-rotate-[5deg]" },
-  { label: "中", value: "medium", rotate: "rotate-[3deg]" },
-  { label: "较高", value: "higher", rotate: "-rotate-[2deg]" },
-  { label: "高", value: "high", rotate: "rotate-[4deg]" }
+  { label: "省电模式", value: "low", rotate: "-rotate-[5deg]" },
+  { label: "从从容容", value: "medium", rotate: "rotate-[3deg]" },
+  { label: "状态在线", value: "higher", rotate: "-rotate-[2deg]" },
+  { label: "能量满满", value: "high", rotate: "rotate-[4deg]" }
 ] as const;
 const symptomOptions = ["疲惫", "头痛", "乳房胀痛", "腹痛", "腰痛"];
 const symptomStickerRotations = ["-rotate-[3deg]", "rotate-[2deg]", "-rotate-[1deg]", "rotate-[3deg]", "-rotate-[2deg]", "rotate-[1deg]"] as const;
@@ -189,7 +189,7 @@ function EnergyStickerButton({
       aria-label={label}
       title={label}
       className={cn(
-        "relative inline-flex min-h-[4.25rem] items-center justify-center rounded-[var(--radius-lg)] border border-transparent bg-transparent p-1.5 transition duration-200 active:scale-[0.98]",
+        "relative inline-flex min-h-[5.35rem] flex-col items-center justify-center gap-1.5 rounded-[var(--radius-lg)] border border-transparent bg-transparent px-1.5 py-1 transition duration-200 active:scale-[0.98]",
         rotate,
         active ? "z-10" : cn("hover:-translate-y-0.5", dimInactive && "opacity-[0.55] hover:opacity-[0.8]")
       )}
@@ -203,6 +203,7 @@ function EnergyStickerButton({
           className={cn("h-[3.4rem] sm:h-[3.7rem]", stickerShadowStyles.regular)}
         />
       </span>
+      <span className="text-xs font-semibold text-[color:var(--foreground)]">{label}</span>
     </button>
   );
 }
