@@ -30,7 +30,7 @@ export function PhaseHeroCard({ summary }: PhaseHeroCardProps) {
   const titleText = summary.phase.tone.replace(/[。！？.!?]+$/u, "");
 
   return (
-    <section className="relative flex flex-1 px-2 pb-2 pt-6">
+    <section className="relative flex max-h-[36rem] flex-1 px-2 pb-2 pt-6">
       <div className="relative mx-auto flex min-h-full w-full max-w-[21rem] flex-1 flex-col items-center text-center">
         <div className={cn("flex shrink-0 flex-col items-center", uiSpacingStyles.gapMd)}>
           <div className={cn("inline-flex items-center gap-1 font-medium", uiTextStyles.sm, uiTextStyles.muted)}>
@@ -65,13 +65,13 @@ export function PhaseHeroCard({ summary }: PhaseHeroCardProps) {
             aria-hidden="true"
           >
             <div
-              className="size-[clamp(13rem,32dvh,18rem)] rounded-full blur-3xl"
+              className="size-[clamp(11rem,32dvh,18rem)] rounded-full blur-3xl"
               style={{
                 background: `radial-gradient(circle, ${summary.phase.color} 0%, transparent 72%)`
               }}
             />
           </div>
-          <PhaseIllustration phase={phaseKey} className="relative z-10 size-[clamp(13rem,32dvh,18rem)]" />
+          <PhaseIllustration phase={phaseKey} className="relative z-10 size-[clamp(11rem,32dvh,18rem)]" />
         </div>
 
         <div className={cn("flex shrink-0 items-center justify-center gap-3 leading-none", uiTextStyles.sm)}>
