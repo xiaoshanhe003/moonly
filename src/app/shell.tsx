@@ -76,7 +76,7 @@ export function AppShell({ initialView }: AppShellProps) {
       className={cn(
         "text-[var(--color-ink)]",
         profile
-          ? "min-h-screen bg-[var(--color-canvas)]"
+          ? "flex min-h-dvh flex-col bg-[var(--color-canvas)]"
           : "h-dvh overflow-hidden bg-[var(--color-canvas)]"
       )}
     >
@@ -153,8 +153,8 @@ export function AppShell({ initialView }: AppShellProps) {
       <div
         className={
           profile
-            ? `mx-auto flex min-h-screen max-w-md flex-col gap-4 px-4 sm:px-6 ${
-                currentView === "today" ? "py-3" : "py-6"
+            ? `mx-auto flex w-full max-w-md flex-col gap-4 px-4 sm:px-6 ${
+                currentView === "today" ? "min-h-0 flex-1 py-3" : "min-h-screen py-6"
               }`
             : "mx-auto flex h-dvh max-w-md flex-col overflow-hidden"
         }
