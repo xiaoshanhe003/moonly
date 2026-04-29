@@ -635,7 +635,7 @@ export function CompletedRecordSheetContent({
         <div className="pb-20">
           <CompletedLogDetails entry={draftEntry} onChange={updateDraftEntry} />
         </div>
-        <div className="sticky bottom-0 z-10 -mx-6 -mb-6 mt-2 border-t border-[color:var(--border)] bg-[color:var(--card-elevated)] px-6 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] pt-4 backdrop-blur-xl">
+        <div className="sticky bottom-[calc(var(--space-5)*-1)] z-10 -mx-[var(--space-5)] -mb-[var(--space-5)] mt-2 border-t border-[color:var(--border)] bg-[color:var(--card-elevated)] px-[var(--space-5)] pb-[calc(1rem+var(--space-5)+env(safe-area-inset-bottom,0px))] pt-4 backdrop-blur-xl">
           <div className="grid grid-cols-2 gap-3">
             <Button
               variant="secondary"
