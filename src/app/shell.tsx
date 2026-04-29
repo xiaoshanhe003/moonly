@@ -1,13 +1,17 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { Settings as SettingsIcon } from "lucide-react";
 import { TodayPage } from "../pages/today-page";
 import { CalendarPage } from "../pages/calendar-page";
 import { OnboardingPage } from "../pages/onboarding-page";
 import { DevScenarioBar } from "../components/domain/dev-scenario-bar";
 import { InstallAppButton } from "../components/domain/install-app-button";
 import { SegmentedControl } from "../components/domain/segmented-control";
+import { Button } from "../components/ui/button";
+import { Sheet } from "../components/ui/sheet";
 import { useCycleStore } from "../features/cycle/store";
 import { getCycleSummary } from "../features/cycle/cycle";
+import type { CycleProfile } from "../features/cycle/types";
 import { cn, formatShortDate } from "../lib/utils";
 import { uiTextStyles } from "../components/ui/styles";
 
@@ -22,11 +26,14 @@ export function AppShell({ initialView }: AppShellProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const profile = useCycleStore((state) => state.profile);
+  const setProfile = useCycleStore((state) => state.setProfile);
   const entries = useCycleStore((state) => state.entries);
   const currentView = location.pathname.includes("calendar") ? "calendar" : initialView;
   const previousProfileRef = useRef(profile);
   const previousViewRef = useRef(currentView);
   const [animateQuickLog, setAnimateQuickLog] = useState(false);
+  const [showLocalSaveInfo, setShowLocalSaveInfo] = useState(false);
+  const [importNotice, setImportNotice] = useState("");
   const [visibleCalendarMonthKey, setVisibleCalendarMonthKey] = useState(() =>
     new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()
   );
@@ -41,6 +48,25 @@ export function AppShell({ initialView }: AppShellProps) {
       setVisibleCalendarMonthKey(new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString());
     }
   }, [currentView]);
+
+  useEffect(() => {
+    const locationState = location.state as { importNotice?: string } | null;
+
+    if (locationState?.importNotice) {
+      setImportNotice(locationState.importNotice);
+      navigate(location.pathname, { replace: true, state: null });
+    }
+  }, [location.pathname, location.state, navigate]);
+
+  useEffect(() => {
+    if (!importNotice) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => setImportNotice(""), 2200);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [importNotice]);
 
   useLayoutEffect(() => {
     if (!previousProfileRef.current && profile) {
@@ -71,6 +97,16 @@ export function AppShell({ initialView }: AppShellProps) {
     previousViewRef.current = currentView;
   }, [currentView]);
 
+  const completeOnboarding = (nextProfile: CycleProfile) => {
+    setProfile(nextProfile);
+    setShowLocalSaveInfo(true);
+  };
+
+  const acknowledgeLocalSave = () => {
+    setShowLocalSaveInfo(false);
+    navigate("/today", { replace: true });
+  };
+
   return (
     <main
       className={cn(
@@ -89,7 +125,7 @@ export function AppShell({ initialView }: AppShellProps) {
           data-sticky-shell-header
         >
           <header className="mx-auto max-w-md px-4 pt-4 sm:px-6">
-            <div className="flex items-center justify-center">
+            <div className="flex items-center justify-between gap-3">
               <SegmentedControl
                 value={currentView}
                 onChange={(next) => navigate(next === "today" ? "/today" : "/calendar")}
@@ -98,6 +134,18 @@ export function AppShell({ initialView }: AppShellProps) {
                   { value: "calendar", label: "日历" }
                 ]}
               />
+              <div className="flex shrink-0 items-center gap-2">
+                <InstallAppButton placement="header" />
+                <Button
+                  className="size-10 shrink-0 bg-transparent text-[color:var(--foreground)] shadow-none hover:bg-[color:var(--muted)]"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => navigate("/settings")}
+                  aria-label="打开设置"
+                >
+                  <SettingsIcon className="size-5" aria-hidden="true" />
+                </Button>
+              </div>
             </div>
 
             {currentView === "calendar" && cycleSummary ? (
@@ -162,7 +210,7 @@ export function AppShell({ initialView }: AppShellProps) {
         {isDev ? <DevScenarioBar /> : null}
 
         {!profile ? (
-          <OnboardingPage />
+          <OnboardingPage onComplete={completeOnboarding} />
         ) : currentView === "today" ? (
           <TodayPage animateQuickLog={animateQuickLog} />
         ) : (
@@ -170,7 +218,31 @@ export function AppShell({ initialView }: AppShellProps) {
         )}
       </div>
 
-      <InstallAppButton isCompact={Boolean(profile)} />
+      {showLocalSaveInfo ? (
+        <Sheet
+          header={<p className={cn("font-semibold leading-snug", uiTextStyles.xl)}>已保存到本机</p>}
+          bodyClassName="sm:max-w-md"
+          onClose={acknowledgeLocalSave}
+        >
+          <div className="space-y-5">
+            <p className={cn("leading-relaxed", uiTextStyles.md)}>
+              你的记录会保存在当前设备的浏览器中，不需要注册账号，也不会上传到云端。之后可以在设置中备份数据或校准预测。
+            </p>
+            <Button className="h-11 w-full rounded-[10px]" onClick={acknowledgeLocalSave}>
+              我知道了
+            </Button>
+          </div>
+        </Sheet>
+      ) : null}
+
+      {importNotice ? (
+        <div
+          className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+1rem)] left-1/2 z-50 -translate-x-1/2 rounded-full border border-[color:var(--border)] bg-[color:var(--card-elevated)] px-4 py-2 text-sm font-medium text-[color:var(--foreground)] shadow-[var(--shadow-elevated)]"
+          role="status"
+        >
+          {importNotice}
+        </div>
+      ) : null}
     </main>
   );
 }

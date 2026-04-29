@@ -8,7 +8,9 @@ type CycleState = {
   entries: Record<string, DailyEntry>;
   activeScenario: AppScenario;
   setProfile: (profile: CycleProfile) => void;
+  updateProfile: (patch: Partial<CycleProfile>) => void;
   updateEntry: (date: string, patch: Partial<DailyEntry>) => void;
+  importEntries: (profile: CycleProfile, entries: Record<string, DailyEntry>, conflictMode: "skip" | "overwrite") => void;
   loadScenario: (scenario: AppScenario) => void;
   reset: () => void;
 };
@@ -73,6 +75,10 @@ export const useCycleStore = create<CycleState>()(
       entries: buildScenarioEntries(defaultScenario),
       activeScenario: "first-run",
       setProfile: (profile) => set({ profile }),
+      updateProfile: (patch) =>
+        set((state) => ({
+          profile: state.profile ? { ...state.profile, ...patch } : null
+        })),
       updateEntry: (date, patch) =>
         set((state) => ({
           entries: {
@@ -84,6 +90,23 @@ export const useCycleStore = create<CycleState>()(
             }
           }
         })),
+      importEntries: (profile, entries, conflictMode) =>
+        set((state) => {
+          const mergedEntries = { ...state.entries };
+
+          for (const [date, entry] of Object.entries(entries)) {
+            if (conflictMode === "skip" && mergedEntries[date]) {
+              continue;
+            }
+
+            mergedEntries[date] = entry;
+          }
+
+          return {
+            profile: state.profile && Object.keys(state.entries).length > 0 ? state.profile : profile,
+            entries: mergedEntries
+          };
+        }),
       loadScenario: (scenario) =>
         set(() => {
           const current = scenarios[scenario];
@@ -102,7 +125,7 @@ export const useCycleStore = create<CycleState>()(
     }),
     {
       name: "moonly-store",
-      version: 3,
+      version: 4,
       migrate: (persistedState) => {
         const state = persistedState as Partial<CycleState>;
 

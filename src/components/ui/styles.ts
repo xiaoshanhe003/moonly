@@ -39,7 +39,7 @@ export const uiLayoutStyles = {
     "max-h-[88vh] w-full overflow-hidden rounded-t-[var(--radius-record-sheet)] bg-[color:var(--card-elevated)] shadow-[var(--shadow-card)] sm:max-w-2xl sm:rounded-[var(--radius-record-sheet)]",
   sheetHeader:
     "flex items-center justify-between border-b border-[color:var(--border)] px-[var(--space-5)] py-[var(--space-4)]",
-  sheetContent: "max-h-[calc(88vh-5rem)] overflow-y-auto p-[var(--space-5)]",
+  sheetContent: "max-h-[calc(88vh-5rem)] overflow-x-hidden overflow-y-auto p-[var(--space-5)]",
   input:
     "w-full rounded-[var(--radius-md)] border border-[color:var(--input)] bg-[color:var(--muted)] px-[var(--space-4)] py-[var(--space-3)] text-[color:var(--foreground)]"
 };

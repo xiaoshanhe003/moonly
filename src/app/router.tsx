@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { AppShell } from "./shell";
 import { PhaseSciencePage } from "../pages/phase-science-page";
+import { SettingsPage } from "../pages/settings-page";
 
 export const router = createBrowserRouter([
   {
@@ -18,5 +19,9 @@ export const router = createBrowserRouter([
   {
     path: "/phase-science",
     element: <PhaseSciencePage />
+  },
+  {
+    path: "/settings",
+    element: <SettingsPage />
   }
 ]);

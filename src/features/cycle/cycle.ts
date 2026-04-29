@@ -469,12 +469,17 @@ function resolveCycleMetrics(
 ) {
   const streaks = getBleedingStreaks(entries, today);
   const periodEvents: Array<{ streak: BleedingStreak; event: PeriodStartEvent }> = [];
-  let previousReliableStart = parseDateKey(profile.lastPeriodStart);
+  const calibrationStart = parseDateKey(profile.lastPeriodStart);
+  let previousReliableStart = calibrationStart;
 
   for (const streak of streaks) {
     const event = classifyPeriodStart(streak, profile, previousReliableStart);
 
     if (event) {
+      if (startOfDay(event.date).getTime() < startOfDay(calibrationStart).getTime()) {
+        continue;
+      }
+
       periodEvents.push({ streak, event });
 
       if (event.confidence === "confirmed") {

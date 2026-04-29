@@ -10,6 +10,20 @@ function parseDateKey(dateKey: string) {
   return new Date(year, month - 1, day);
 }
 
+function startOfDay(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function diffInDays(later: Date, earlier: Date) {
+  const millisecondsPerDay = 24 * 60 * 60 * 1000;
+  return Math.round((startOfDay(later).getTime() - startOfDay(earlier).getTime()) / millisecondsPerDay);
+}
+
+function canEditRecentRecord(dateKey: string, today: Date) {
+  const daysAgo = diffInDays(today, parseDateKey(dateKey));
+  return daysAgo >= 0 && daysAgo < 5;
+}
+
 function startOfMonth(date: Date) {
   return new Date(date.getFullYear(), date.getMonth(), 1);
 }
@@ -51,7 +65,6 @@ export function CalendarPage({ onVisibleMonthChange }: CalendarPageProps) {
   const profile = useCycleStore((state) => state.profile)!;
   const entries = useCycleStore((state) => state.entries);
   const today = new Date();
-  const todayKey = today.toISOString().slice(0, 10);
   const months = buildCalendarMonths(profile.lastPeriodStart, today);
   const currentMonthKey = startOfMonth(today).toISOString();
   const hasScrolledToCurrentMonth = useRef(false);
@@ -64,6 +77,12 @@ export function CalendarPage({ onVisibleMonthChange }: CalendarPageProps) {
   const selectedEntry = selectedDateKey ? entries[selectedDateKey] : undefined;
 
   const handleDateClick = (dateKey: string) => {
+    if (canEditRecentRecord(dateKey, today)) {
+      setSelectedDateKey(dateKey);
+      setSelectedEmptyDateBubble(null);
+      return;
+    }
+
     if (entries[dateKey]) {
       setSelectedDateKey(dateKey);
       setSelectedEmptyDateBubble(null);
@@ -222,11 +241,11 @@ export function CalendarPage({ onVisibleMonthChange }: CalendarPageProps) {
         </Card>
       </div>
 
-      {selectedDateKey && selectedEntry ? (
+      {selectedDateKey ? (
         <CalendarEntrySheet
           date={selectedDateKey}
           entry={selectedEntry}
-          isToday={selectedDateKey === todayKey}
+          canEdit={canEditRecentRecord(selectedDateKey, today)}
           onClose={() => setSelectedDateKey(null)}
         />
       ) : null}

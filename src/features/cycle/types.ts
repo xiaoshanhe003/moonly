@@ -4,6 +4,7 @@ export type CycleProfile = {
   cycleLength: number;
   isPeriodLengthEstimated: boolean;
   isCycleLengthEstimated: boolean;
+  calibratedAt?: string;
 };
 
 export type BleedingLevel = "none" | "spotting" | "light" | "medium" | "heavy";

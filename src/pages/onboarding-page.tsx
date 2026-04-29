@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Calendar } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { useCycleStore } from "../features/cycle/store";
+import type { CycleProfile } from "../features/cycle/types";
 import { cn } from "../lib/utils";
 import welcomeIllustration from "../assets/onboarding/welcome-illustration.png";
 
@@ -74,7 +75,11 @@ function OnboardingInput({ children, suffix, onClick }: OnboardingInputProps) {
   );
 }
 
-export function OnboardingPage() {
+type OnboardingPageProps = {
+  onComplete?: (profile: CycleProfile) => void;
+};
+
+export function OnboardingPage({ onComplete }: OnboardingPageProps) {
   const navigate = useNavigate();
   const setProfile = useCycleStore((state) => state.setProfile);
   const lastPeriodInputRef = useRef<HTMLInputElement | null>(null);
@@ -90,13 +95,20 @@ export function OnboardingPage() {
   const [cycleUnknown, setCycleUnknown] = useState(false);
 
   const completeOnboarding = () => {
-    setProfile({
+    const profile = {
       lastPeriodStart,
       periodLength: periodUnknown ? 5 : Number(periodLength),
       cycleLength: cycleUnknown ? 28 : Number(cycleLength),
       isPeriodLengthEstimated: periodUnknown,
       isCycleLengthEstimated: cycleUnknown
-    });
+    };
+
+    if (onComplete) {
+      onComplete(profile);
+      return;
+    }
+
+    setProfile(profile);
     navigate("/today", { replace: true });
   };
 

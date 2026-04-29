@@ -32,9 +32,10 @@ function isStandaloneDisplay() {
 
 type InstallAppButtonProps = {
   isCompact?: boolean;
+  placement?: "floating" | "header";
 };
 
-export function InstallAppButton({ isCompact = false }: InstallAppButtonProps) {
+export function InstallAppButton({ isCompact = false, placement = "floating" }: InstallAppButtonProps) {
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState(() => isStandaloneDisplay());
   const [isHelpOpen, setIsHelpOpen] = useState(false);
@@ -135,6 +136,31 @@ export function InstallAppButton({ isCompact = false }: InstallAppButtonProps) {
     return null;
   }
 
+  if (placement === "header") {
+    return (
+      <>
+        <Button
+          className="h-10 shrink-0 gap-1.5 rounded-full border border-[color:var(--border-strong)] bg-[color:var(--card-elevated)] px-3 text-sm font-medium text-[color:var(--foreground)] shadow-[var(--shadow-card)] backdrop-blur-xl hover:bg-white"
+          variant="ghost"
+          onClick={handleInstallClick}
+          aria-label="添加到主屏幕"
+        >
+          <Download className="size-4" aria-hidden="true" />
+          <span>安装</span>
+        </Button>
+
+        {isHelpOpen ? (
+          <InstallHelpSheet
+            copyBubble={copyBubble}
+            pageUrl={pageUrl}
+            copyPageUrl={copyPageUrl}
+            onClose={() => setIsHelpOpen(false)}
+          />
+        ) : null}
+      </>
+    );
+  }
+
   return (
     <>
       <Button
@@ -153,91 +179,112 @@ export function InstallAppButton({ isCompact = false }: InstallAppButtonProps) {
       </Button>
 
       {isHelpOpen ? (
-        <Sheet
-          header={
-            <p className={cn("min-w-0 whitespace-nowrap pr-3 font-semibold leading-snug", uiTextStyles.xl)}>
-              如何将月信安装到手机主屏幕
-            </p>
-          }
-          bodyClassName="sm:max-w-md"
-          contentClassName="px-7 pb-8 pt-6 sm:px-6"
+        <InstallHelpSheet
+          copyBubble={copyBubble}
+          pageUrl={pageUrl}
+          copyPageUrl={copyPageUrl}
           onClose={() => setIsHelpOpen(false)}
-        >
-          <ol className="space-y-6">
-            <li className="grid grid-cols-[2.25rem_1fr] gap-3">
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-[8px] bg-[color:var(--muted)] text-base font-semibold text-[color:var(--foreground)]">
-                1
-              </span>
-              <div className="min-w-0 space-y-2">
-                <p className={cn("pt-1 leading-relaxed", uiTextStyles.md)}>
-                  用浏览器打开本网页，推荐 Safari 和 Chrome
-                </p>
-                <div className="relative">
-                  {copyBubble ? (
-                    <div
-                      key={copyBubble.id}
-                      className={cn(
-                        "absolute left-1/2 top-0 z-10 whitespace-nowrap rounded-[0.65rem] border border-[color:var(--border)] bg-[color:var(--card-elevated)] px-2.5 py-1.5 text-sm font-medium leading-none text-[color:var(--foreground)] shadow-[var(--shadow-card)]",
-                        copyBubble.isLeaving
-                          ? "[animation:phase-bubble-fade_200ms_ease-in_forwards]"
-                          : "[animation:phase-bubble-float_160ms_ease-out_forwards]"
-                      )}
-                      role="status"
-                    >
-                      已复制
-                      <span
-                        className="absolute left-1/2 top-full h-2 w-2 -translate-x-1/2 -translate-y-1/2 rotate-45 border-b border-r border-[color:var(--border)] bg-[color:var(--card-elevated)]"
-                        aria-hidden="true"
-                      />
-                    </div>
-                  ) : null}
-                  <button
-                    type="button"
-                    className="flex h-11 w-full items-center gap-3 rounded-[8px] border border-[color:var(--border)] bg-white px-3 text-left transition-colors hover:bg-[color:var(--muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ring)]"
-                    onClick={copyPageUrl}
-                    aria-label="复制当前网页地址"
-                  >
-                    <span className={cn("min-w-0 flex-1 truncate", uiTextStyles.sm, uiTextStyles.muted)}>
-                      {pageUrl}
-                    </span>
-                    <Copy className="size-4 shrink-0 text-[color:var(--muted-foreground)]" aria-hidden="true" />
-                  </button>
-                </div>
-              </div>
-            </li>
-            <li className="grid grid-cols-[2.25rem_1fr] gap-3">
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-[8px] bg-[color:var(--muted)] text-base font-semibold text-[color:var(--foreground)]">
-                2
-              </span>
-              <div className="min-w-0 space-y-3">
-                <p className={cn("pt-1 leading-relaxed", uiTextStyles.md)}>
-                  点击浏览器上方/下方工具栏中的分享按钮
-                </p>
-                <img
-                  src={shareButtonImage}
-                  alt="浏览器分享按钮位置示意"
-                  className="h-32 w-full rounded-[8px] object-cover sm:h-32"
-                />
-              </div>
-            </li>
-            <li className="grid grid-cols-[2.25rem_1fr] gap-3">
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-[8px] bg-[color:var(--muted)] text-base font-semibold text-[color:var(--foreground)]">
-                3
-              </span>
-              <div className="min-w-0 space-y-3">
-                <p className={cn("pt-1 leading-relaxed", uiTextStyles.md)}>
-                  在打开的弹窗中选择“添加到主屏幕”
-                </p>
-                <img
-                  src={addToHomeScreenImage}
-                  alt="添加到主屏幕菜单项示意"
-                  className="h-32 w-full rounded-[8px] object-cover sm:h-32"
-                />
-              </div>
-            </li>
-          </ol>
-        </Sheet>
+        />
       ) : null}
     </>
+  );
+}
+
+function InstallHelpSheet({
+  copyBubble,
+  pageUrl,
+  copyPageUrl,
+  onClose
+}: {
+  copyBubble: CopyBubble | null;
+  pageUrl: string;
+  copyPageUrl: () => void;
+  onClose: () => void;
+}) {
+  return (
+    <Sheet
+      header={
+        <p className={cn("min-w-0 whitespace-nowrap pr-3 font-semibold leading-snug", uiTextStyles.xl)}>
+          如何将月信安装到手机主屏幕
+        </p>
+      }
+      bodyClassName="sm:max-w-md"
+      contentClassName="px-7 pb-8 pt-6 sm:px-6"
+      onClose={onClose}
+    >
+      <ol className="space-y-6">
+        <li className="grid grid-cols-[2.25rem_1fr] gap-3">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-[8px] bg-[color:var(--muted)] text-base font-semibold text-[color:var(--foreground)]">
+            1
+          </span>
+          <div className="min-w-0 space-y-2">
+            <p className={cn("pt-1 leading-relaxed", uiTextStyles.md)}>
+              用浏览器打开本网页，推荐 Safari 和 Chrome
+            </p>
+            <div className="relative">
+              {copyBubble ? (
+                <div
+                  key={copyBubble.id}
+                  className={cn(
+                    "absolute left-1/2 top-0 z-10 whitespace-nowrap rounded-[0.65rem] border border-[color:var(--border)] bg-[color:var(--card-elevated)] px-2.5 py-1.5 text-sm font-medium leading-none text-[color:var(--foreground)] shadow-[var(--shadow-card)]",
+                    copyBubble.isLeaving
+                      ? "[animation:phase-bubble-fade_200ms_ease-in_forwards]"
+                      : "[animation:phase-bubble-float_160ms_ease-out_forwards]"
+                  )}
+                  role="status"
+                >
+                  已复制
+                  <span
+                    className="absolute left-1/2 top-full h-2 w-2 -translate-x-1/2 -translate-y-1/2 rotate-45 border-b border-r border-[color:var(--border)] bg-[color:var(--card-elevated)]"
+                    aria-hidden="true"
+                  />
+                </div>
+              ) : null}
+              <button
+                type="button"
+                className="flex h-11 w-full items-center gap-3 rounded-[8px] border border-[color:var(--border)] bg-white px-3 text-left transition-colors hover:bg-[color:var(--muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ring)]"
+                onClick={copyPageUrl}
+                aria-label="复制当前网页地址"
+              >
+                <span className={cn("min-w-0 flex-1 truncate", uiTextStyles.sm, uiTextStyles.muted)}>
+                  {pageUrl}
+                </span>
+                <Copy className="size-4 shrink-0 text-[color:var(--muted-foreground)]" aria-hidden="true" />
+              </button>
+            </div>
+          </div>
+        </li>
+        <li className="grid grid-cols-[2.25rem_1fr] gap-3">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-[8px] bg-[color:var(--muted)] text-base font-semibold text-[color:var(--foreground)]">
+            2
+          </span>
+          <div className="min-w-0 space-y-3">
+            <p className={cn("pt-1 leading-relaxed", uiTextStyles.md)}>
+              点击浏览器上方/下方工具栏中的分享按钮
+            </p>
+            <img
+              src={shareButtonImage}
+              alt="浏览器分享按钮位置示意"
+              className="h-32 w-full rounded-[8px] object-cover sm:h-32"
+            />
+          </div>
+        </li>
+        <li className="grid grid-cols-[2.25rem_1fr] gap-3">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-[8px] bg-[color:var(--muted)] text-base font-semibold text-[color:var(--foreground)]">
+            3
+          </span>
+          <div className="min-w-0 space-y-3">
+            <p className={cn("pt-1 leading-relaxed", uiTextStyles.md)}>
+              在打开的弹窗中选择“添加到主屏幕”
+            </p>
+            <img
+              src={addToHomeScreenImage}
+              alt="添加到主屏幕菜单项示意"
+              className="h-32 w-full rounded-[8px] object-cover sm:h-32"
+            />
+          </div>
+        </li>
+      </ol>
+    </Sheet>
   );
 }
