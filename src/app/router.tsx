@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate } from "react-router-dom";
 import { AppShell } from "./shell";
 import { PhaseSciencePage } from "../pages/phase-science-page";
 import { SettingsPage } from "../pages/settings-page";
+import { OnboardingPage } from "../pages/onboarding-page";
 
 export const router = createBrowserRouter([
   {
@@ -23,5 +24,9 @@ export const router = createBrowserRouter([
   {
     path: "/settings",
     element: <SettingsPage />
+  },
+  {
+    path: "/onboarding",
+    element: <OnboardingPage />
   }
 ]);

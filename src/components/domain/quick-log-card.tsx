@@ -7,7 +7,7 @@ import { getBleedingLevel, getCycleSummary, getLogProgress, getSuggestedStep } f
 import type { CycleProfile, DailyEntry, QuickLogStep } from "../../features/cycle/types";
 import { cn } from "../../lib/utils";
 import { useCycleStore } from "../../features/cycle/store";
-import { uiSpacingStyles, uiSurfaceStyles, uiTextStyles } from "../ui/styles";
+import { uiLayoutStyles, uiSpacingStyles, uiSurfaceStyles, uiTextStyles } from "../ui/styles";
 import { formatFullDate } from "../../lib/utils";
 import { getMoodOption, moodOptions, type MoodValue } from "./mood-options";
 import { MoodStickerGraphic } from "./mood-sticker-graphic";
@@ -48,6 +48,9 @@ const flowOptions = [
 ] as const;
 const stepOrder: QuickLogStep[] = ["mood", "energy", "symptoms", "flow"];
 const cardSlideAnimationMs = 440;
+const recordSheetActionBarClassName =
+  "sticky bottom-[-2rem] z-10 -mx-8 -mb-8 mt-2 border-t border-[color:var(--border)] bg-[color:var(--card-elevated)] px-8 pb-[calc(var(--space-5)+env(safe-area-inset-bottom,0px))] pt-3 backdrop-blur-xl sm:-mx-6 sm:-mb-6 sm:px-6 sm:pb-6";
+const recordSheetSectionClassName = "grid gap-3 border-b border-[color:var(--border)] pb-6";
 type FlowOption = (typeof flowOptions)[number];
 
 type CompletedLogDetailsProps = {
@@ -305,6 +308,31 @@ function OutlinedStickerText({ label, compact = false }: { label: string; compac
   );
 }
 
+function SymptomValue({ symptoms }: { symptoms?: DailyEntry["symptoms"] }) {
+  if (symptoms === undefined) {
+    return <>未记录</>;
+  }
+
+  const labels = symptoms.length > 0 ? symptoms : [noSymptomLabel];
+
+  return (
+    <span className="inline-flex flex-wrap items-center gap-2">
+      {labels.map((label, index) => (
+        <span
+          key={label}
+          className={cn(
+            "inline-flex items-center justify-center",
+            stickerShadowStyles.compact,
+            symptomStickerRotations[index % symptomStickerRotations.length]
+          )}
+        >
+          <OutlinedStickerText label={label} compact />
+        </span>
+      ))}
+    </span>
+  );
+}
+
 function CompletedAnswerStickerRow({
   entry,
   bleedingLevel,
@@ -426,12 +454,6 @@ export function LogAnswerSummary({ entry }: { entry?: DailyEntry }) {
   const energyColors = getPhaseEnergyColors(
     profile && entry?.date ? getCycleSummary(profile, entries, parseDateKey(entry.date)).phase.color : undefined
   );
-  const symptomLabel =
-    entry?.symptoms === undefined
-      ? "未记录"
-      : entry.symptoms.length > 0
-        ? entry.symptoms.join("、")
-        : "今天没有明显不适";
   const periodSignalLabel =
     bleedingLevel && bleedingLevel !== "none" && entry?.periodSignal && entry.periodSignal !== "none"
       ? "这是经期第一天"
@@ -453,7 +475,9 @@ export function LogAnswerSummary({ entry }: { entry?: DailyEntry }) {
       </div>
       <div>
         <p className={uiTextStyles.sectionLabel}>身体症状</p>
-        <p className="mt-2 text-base font-medium text-[color:var(--foreground)]">{symptomLabel}</p>
+        <div className="mt-2 text-base font-medium text-[color:var(--foreground)]">
+          <SymptomValue symptoms={entry?.symptoms} />
+        </div>
       </div>
       <div>
         <p className={uiTextStyles.sectionLabel}>出血情况</p>
@@ -499,8 +523,8 @@ export function CompletedLogDetails({ entry, onChange }: CompletedLogDetailsProp
       : "今天有经血吗？";
 
   return (
-    <div className="grid gap-8">
-      <div className="grid gap-3">
+    <div className="grid gap-6">
+      <div className={recordSheetSectionClassName}>
         <p className={questionClassName}>今天心情如何？</p>
         <div className="relative mx-auto h-[7.5rem] w-full max-w-[19rem] sm:h-[8.25rem] sm:max-w-[21rem]">
           {moodOptions.map((mood) => (
@@ -517,7 +541,7 @@ export function CompletedLogDetails({ entry, onChange }: CompletedLogDetailsProp
         </div>
       </div>
 
-      <div className="grid gap-3">
+      <div className={recordSheetSectionClassName}>
         <p className={questionClassName}>感觉体内的能量如何？</p>
         <div className="grid grid-cols-4 gap-1.5">
           {energyOptions.map((energy) => (
@@ -536,7 +560,7 @@ export function CompletedLogDetails({ entry, onChange }: CompletedLogDetailsProp
         </div>
       </div>
 
-      <div className="grid gap-3">
+      <div className={recordSheetSectionClassName}>
         <p className={questionClassName}>身体有什么信号？</p>
         <div className="flex flex-wrap gap-2.5">
           <SymptomStickerButton
@@ -570,7 +594,7 @@ export function CompletedLogDetails({ entry, onChange }: CompletedLogDetailsProp
         </div>
       </div>
 
-      <div className="grid gap-3">
+      <div className={cn(recordSheetSectionClassName, "border-b-0 pb-0")}>
         <p className={questionClassName}>{flowQuestion}</p>
         <div className="grid grid-cols-5 gap-1.5">
           {flowOptions.map((flow) =>
@@ -635,11 +659,11 @@ export function CompletedRecordSheetContent({
         <div className="pb-20">
           <CompletedLogDetails entry={draftEntry} onChange={updateDraftEntry} />
         </div>
-        <div className="sticky bottom-[calc(var(--space-5)*-1)] z-10 -mx-[var(--space-5)] -mb-[var(--space-5)] mt-2 border-t border-[color:var(--border)] bg-[color:var(--card-elevated)] px-[var(--space-5)] pb-[calc(1rem+var(--space-5)+env(safe-area-inset-bottom,0px))] pt-4 backdrop-blur-xl">
+        <div className={recordSheetActionBarClassName}>
           <div className="grid grid-cols-2 gap-3">
             <Button
               variant="secondary"
-              className="min-h-12"
+              className={uiLayoutStyles.sheetSecondaryActionButton}
               onClick={() => {
                 setDraftEntry(entry ?? { date });
                 setIsEditing(false);
@@ -649,7 +673,7 @@ export function CompletedRecordSheetContent({
             </Button>
             <Button
               variant="primary"
-              className="min-h-12"
+              className={uiLayoutStyles.sheetPrimaryActionButton}
               onClick={() => {
                 if (draftEntry) {
                   onSave(draftEntry);
@@ -669,10 +693,10 @@ export function CompletedRecordSheetContent({
     <div className="grid gap-4">
       <LogAnswerSummary entry={entry} />
       {allowEditing ? (
-        <div className="-mx-6 mt-2 border-t border-[color:var(--border)] px-6 pt-4">
+        <div className={recordSheetActionBarClassName}>
           <Button
             variant="secondary"
-            className="min-h-12 w-full"
+            className={uiLayoutStyles.sheetSecondaryActionButton}
             onClick={() => {
               setDraftEntry(entry ?? { date });
               setIsEditing(true);

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { MouseEventHandler, ReactNode } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Calendar } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { useCycleStore } from "../features/cycle/store";
@@ -79,20 +79,29 @@ type OnboardingPageProps = {
   onComplete?: (profile: CycleProfile) => void;
 };
 
+type OnboardingLocationState = {
+  mode?: "restart";
+  profile?: CycleProfile;
+};
+
 export function OnboardingPage({ onComplete }: OnboardingPageProps) {
   const navigate = useNavigate();
+  const location = useLocation();
+  const locationState = location.state as OnboardingLocationState | null;
+  const restartProfile = locationState?.mode === "restart" ? locationState.profile : undefined;
   const setProfile = useCycleStore((state) => state.setProfile);
+  const restartWithProfile = useCycleStore((state) => state.restartWithProfile);
   const lastPeriodInputRef = useRef<HTMLInputElement | null>(null);
   const periodLengthInputRef = useRef<HTMLInputElement | null>(null);
   const cycleLengthInputRef = useRef<HTMLInputElement | null>(null);
   const pendingFocusRef = useRef<"period" | "cycle" | null>(null);
-  const [hasStarted, setHasStarted] = useState(false);
+  const [hasStarted, setHasStarted] = useState(() => Boolean(restartProfile));
   const [step, setStep] = useState<OnboardingStep>(0);
-  const [lastPeriodStart, setLastPeriodStart] = useState(() => new Date().toISOString().slice(0, 10));
-  const [periodLength, setPeriodLength] = useState("5");
-  const [cycleLength, setCycleLength] = useState("28");
-  const [periodUnknown, setPeriodUnknown] = useState(false);
-  const [cycleUnknown, setCycleUnknown] = useState(false);
+  const [lastPeriodStart, setLastPeriodStart] = useState(() => restartProfile?.lastPeriodStart ?? new Date().toISOString().slice(0, 10));
+  const [periodLength, setPeriodLength] = useState(() => String(restartProfile?.periodLength ?? 5));
+  const [cycleLength, setCycleLength] = useState(() => String(restartProfile?.cycleLength ?? 28));
+  const [periodUnknown, setPeriodUnknown] = useState(() => restartProfile?.isPeriodLengthEstimated ?? false);
+  const [cycleUnknown, setCycleUnknown] = useState(() => restartProfile?.isCycleLengthEstimated ?? false);
 
   const completeOnboarding = () => {
     const profile = {
@@ -105,6 +114,12 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
 
     if (onComplete) {
       onComplete(profile);
+      return;
+    }
+
+    if (restartProfile) {
+      restartWithProfile(profile);
+      navigate("/today", { replace: true, state: null });
       return;
     }
 

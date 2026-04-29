@@ -13,7 +13,7 @@ import { useCycleStore } from "../features/cycle/store";
 import { getCycleSummary } from "../features/cycle/cycle";
 import type { CycleProfile } from "../features/cycle/types";
 import { cn, formatShortDate } from "../lib/utils";
-import { uiTextStyles } from "../components/ui/styles";
+import { uiLayoutStyles, uiTextStyles } from "../components/ui/styles";
 
 const weekdays = ["日", "一", "二", "三", "四", "五", "六"];
 
@@ -124,8 +124,8 @@ export function AppShell({ initialView }: AppShellProps) {
           )}
           data-sticky-shell-header
         >
-          <header className="mx-auto max-w-md px-4 pt-4 sm:px-6">
-            <div className="flex items-center justify-between gap-3">
+          <header className="mx-auto max-w-md px-4 sm:px-6">
+            <div className={cn(uiLayoutStyles.pageHeaderBar, "flex items-center justify-between gap-3")}>
               <SegmentedControl
                 value={currentView}
                 onChange={(next) => navigate(next === "today" ? "/today" : "/calendar")}
@@ -223,15 +223,15 @@ export function AppShell({ initialView }: AppShellProps) {
           header={<p className={cn("font-semibold leading-snug", uiTextStyles.xl)}>已保存到本机</p>}
           bodyClassName="sm:max-w-md"
           onClose={acknowledgeLocalSave}
-        >
-          <div className="space-y-5">
-            <p className={cn("leading-relaxed", uiTextStyles.md)}>
-              你的记录会保存在当前设备的浏览器中，不需要注册账号，也不会上传到云端。之后可以在设置中备份数据或校准预测。
-            </p>
-            <Button className="h-11 w-full rounded-[10px]" onClick={acknowledgeLocalSave}>
+          footer={
+            <Button className={uiLayoutStyles.sheetPrimaryActionButton} onClick={acknowledgeLocalSave}>
               我知道了
             </Button>
-          </div>
+          }
+        >
+          <p className={cn("leading-relaxed", uiTextStyles.md)}>
+            你的记录会保存在当前设备的浏览器中，不需要注册账号，也不会上传到云端。之后可以在设置中备份数据或重新开始填写基础信息。
+          </p>
         </Sheet>
       ) : null}
 

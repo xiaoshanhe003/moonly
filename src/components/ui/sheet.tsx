@@ -8,11 +8,12 @@ import { uiLayoutStyles } from "./styles";
 type SheetProps = PropsWithChildren<{
   header: ReactNode;
   onClose: () => void;
+  footer?: ReactNode;
   bodyClassName?: string;
   contentClassName?: string;
 }>;
 
-export function Sheet({ header, onClose, bodyClassName, contentClassName, children }: SheetProps) {
+export function Sheet({ header, onClose, footer, bodyClassName, contentClassName, children }: SheetProps) {
   useEffect(() => {
     const { documentElement, body } = document;
     const previousDocumentOverflow = documentElement.style.overflow;
@@ -29,15 +30,22 @@ export function Sheet({ header, onClose, bodyClassName, contentClassName, childr
 
   return createPortal(
     <div className={uiLayoutStyles.sheetOverlay} onClick={onClose}>
-      <div className={cn(uiLayoutStyles.sheetBody, bodyClassName)} onClick={(event) => event.stopPropagation()}>
-        <div className={uiLayoutStyles.sheetHeader}>
-          <div>{header}</div>
-          <Button variant="ghost" size="icon" onClick={onClose} aria-label="关闭">
-            <X className="size-5" />
-          </Button>
-        </div>
+      <div className={cn(uiLayoutStyles.sheetFrame, bodyClassName)} onClick={(event) => event.stopPropagation()}>
+        <Button
+          variant="ghost"
+          size="icon"
+          className={uiLayoutStyles.sheetCloseButton}
+          onClick={onClose}
+          aria-label="关闭"
+        >
+          <X className="size-5" />
+        </Button>
 
-        <div className={cn(uiLayoutStyles.sheetContent, "overscroll-contain", contentClassName)}>{children}</div>
+        <div className={uiLayoutStyles.sheetBody}>
+          <div className={uiLayoutStyles.sheetHeader}>{header}</div>
+          <div className={cn(uiLayoutStyles.sheetContent, "overscroll-contain", contentClassName)}>{children}</div>
+          {footer ? <div className={uiLayoutStyles.sheetFooter}>{footer}</div> : null}
+        </div>
       </div>
     </div>,
     document.body

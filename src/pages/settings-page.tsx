@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft, BookOpen, Check, ChevronRight, Database, Info, RotateCcw } from "lucide-react";
 import { Button } from "../components/ui/button";
+import { Sheet } from "../components/ui/sheet";
 import { uiLayoutStyles, uiTextStyles } from "../components/ui/styles";
 import { cn } from "../lib/utils";
 import { createBackupText, parseBackupText } from "../features/backup/backup-text";
@@ -9,16 +10,8 @@ import { useCycleStore } from "../features/cycle/store";
 import { appVersion, recentUpdates } from "../features/app-info/app-info";
 import appIcon from "../../public/icon.svg";
 
-type SettingsView = "home" | "calibration" | "backup" | "about";
+type SettingsView = "home" | "backup" | "about";
 type ConflictMode = "skip" | "overwrite";
-
-function formatDateKey(date: Date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
-}
 
 function formatDisplayDate(value: string) {
   return new Intl.DateTimeFormat("zh-CN", {
@@ -85,14 +78,12 @@ export function SettingsPage() {
   const location = useLocation();
   const profile = useCycleStore((state) => state.profile);
   const entries = useCycleStore((state) => state.entries);
-  const updateProfile = useCycleStore((state) => state.updateProfile);
   const importEntries = useCycleStore((state) => state.importEntries);
-  const todayKey = formatDateKey(new Date());
   const [view, setView] = useState<SettingsView>("home");
-  const [calibrationDate, setCalibrationDate] = useState(profile?.lastPeriodStart ?? todayKey);
-  const [isConfirmingCalibration, setIsConfirmingCalibration] = useState(false);
+  const [isRestartSheetOpen, setIsRestartSheetOpen] = useState(false);
   const [backupCopied, setBackupCopied] = useState(false);
   const [backupInput, setBackupInput] = useState("");
+  const recordCountForRestart = Object.keys(entries).length;
 
   useEffect(() => {
     if (!profile) {
@@ -121,7 +112,6 @@ export function SettingsPage() {
 
   const headerTitle = {
     home: "设置",
-    calibration: "校准",
     backup: "数据备份/导入",
     about: "关于月信"
   }[view];
@@ -149,13 +139,17 @@ export function SettingsPage() {
     setBackupCopied(true);
   };
 
-  const handleSaveCalibration = () => {
-    updateProfile({
-      lastPeriodStart: calibrationDate,
-      calibratedAt: new Date().toISOString()
+  const handleRestart = () => {
+    if (!profile) {
+      return;
+    }
+
+    navigate("/onboarding", {
+      state: {
+        mode: "restart",
+        profile
+      }
     });
-    setIsConfirmingCalibration(false);
-    setView("home");
   };
 
   const handleImport = (mode: ConflictMode) => {
@@ -179,7 +173,7 @@ export function SettingsPage() {
   return (
     <main className="min-h-screen bg-[var(--color-canvas)] text-[var(--color-ink)]">
       <div className="sticky top-0 z-40 w-full bg-[color:var(--color-canvas)]/85 backdrop-blur">
-        <header className="mx-auto flex max-w-md items-center gap-3 px-4 py-4 sm:px-6">
+        <header className={cn(uiLayoutStyles.pageHeaderInner, "gap-3")}>
           <Button variant="ghost" size="icon" onClick={goBack} aria-label="返回">
             <ArrowLeft className="size-5 text-[var(--color-ink)]" />
           </Button>
@@ -191,15 +185,14 @@ export function SettingsPage() {
         {view === "home" ? (
           <div className="space-y-3">
             <SettingsRow
-              icon={<RotateCcw className="size-5" aria-hidden="true" />}
-              title="校准"
-              description="修改最近一次月经开始日"
-              onClick={() => setView("calibration")}
-            />
-            <SettingsRow
               icon={<Database className="size-5" aria-hidden="true" />}
               title="数据备份/导入"
               onClick={() => setView("backup")}
+            />
+            <SettingsRow
+              icon={<RotateCcw className="size-5" aria-hidden="true" />}
+              title="重新开始"
+              onClick={() => setIsRestartSheetOpen(true)}
             />
             <SettingsRow
               icon={<BookOpen className="size-5" aria-hidden="true" />}
@@ -212,50 +205,6 @@ export function SettingsPage() {
               meta={`v${appVersion}`}
               onClick={() => setView("about")}
             />
-          </div>
-        ) : null}
-
-        {view === "calibration" ? (
-          <div className="space-y-5">
-            <div className="space-y-2">
-              <label className={cn("block font-medium", uiTextStyles.md)} htmlFor="calibration-date">
-                最近一次月经开始日
-              </label>
-              <input
-                id="calibration-date"
-                className={uiLayoutStyles.input}
-                type="date"
-                value={calibrationDate}
-                max={todayKey}
-                onChange={(event) => {
-                  setCalibrationDate(event.target.value);
-                  setIsConfirmingCalibration(false);
-                }}
-              />
-              <p className={cn("leading-relaxed", uiTextStyles.sm, uiTextStyles.muted)}>
-                只用于重新判断相位和未来预测，不会修改已有每日记录。
-              </p>
-            </div>
-
-            {isConfirmingCalibration ? (
-              <div className="space-y-4 rounded-[var(--radius-md)] bg-[color:var(--muted)] p-4">
-                <p className={cn("leading-relaxed", uiTextStyles.md)}>
-                  保存后，月信会从这一天开始重新判断相位和未来预测。已有每日记录不会被修改。
-                </p>
-                <div className="grid grid-cols-2 gap-3">
-                  <Button variant="secondary" className="h-11 rounded-[10px]" onClick={() => setIsConfirmingCalibration(false)}>
-                    取消
-                  </Button>
-                  <Button className="h-11 rounded-[10px]" onClick={handleSaveCalibration}>
-                    保存校准
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <Button className="h-11 w-full rounded-[10px]" onClick={() => setIsConfirmingCalibration(true)}>
-                保存
-              </Button>
-            )}
           </div>
         ) : null}
 
@@ -358,6 +307,23 @@ export function SettingsPage() {
           </div>
         ) : null}
       </div>
+
+      {isRestartSheetOpen ? (
+        <Sheet
+          header={<p className={cn("font-semibold leading-snug", uiTextStyles.xl)}>要重新开始吗？</p>}
+          bodyClassName="sm:max-w-md"
+          onClose={() => setIsRestartSheetOpen(false)}
+          footer={
+            <Button className={uiLayoutStyles.sheetPrimaryActionButton} onClick={handleRestart}>
+              清空并重填
+            </Button>
+          }
+        >
+          <p className={cn("leading-relaxed", uiTextStyles.md)}>
+            重新开始将清空当前的每日记录（共 {recordCountForRestart} 天）且无法找回。
+          </p>
+        </Sheet>
+      ) : null}
     </main>
   );
 }

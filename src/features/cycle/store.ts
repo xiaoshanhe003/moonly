@@ -8,6 +8,7 @@ type CycleState = {
   entries: Record<string, DailyEntry>;
   activeScenario: AppScenario;
   setProfile: (profile: CycleProfile) => void;
+  restartWithProfile: (profile: CycleProfile) => void;
   updateProfile: (patch: Partial<CycleProfile>) => void;
   updateEntry: (date: string, patch: Partial<DailyEntry>) => void;
   importEntries: (profile: CycleProfile, entries: Record<string, DailyEntry>, conflictMode: "skip" | "overwrite") => void;
@@ -75,6 +76,12 @@ export const useCycleStore = create<CycleState>()(
       entries: buildScenarioEntries(defaultScenario),
       activeScenario: "first-run",
       setProfile: (profile) => set({ profile }),
+      restartWithProfile: (profile) =>
+        set({
+          profile,
+          entries: {},
+          activeScenario: "first-run"
+        }),
       updateProfile: (patch) =>
         set((state) => ({
           profile: state.profile ? { ...state.profile, ...patch } : null

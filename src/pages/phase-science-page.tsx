@@ -6,7 +6,7 @@ import { PhaseIllustration } from "../components/domain/phase-illustration";
 import { getCycleSummary, type PhaseKey } from "../features/cycle/cycle";
 import { useCycleStore } from "../features/cycle/store";
 import { cn } from "../lib/utils";
-import { uiTextStyles } from "../components/ui/styles";
+import { uiLayoutStyles, uiTextStyles } from "../components/ui/styles";
 
 type ScienceTabKey = "overview" | PhaseKey;
 
@@ -329,7 +329,7 @@ export function PhaseSciencePage() {
     <main className="min-h-screen bg-[var(--color-canvas)] text-[var(--color-ink)]">
       <div className={scienceStyles.stickyHeader}>
         <header className={scienceStyles.headerInner}>
-          <div className="pt-3">
+          <div className={cn(uiLayoutStyles.pageHeaderBar, "flex items-center")}>
             <Button variant="ghost" size="icon" onClick={() => navigate(-1)} aria-label="返回">
               <ArrowLeft className="size-5 text-[var(--color-ink)]" />
             </Button>

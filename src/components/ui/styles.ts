@@ -33,13 +33,23 @@ export const uiSurfaceStyles = {
 };
 
 export const uiLayoutStyles = {
+  pageHeaderBar: "h-[72px]",
+  pageHeaderInner: "mx-auto flex h-[72px] w-full max-w-md items-center px-4 sm:px-6",
   sheetOverlay:
-    "fixed inset-0 z-50 flex items-end bg-[color:var(--overlay)] p-0 backdrop-blur-sm sm:items-center sm:justify-center sm:p-6",
+    "fixed inset-0 z-50 flex items-end justify-center bg-[color:var(--overlay)] p-0 pt-[calc(env(safe-area-inset-top,0px)+0.75rem)] backdrop-blur-sm sm:items-center sm:p-6",
+  sheetFrame: "flex max-h-full w-full flex-col items-end sm:max-w-2xl",
+  sheetCloseButton:
+    "mr-5 h-9 w-14 rounded-b-none rounded-t-[8px] bg-[color:var(--muted)] text-[color:var(--foreground)] shadow-none hover:bg-[color:var(--muted)] sm:mr-6",
   sheetBody:
-    "max-h-[88vh] w-full overflow-hidden rounded-t-[var(--radius-record-sheet)] bg-[color:var(--card-elevated)] shadow-[var(--shadow-card)] sm:max-w-2xl sm:rounded-[var(--radius-record-sheet)]",
-  sheetHeader:
-    "flex items-center justify-between border-b border-[color:var(--border)] px-[var(--space-5)] py-[var(--space-4)]",
-  sheetContent: "max-h-[calc(88vh-5rem)] overflow-x-hidden overflow-y-auto p-[var(--space-5)]",
+    "flex min-h-[17rem] w-full flex-col overflow-hidden rounded-t-[var(--radius-record-sheet)] bg-[color:var(--card-elevated)] shadow-[var(--shadow-card)] sm:rounded-[var(--radius-record-sheet)]",
+  sheetHeader: "px-8 pb-0 pt-8 sm:px-6 sm:pt-6",
+  sheetContent: "min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-8 pb-8 pt-5 sm:px-6 sm:pb-6",
+  sheetFooter:
+    "border-t border-[color:var(--border)] px-8 pb-[calc(var(--space-5)+env(safe-area-inset-bottom,0px))] pt-3 sm:px-6 sm:pb-6",
+  sheetPrimaryActionButton:
+    "h-[50px] w-full rounded-[10px] bg-[color:var(--foreground)] text-base font-semibold text-[color:var(--background)]",
+  sheetSecondaryActionButton:
+    "h-[50px] w-full rounded-[10px] bg-[color:var(--muted)] text-base font-semibold text-[color:var(--foreground)]",
   input:
     "w-full rounded-[var(--radius-md)] border border-[color:var(--input)] bg-[color:var(--muted)] px-[var(--space-4)] py-[var(--space-3)] text-[color:var(--foreground)]"
 };

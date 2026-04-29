@@ -8,8 +8,8 @@ export const recentUpdates = [
   },
   {
     date: "2026/04/29",
-    title: "新增预测校准",
-    description: "可重新选择最近一次月经开始日。"
+    title: "新增重新开始",
+    description: "可带入上次基础信息重新填写，并在完成后清空每日记录。"
   },
   {
     date: "2026/04/29",
