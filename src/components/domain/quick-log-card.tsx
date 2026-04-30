@@ -816,7 +816,7 @@ export function QuickLogCard({
     const progressText = `${stepOrder.indexOf(step) + 1}/${stepOrder.length}`;
     const questionClassName = "text-sm font-medium text-[color:var(--foreground)]";
     const progressClassName = cn("text-sm leading-none", uiTextStyles.muted);
-    const stepLayoutClassName = "flex h-full flex-col";
+    const stepLayoutClassName = "flex h-full min-h-0 flex-col";
     const stepBodyClassName = "flex flex-1 items-center";
 
     if (step === "mood") {
@@ -892,45 +892,47 @@ export function QuickLogCard({
             <p className={questionClassName}>身体有什么信号？</p>
             <p className={progressClassName}>{progressText}</p>
           </div>
-          <div className="flex flex-1 flex-col justify-center gap-4">
-            <div className="flex flex-wrap items-center gap-2.5">
-              <SymptomStickerButton
-                active={noSymptomSelected}
-                dimInactive={hasSelectedSymptoms}
-                label={noSymptomLabel}
-                rotate="rotate-[2deg]"
-                onClick={() => {
-                  updateEntry(date, { symptoms: [] });
-                  setStepOverride("symptoms");
-                }}
-              />
-              {symptomOptions.map((symptom, index) => {
-                const active = entry?.symptoms?.includes(symptom);
-                return (
-                  <SymptomStickerButton
-                    key={symptom}
-                    active={Boolean(active)}
-                    dimInactive={hasSelectedSymptoms}
-                    label={symptom}
-                    rotate={symptomStickerRotations[index % symptomStickerRotations.length]}
-                    onClick={() => {
-                      const previous = new Set(entry?.symptoms ?? []);
-                      if (noSymptomSelected) {
-                        previous.clear();
-                      }
-                      if (previous.has(symptom)) {
-                        previous.delete(symptom);
-                      } else {
-                        previous.add(symptom);
-                      }
-                      updateEntry(date, { symptoms: [...previous] });
-                      setStepOverride("symptoms");
-                    }}
-                  />
-                );
-              })}
+          <div className="flex min-h-0 flex-1 flex-col gap-3">
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1">
+              <div className="flex min-h-full flex-wrap content-center items-center gap-2.5 py-1">
+                <SymptomStickerButton
+                  active={noSymptomSelected}
+                  dimInactive={hasSelectedSymptoms}
+                  label={noSymptomLabel}
+                  rotate="rotate-[2deg]"
+                  onClick={() => {
+                    updateEntry(date, { symptoms: [] });
+                    setStepOverride("symptoms");
+                  }}
+                />
+                {symptomOptions.map((symptom, index) => {
+                  const active = entry?.symptoms?.includes(symptom);
+                  return (
+                    <SymptomStickerButton
+                      key={symptom}
+                      active={Boolean(active)}
+                      dimInactive={hasSelectedSymptoms}
+                      label={symptom}
+                      rotate={symptomStickerRotations[index % symptomStickerRotations.length]}
+                      onClick={() => {
+                        const previous = new Set(entry?.symptoms ?? []);
+                        if (noSymptomSelected) {
+                          previous.clear();
+                        }
+                        if (previous.has(symptom)) {
+                          previous.delete(symptom);
+                        } else {
+                          previous.add(symptom);
+                        }
+                        updateEntry(date, { symptoms: [...previous] });
+                        setStepOverride("symptoms");
+                      }}
+                    />
+                  );
+                })}
+              </div>
             </div>
-            <div className={cn("flex flex-wrap items-center justify-end", uiSpacingStyles.gapSm)}>
+            <div className={cn("flex shrink-0 flex-wrap items-center justify-end", uiSpacingStyles.gapSm)}>
               <Button
                 variant="primary"
                 onClick={() => scheduleStepOverride(null, "flow")}
