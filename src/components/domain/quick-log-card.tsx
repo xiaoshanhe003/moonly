@@ -230,7 +230,7 @@ function FlowStickerButton({
       aria-label={option.label}
       title={option.label}
       className={cn(
-        "relative inline-flex min-h-[5.35rem] flex-col items-center justify-center gap-1.5 rounded-[var(--radius-lg)] bg-transparent px-1.5 py-1 transition duration-200 active:scale-[0.98]",
+        "relative inline-flex min-h-[4.85rem] flex-col items-center justify-center gap-1.5 rounded-[var(--radius-lg)] bg-transparent px-0.5 py-1 transition duration-200 active:scale-[0.98] min-[360px]:min-h-[5.35rem] min-[360px]:px-1.5",
         active ? "z-10" : cn("hover:-translate-y-0.5", dimInactive && "opacity-[0.55] hover:opacity-[0.8]")
       )}
     >
@@ -238,7 +238,7 @@ function FlowStickerButton({
         {active ? <SelectedStickerMark className="-right-1 top-0" /> : null}
         <FlowStickerGraphic
           level={option.value}
-          className={cn("h-[3.4rem] sm:h-[3.7rem]", stickerShadowStyles.regular)}
+          className={cn("h-12 min-[360px]:h-[3.4rem] sm:h-[3.7rem]", stickerShadowStyles.regular)}
         />
       </span>
       <span className="text-xs font-semibold text-[color:var(--foreground)]">{option.label}</span>
@@ -952,30 +952,32 @@ export function QuickLogCard({
           <p className={questionClassName}>{flowQuestion}</p>
           <p className={progressClassName}>{progressText}</p>
         </div>
-        <div className="flex flex-1 flex-col justify-center gap-4">
-          <div className="grid grid-cols-5 gap-1.5">
-            {flowOptions.map((flow) => (
-              <FlowStickerButton
-                key={flow.value}
-                active={bleedingLevel === flow.value}
-                dimInactive={bleedingLevel !== undefined}
-                option={flow}
-                onClick={() => {
-                  setStepOverride("flow");
-                  setIsReviewingFlowSignal(flow.value !== "none");
-                  updateEntry(date, {
-                    bleedingLevel: flow.value,
-                    periodSignal: flow.value === "none" ? "none" : entry?.periodSignal ?? "none"
-                  });
-                  if (flow.value === "none") {
-                    scheduleCompletion();
-                  }
-                }}
-              />
-            ))}
+        <div className="flex min-h-0 flex-1 flex-col gap-3">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1">
+            <div className="grid min-h-full grid-cols-5 content-center gap-1 min-[360px]:gap-1.5">
+              {flowOptions.map((flow) => (
+                <FlowStickerButton
+                  key={flow.value}
+                  active={bleedingLevel === flow.value}
+                  dimInactive={bleedingLevel !== undefined}
+                  option={flow}
+                  onClick={() => {
+                    setStepOverride("flow");
+                    setIsReviewingFlowSignal(flow.value !== "none");
+                    updateEntry(date, {
+                      bleedingLevel: flow.value,
+                      periodSignal: flow.value === "none" ? "none" : entry?.periodSignal ?? "none"
+                    });
+                    if (flow.value === "none") {
+                      scheduleCompletion();
+                    }
+                  }}
+                />
+              ))}
+            </div>
           </div>
           {canShowPeriodSignal ? (
-            <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex shrink-0 flex-wrap items-center justify-between gap-3">
               <label className="inline-flex min-h-11 items-center gap-3 text-sm font-medium text-[color:var(--foreground)]">
                 <input
                   type="checkbox"
