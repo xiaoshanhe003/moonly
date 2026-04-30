@@ -8,7 +8,8 @@ import { cn } from "../lib/utils";
 import { createBackupText, parseBackupText } from "../features/backup/backup-text";
 import { useCycleStore } from "../features/cycle/store";
 import { appVersion, recentUpdates } from "../features/app-info/app-info";
-import appIcon from "../../public/icon.svg";
+
+const appIcon = "/icon.svg";
 
 type SettingsView = "home" | "backup" | "import" | "about";
 type ConflictMode = "skip" | "overwrite";

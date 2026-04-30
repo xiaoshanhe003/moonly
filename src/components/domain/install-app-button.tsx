@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { Copy, Download } from "lucide-react";
+import { Copy, Download, RefreshCw } from "lucide-react";
 import { Button } from "../ui/button";
 import { Sheet } from "../ui/sheet";
 import { cn } from "../../lib/utils";
 import { uiTextStyles } from "../ui/styles";
+import { installAppUpdate, useAppUpdateStatus } from "../../features/install/app-update";
 import shareButtonImage from "../../assets/install/share-button.png";
 import addToHomeScreenImage from "../../assets/install/add-to-home-screen.png";
 
@@ -35,11 +36,15 @@ type InstallAppButtonProps = {
   placement?: "floating" | "header";
 };
 
+const headerButtonClassName =
+  "h-10 shrink-0 gap-1.5 rounded-full border border-[color:var(--border-strong)] bg-[color:var(--card-elevated)] px-3 text-sm font-medium text-[color:var(--foreground)] shadow-[var(--shadow-card)] backdrop-blur-xl hover:bg-white";
+
 export function InstallAppButton({ isCompact = false, placement = "floating" }: InstallAppButtonProps) {
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState(() => isStandaloneDisplay());
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [copyBubble, setCopyBubble] = useState<CopyBubble | null>(null);
+  const { isUpdateAvailable, isUpdating } = useAppUpdateStatus();
   const pageUrl = window.location.href;
 
   useEffect(() => {
@@ -132,6 +137,47 @@ export function InstallAppButton({ isCompact = false, placement = "floating" }: 
     }
   };
 
+  const handleUpdateClick = () => {
+    void installAppUpdate().catch(() => undefined);
+  };
+
+  if (isUpdateAvailable) {
+    if (placement === "header") {
+      return (
+        <Button
+          className={headerButtonClassName}
+          variant="ghost"
+          onClick={handleUpdateClick}
+          disabled={isUpdating}
+          aria-label="更新到最新版本"
+        >
+          <RefreshCw className={cn("size-4", isUpdating && "motion-safe:animate-spin")} aria-hidden="true" />
+          <span>{isUpdating ? "更新中" : "更新到最新版本"}</span>
+        </Button>
+      );
+    }
+
+    return (
+      <Button
+        className={cn(
+          "fixed top-[calc(env(safe-area-inset-top,0px)+1rem)] z-50 h-11 gap-2 overflow-hidden border border-[color:var(--border-strong)] bg-[color:var(--card-elevated)] text-[color:var(--foreground)] shadow-[var(--shadow-elevated)] backdrop-blur-xl transition-[right,width,padding,border-radius] duration-200 ease-out hover:bg-white",
+          isCompact
+            ? "right-0 w-11 rounded-l-full rounded-r-none border-r-0 px-3 sm:right-4 sm:w-auto sm:rounded-full sm:border-r sm:px-4"
+            : "right-4 w-auto rounded-full px-4"
+        )}
+        variant="ghost"
+        onClick={handleUpdateClick}
+        disabled={isUpdating}
+        aria-label="更新到最新版本"
+      >
+        <RefreshCw className={cn("size-4", isUpdating && "motion-safe:animate-spin")} aria-hidden="true" />
+        <span className={isCompact ? "sr-only sm:not-sr-only" : ""}>
+          {isUpdating ? "更新中" : "更新到最新版本"}
+        </span>
+      </Button>
+    );
+  }
+
   if (isInstalled) {
     return null;
   }
@@ -140,7 +186,7 @@ export function InstallAppButton({ isCompact = false, placement = "floating" }: 
     return (
       <>
         <Button
-          className="h-10 shrink-0 gap-1.5 rounded-full border border-[color:var(--border-strong)] bg-[color:var(--card-elevated)] px-3 text-sm font-medium text-[color:var(--foreground)] shadow-[var(--shadow-card)] backdrop-blur-xl hover:bg-white"
+          className={headerButtonClassName}
           variant="ghost"
           onClick={handleInstallClick}
           aria-label="添加到主屏幕"

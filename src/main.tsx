@@ -3,12 +3,20 @@ import ReactDOM from "react-dom/client";
 import { RouterProvider } from "react-router-dom";
 import { registerSW } from "virtual:pwa-register";
 import { router } from "./app/router";
+import { configureAppUpdate, markAppUpdateAvailable } from "./features/install/app-update";
 import { setupInstallStorageHandoff } from "./features/install/storage-handoff";
 import "./app/styles.css";
 
-registerSW({
+const updateServiceWorker = registerSW({
   immediate: true,
+  onNeedRefresh() {
+    markAppUpdateAvailable();
+  },
   onRegisteredSW(_swScriptUrl, registration) {
+    configureAppUpdate({
+      registration
+    });
+
     if (!registration) {
       return;
     }
@@ -19,6 +27,10 @@ registerSW({
       }
     });
   }
+});
+
+configureAppUpdate({
+  update: updateServiceWorker
 });
 
 setupInstallStorageHandoff();
