@@ -8,7 +8,6 @@ import { DevScenarioBar } from "../components/domain/dev-scenario-bar";
 import { InstallAppButton } from "../components/domain/install-app-button";
 import { SegmentedControl } from "../components/domain/segmented-control";
 import { Button } from "../components/ui/button";
-import { Sheet } from "../components/ui/sheet";
 import { useCycleStore } from "../features/cycle/store";
 import { getCycleSummary } from "../features/cycle/cycle";
 import type { CycleProfile } from "../features/cycle/types";
@@ -32,7 +31,6 @@ export function AppShell({ initialView }: AppShellProps) {
   const previousProfileRef = useRef(profile);
   const previousViewRef = useRef(currentView);
   const [animateQuickLog, setAnimateQuickLog] = useState(false);
-  const [showLocalSaveInfo, setShowLocalSaveInfo] = useState(false);
   const [importNotice, setImportNotice] = useState("");
   const [visibleCalendarMonthKey, setVisibleCalendarMonthKey] = useState(() =>
     new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()
@@ -99,11 +97,6 @@ export function AppShell({ initialView }: AppShellProps) {
 
   const completeOnboarding = (nextProfile: CycleProfile) => {
     setProfile(nextProfile);
-    setShowLocalSaveInfo(true);
-  };
-
-  const acknowledgeLocalSave = () => {
-    setShowLocalSaveInfo(false);
     navigate("/today", { replace: true });
   };
 
@@ -218,23 +211,6 @@ export function AppShell({ initialView }: AppShellProps) {
           <CalendarPage onVisibleMonthChange={setVisibleCalendarMonthKey} />
         )}
       </div>
-
-      {showLocalSaveInfo ? (
-        <Sheet
-          header={<p className={cn("font-semibold leading-snug", uiTextStyles.xl)}>已保存到本机</p>}
-          bodyClassName="sm:max-w-md"
-          onClose={acknowledgeLocalSave}
-          footer={
-            <Button className={uiLayoutStyles.sheetPrimaryActionButton} onClick={acknowledgeLocalSave}>
-              我知道了
-            </Button>
-          }
-        >
-          <p className={cn("leading-relaxed", uiTextStyles.md)}>
-            你的记录会保存在当前设备的浏览器中，不需要注册账号，也不会上传到云端。之后可以在设置中备份数据或重新开始填写基础信息。
-          </p>
-        </Sheet>
-      ) : null}
 
       {importNotice ? (
         <div

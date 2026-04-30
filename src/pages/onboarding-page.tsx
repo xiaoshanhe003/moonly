@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { MouseEventHandler, ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Calendar } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { useCycleStore } from "../features/cycle/store";
 import type { CycleProfile } from "../features/cycle/types";
@@ -20,8 +20,53 @@ const questions = [
   "你一般多久来一次月经？"
 ];
 
-function formatDateInputValue(value: string) {
-  return value.replaceAll("-", "/");
+const weekdayLabels = ["日", "一", "二", "三", "四", "五", "六"];
+
+function formatDateKey(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function formatSelectedDateLabel(date: Date) {
+  return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
+}
+
+function parseDateKey(dateKey: string) {
+  const [year, month, day] = dateKey.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
+function startOfDay(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function startOfMonth(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), 1);
+}
+
+function addMonths(date: Date, offset: number) {
+  return new Date(date.getFullYear(), date.getMonth() + offset, 1);
+}
+
+function isSameMonth(date: Date, otherDate: Date) {
+  return date.getFullYear() === otherDate.getFullYear() && date.getMonth() === otherDate.getMonth();
+}
+
+function buildMonthDays(monthDate: Date) {
+  const monthStart = startOfMonth(monthDate);
+  const daysInMonth = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0).getDate();
+
+  return Array.from({ length: daysInMonth }, (_, index) => new Date(monthStart.getFullYear(), monthStart.getMonth(), index + 1));
+}
+
+function clampToToday(dateKey: string | undefined, today: Date) {
+  if (!dateKey) {
+    return formatDateKey(today);
+  }
+
+  return parseDateKey(dateKey) > today ? formatDateKey(today) : dateKey;
 }
 
 function MoonlyMark() {
@@ -75,6 +120,98 @@ function OnboardingInput({ children, suffix, onClick }: OnboardingInputProps) {
   );
 }
 
+type OnboardingCalendarPickerProps = {
+  value: string;
+  today: Date;
+  onChange: (dateKey: string) => void;
+};
+
+function OnboardingCalendarPicker({ value, today, onChange }: OnboardingCalendarPickerProps) {
+  const normalizedToday = startOfDay(today);
+  const selectedDate = parseDateKey(value);
+  const [visibleMonth, setVisibleMonth] = useState(() => startOfMonth(selectedDate));
+  const monthDays = buildMonthDays(visibleMonth);
+  const firstWeekday = startOfMonth(visibleMonth).getDay();
+  const canGoNext = !isSameMonth(visibleMonth, normalizedToday);
+
+  const goToPreviousMonth = () => setVisibleMonth((current) => addMonths(current, -1));
+  const goToNextMonth = () =>
+    setVisibleMonth((current) => {
+      const nextMonth = addMonths(current, 1);
+      return nextMonth > startOfMonth(normalizedToday) ? current : nextMonth;
+    });
+
+  return (
+    <div className="w-full">
+      <div className={cn("w-full rounded-[10px] bg-white p-4 text-black", onboardingControlShadow)}>
+        <div className="flex h-9 items-center justify-between">
+          <button
+            type="button"
+            onClick={goToPreviousMonth}
+            className="inline-flex size-9 items-center justify-center rounded-full bg-[#f4f5f7] text-[#111827] transition active:scale-95"
+            aria-label="查看上个月"
+          >
+            <ChevronLeft className="size-5" aria-hidden="true" />
+          </button>
+          <p className="text-base font-semibold leading-none">
+            {visibleMonth.getFullYear()}年{visibleMonth.getMonth() + 1}月
+          </p>
+          <button
+            type="button"
+            onClick={goToNextMonth}
+            disabled={!canGoNext}
+            className="inline-flex size-9 items-center justify-center rounded-full bg-[#f4f5f7] text-[#111827] transition active:scale-95 disabled:pointer-events-none disabled:opacity-30"
+            aria-label="查看下个月"
+          >
+            <ChevronRight className="size-5" aria-hidden="true" />
+          </button>
+        </div>
+
+        <div className="mt-4 grid grid-cols-7 text-center text-xs font-medium leading-none text-[#8b939f]">
+          {weekdayLabels.map((weekday) => (
+            <div key={weekday} className="flex h-6 items-center justify-center">
+              {weekday}
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-1 grid grid-cols-7 gap-y-1">
+          {Array.from({ length: firstWeekday }, (_, index) => (
+            <div key={`empty-${index}`} className="h-10" aria-hidden="true" />
+          ))}
+          {monthDays.map((date) => {
+            const dateKey = formatDateKey(date);
+            const isSelected = dateKey === value;
+            const isToday = date.getTime() === normalizedToday.getTime();
+            const isFuture = date.getTime() > normalizedToday.getTime();
+
+            return (
+              <button
+                key={dateKey}
+                type="button"
+                onClick={() => onChange(dateKey)}
+                disabled={isFuture}
+                className={cn(
+                  "mx-auto flex size-10 items-center justify-center rounded-full text-sm font-semibold leading-none transition active:scale-95 disabled:pointer-events-none",
+                  isSelected
+                    ? "bg-black text-white shadow-[0_6px_14px_rgba(17,24,39,0.18)]"
+                    : "text-black hover:bg-[#f4f5f7]",
+                  isToday && !isSelected && "border border-black",
+                  isFuture && "text-[#c9ced6] opacity-70"
+                )}
+                aria-label={`选择 ${dateKey}`}
+                aria-pressed={isSelected}
+              >
+                {date.getDate()}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 type OnboardingPageProps = {
   onComplete?: (profile: CycleProfile) => void;
 };
@@ -91,17 +228,20 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
   const restartProfile = locationState?.mode === "restart" ? locationState.profile : undefined;
   const setProfile = useCycleStore((state) => state.setProfile);
   const restartWithProfile = useCycleStore((state) => state.restartWithProfile);
-  const lastPeriodInputRef = useRef<HTMLInputElement | null>(null);
   const periodLengthInputRef = useRef<HTMLInputElement | null>(null);
   const cycleLengthInputRef = useRef<HTMLInputElement | null>(null);
   const pendingFocusRef = useRef<"period" | "cycle" | null>(null);
+  const today = startOfDay(new Date());
   const [hasStarted, setHasStarted] = useState(() => Boolean(restartProfile));
   const [step, setStep] = useState<OnboardingStep>(0);
-  const [lastPeriodStart, setLastPeriodStart] = useState(() => restartProfile?.lastPeriodStart ?? new Date().toISOString().slice(0, 10));
+  const [lastPeriodStart, setLastPeriodStart] = useState(() => clampToToday(restartProfile?.lastPeriodStart, today));
   const [periodLength, setPeriodLength] = useState(() => String(restartProfile?.periodLength ?? 5));
   const [cycleLength, setCycleLength] = useState(() => String(restartProfile?.cycleLength ?? 28));
   const [periodUnknown, setPeriodUnknown] = useState(() => restartProfile?.isPeriodLengthEstimated ?? false);
   const [cycleUnknown, setCycleUnknown] = useState(() => restartProfile?.isCycleLengthEstimated ?? false);
+  const selectedLastPeriodDate = parseDateKey(lastPeriodStart);
+  const selectedLastPeriodLabel = formatSelectedDateLabel(selectedLastPeriodDate);
+  const selectedLastPeriodIsToday = selectedLastPeriodDate.getTime() === today.getTime();
 
   const completeOnboarding = () => {
     const profile = {
@@ -129,21 +269,6 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
 
   const nextStep = () => setStep((current) => Math.min(current + 1, totalSteps - 1) as OnboardingStep);
   const previousStep = () => setStep((current) => Math.max(current - 1, 0) as OnboardingStep);
-  const openLastPeriodPicker = () => {
-    const input = lastPeriodInputRef.current;
-
-    if (!input) {
-      return;
-    }
-
-    input.focus();
-
-    try {
-      input.showPicker();
-    } catch {
-      input.click();
-    }
-  };
   const selectInputValue = (input: HTMLInputElement | null) => {
     input?.focus();
     input?.select();
@@ -221,21 +346,7 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
 
         <div className="mt-9 px-4">
           {step === 0 ? (
-            <OnboardingInput onClick={openLastPeriodPicker}>
-              <div className="relative flex min-w-0 items-center">
-                <input
-                  ref={lastPeriodInputRef}
-                  type="date"
-                  value={lastPeriodStart}
-                  onChange={(event) => setLastPeriodStart(event.target.value)}
-                  className="pointer-events-none absolute inset-0 h-full w-full opacity-0"
-                  aria-label={questions[step]}
-                  tabIndex={-1}
-                />
-                <span className="min-w-0 flex-1 select-none pr-9">{formatDateInputValue(lastPeriodStart)}</span>
-                <Calendar className="pointer-events-none absolute right-0 size-5 text-[#6b7280]" aria-hidden="true" />
-              </div>
-            </OnboardingInput>
+            <OnboardingCalendarPicker value={lastPeriodStart} today={today} onChange={setLastPeriodStart} />
           ) : null}
 
           {step === 1 ? (
@@ -319,9 +430,15 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
       </div>
 
       {step === 0 ? (
-        <Button className={cn("h-[50px] w-full rounded-[10px] bg-black text-base font-semibold text-white", onboardingControlShadow)} onClick={nextStep}>
-          下一步
-        </Button>
+        <div className="space-y-4 text-center">
+          <p className="text-sm leading-none text-[#6b7280]">
+            已选择 {selectedLastPeriodLabel}
+            {selectedLastPeriodIsToday ? "（今天）" : ""}
+          </p>
+          <Button className={cn("h-[50px] w-full rounded-[10px] bg-black text-base font-semibold text-white", onboardingControlShadow)} onClick={nextStep}>
+            下一步
+          </Button>
+        </div>
       ) : (
         <div className="grid grid-cols-2 gap-[var(--space-5)]">
           <Button className={cn("h-[50px] rounded-[10px] bg-white text-base font-semibold text-black", onboardingControlShadow)} variant="secondary" onClick={previousStep}>
