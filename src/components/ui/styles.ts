@@ -43,10 +43,10 @@ export const uiLayoutStyles = {
     "mr-5 h-9 w-14 rounded-b-none rounded-t-[8px] bg-[color:var(--muted)] text-[color:var(--foreground)] shadow-none hover:bg-[color:var(--muted)] sm:mr-6",
   sheetBody:
     "flex min-h-[17rem] w-full flex-col overflow-hidden rounded-t-[var(--radius-record-sheet)] bg-[color:var(--card-elevated)] shadow-[var(--shadow-card)] sm:rounded-[var(--radius-record-sheet)]",
-  sheetHeader: "px-8 pb-0 pt-8 sm:px-6 sm:pt-6",
-  sheetContent: "min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-8 pb-8 pt-5 sm:px-6 sm:pb-6",
+  sheetHeader: "px-6 pb-0 pt-8 sm:pt-6",
+  sheetContent: "min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-6 pb-8 pt-5 sm:pb-6",
   sheetFooter:
-    "border-t border-[color:var(--border)] px-8 pb-[calc(var(--space-5)+env(safe-area-inset-bottom,0px))] pt-3 sm:px-6 sm:pb-6",
+    "border-t border-[color:var(--border)] px-6 pb-[calc(var(--space-5)+env(safe-area-inset-bottom,0px))] pt-3 sm:pb-6",
   sheetPrimaryActionButton:
     "h-[50px] w-full rounded-[10px] bg-[color:var(--foreground)] text-base font-semibold text-[color:var(--background)]",
   sheetSecondaryActionButton:
