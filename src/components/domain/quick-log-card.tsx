@@ -265,7 +265,7 @@ function FlowValue({ bleedingLevel }: { bleedingLevel?: DailyEntry["bleedingLeve
 }
 
 function OutlinedStickerText({ label, compact = false }: { label: string; compact?: boolean }) {
-  const width = label.length * (compact ? 16 : 24) + (compact ? 18 : 32);
+  const width = label.length * (compact ? 16 : 24) + (compact ? 14 : 20);
   const height = compact ? 34 : 42;
   const baseline = compact ? 24 : 29;
   const fontSize = compact ? 15 : 19;
