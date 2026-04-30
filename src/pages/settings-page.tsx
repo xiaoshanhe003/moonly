@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ArrowLeft, BookOpen, Check, ChevronRight, Database, Info, RotateCcw } from "lucide-react";
+import { ArrowLeft, BookOpen, Check, ChevronRight, Database, Info, RotateCcw, Upload } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Sheet } from "../components/ui/sheet";
 import { uiLayoutStyles, uiTextStyles } from "../components/ui/styles";
@@ -10,7 +10,7 @@ import { useCycleStore } from "../features/cycle/store";
 import { appVersion, recentUpdates } from "../features/app-info/app-info";
 import appIcon from "../../public/icon.svg";
 
-type SettingsView = "home" | "backup" | "about";
+type SettingsView = "home" | "backup" | "import" | "about";
 type ConflictMode = "skip" | "overwrite";
 
 function formatDisplayDate(value: string) {
@@ -55,20 +55,20 @@ function SettingsRow({
   return (
     <button
       type="button"
-      className="flex w-full items-center gap-3 rounded-[var(--radius-md)] border border-[color:var(--border)] bg-white px-4 py-3 text-left transition-colors hover:bg-[color:var(--muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ring)]"
+      className="flex h-16 w-full items-center gap-3 rounded-[10px] px-1 text-left transition-colors hover:bg-[color:var(--muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ring)]"
       onClick={onClick}
     >
-      <span className="flex size-10 shrink-0 items-center justify-center rounded-[10px] bg-[color:var(--muted)] text-[color:var(--foreground)]">
+      <span className="flex size-8 shrink-0 items-center justify-center text-[color:var(--foreground)]">
         {icon}
       </span>
       <span className="min-w-0 flex-1">
-        <span className={cn("block font-semibold leading-snug", uiTextStyles.md)}>{title}</span>
+        <span className={cn("block font-normal leading-none", uiTextStyles.md)}>{title}</span>
         {description ? (
           <span className={cn("mt-1 block leading-snug", uiTextStyles.sm, uiTextStyles.muted)}>{description}</span>
         ) : null}
       </span>
       {meta ? <span className={cn("shrink-0", uiTextStyles.sm, uiTextStyles.muted)}>{meta}</span> : null}
-      <ChevronRight className="size-4 shrink-0 text-[color:var(--muted-foreground)]" aria-hidden="true" />
+      <ChevronRight className="size-5 shrink-0 text-[color:var(--muted-foreground)]" aria-hidden="true" />
     </button>
   );
 }
@@ -112,7 +112,8 @@ export function SettingsPage() {
 
   const headerTitle = {
     home: "设置",
-    backup: "数据备份/导入",
+    backup: "数据备份",
+    import: "导入数据",
     about: "关于月信"
   }[view];
 
@@ -173,27 +174,36 @@ export function SettingsPage() {
   return (
     <main className="min-h-screen bg-[var(--color-canvas)] text-[var(--color-ink)]">
       <div className={cn("sticky top-0 z-40 w-full bg-[color:var(--color-canvas)]/85 backdrop-blur", uiLayoutStyles.pageHeaderSafeArea)}>
-        <header className={cn(uiLayoutStyles.pageHeaderInner, "gap-3")}>
+        <header className="mx-auto flex h-[72px] w-full max-w-md items-center px-4 sm:px-6">
           <Button variant="ghost" size="icon" onClick={goBack} aria-label="返回">
             <ArrowLeft className="size-5 text-[var(--color-ink)]" />
           </Button>
-          <p className={cn("font-semibold leading-snug", uiTextStyles.xl)}>{headerTitle}</p>
         </header>
       </div>
 
-      <div className="mx-auto w-full max-w-md px-4 pb-8 pt-3 sm:px-6">
+      <div className="mx-auto w-full max-w-md px-4 pb-8 pt-2 sm:px-6">
+        <h1 className={cn("mb-8 px-1 font-semibold leading-none text-[color:var(--foreground)]", uiTextStyles.xxl)}>
+          {headerTitle}
+        </h1>
+
         {view === "home" ? (
-          <div className="space-y-3">
+          <div className="space-y-1">
             <SettingsRow
               icon={<Database className="size-5" aria-hidden="true" />}
-              title="数据备份/导入"
+              title="数据备份"
               onClick={() => setView("backup")}
+            />
+            <SettingsRow
+              icon={<Upload className="size-5" aria-hidden="true" />}
+              title="导入数据"
+              onClick={() => setView("import")}
             />
             <SettingsRow
               icon={<RotateCcw className="size-5" aria-hidden="true" />}
               title="重新开始"
               onClick={() => setIsRestartSheetOpen(true)}
             />
+            <div className="my-4 h-px bg-[color:var(--border)]" aria-hidden="true" />
             <SettingsRow
               icon={<BookOpen className="size-5" aria-hidden="true" />}
               title="了解周期"
@@ -231,14 +241,21 @@ export function SettingsPage() {
                 </p>
               ) : null}
             </div>
+          </div>
+        ) : null}
 
+        {view === "import" ? (
+          <div className="space-y-5">
+            <p className={cn("rounded-[var(--radius-md)] bg-[color:var(--muted)] p-4 leading-relaxed", uiTextStyles.sm)}>
+              粘贴从月信复制出的完整备份文本。导入后会合并到当前设备的本地记录中。
+            </p>
             <div className="space-y-3">
               <label className={cn("block font-medium", uiTextStyles.md)} htmlFor="backup-text">
                 导入备份文本
               </label>
               <textarea
                 id="backup-text"
-                className={cn(uiLayoutStyles.input, "min-h-32 resize-none leading-relaxed")}
+                className={cn(uiLayoutStyles.input, "min-h-48 resize-none leading-relaxed")}
                 value={backupInput}
                 placeholder="粘贴整段月信备份文本"
                 onChange={(event) => setBackupInput(event.target.value)}

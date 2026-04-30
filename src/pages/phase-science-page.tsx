@@ -54,7 +54,7 @@ const hormonePhaseBands = [
 
 const scienceStyles = {
   stickyHeader: "sticky top-0 z-40 w-full bg-[var(--color-canvas)]/95 backdrop-blur",
-  headerInner: "mx-auto max-w-md overflow-hidden border-b border-[color:var(--border)] px-[var(--space-6)]",
+  headerInner: "mx-auto max-w-md overflow-hidden border-b border-[color:var(--border)] px-4 sm:px-6",
   tabRow: "flex min-w-max gap-6 pt-4",
   tabLabel: "flex items-center gap-1.5 leading-none",
   pageBody: "mx-auto flex min-h-[calc(100vh-3rem)] max-w-md flex-col gap-6 px-[var(--space-6)] py-7",

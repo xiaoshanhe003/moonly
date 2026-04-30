@@ -1,6 +1,6 @@
 import { Sheet } from "../ui/sheet";
 import {
-  CompletedRecordSheetContent,
+  CompletedRecordSheet,
   CompletedRecordSheetHeader,
   LogAnswerSummary
 } from "./quick-log-card";
@@ -18,6 +18,18 @@ type CalendarEntrySheetProps = {
 export function CalendarEntrySheet({ date, entry, canEdit, onClose }: CalendarEntrySheetProps) {
   const progress = entry ? getLogProgress(entry) : null;
 
+  if (canEdit) {
+    return (
+      <CompletedRecordSheet
+        date={date}
+        entry={entry}
+        initialEditing={progress !== "complete"}
+        onSave={(nextEntry) => useCycleStore.getState().updateEntry(date, nextEntry)}
+        onClose={onClose}
+      />
+    );
+  }
+
   return (
     <Sheet
       onClose={() => {
@@ -25,14 +37,7 @@ export function CalendarEntrySheet({ date, entry, canEdit, onClose }: CalendarEn
       }}
       header={<CompletedRecordSheetHeader date={date} />}
     >
-      {canEdit ? (
-        <CompletedRecordSheetContent
-          date={date}
-          entry={entry}
-          initialEditing={progress !== "complete"}
-          onSave={(nextEntry) => useCycleStore.getState().updateEntry(date, nextEntry)}
-        />
-      ) : !entry ? (
+      {!entry ? (
         <p className="text-base font-medium text-[color:var(--foreground)]">无记录</p>
       ) : (
         <LogAnswerSummary entry={entry} />

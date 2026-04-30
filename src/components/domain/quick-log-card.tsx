@@ -48,8 +48,6 @@ const flowOptions = [
 ] as const;
 const stepOrder: QuickLogStep[] = ["mood", "energy", "symptoms", "flow"];
 const cardSlideAnimationMs = 440;
-const recordSheetActionBarClassName =
-  "sticky bottom-[-2rem] z-10 -mx-8 -mb-8 mt-2 border-t border-[color:var(--border)] bg-[color:var(--card-elevated)] px-8 pb-[calc(var(--space-5)+env(safe-area-inset-bottom,0px))] pt-3 backdrop-blur-xl sm:-mx-6 sm:-mb-6 sm:px-6 sm:pb-6";
 const recordSheetSectionClassName = "grid gap-3 border-b border-[color:var(--border)] pb-6";
 type FlowOption = (typeof flowOptions)[number];
 
@@ -58,12 +56,13 @@ type CompletedLogDetailsProps = {
   onChange: (patch: Partial<DailyEntry>) => void;
 };
 
-type CompletedRecordSheetContentProps = {
+type CompletedRecordSheetProps = {
   date: string;
   entry?: DailyEntry;
   allowEditing?: boolean;
   initialEditing?: boolean;
   onSave: (entry: DailyEntry) => void;
+  onClose: () => void;
 };
 
 function SelectedStickerMark({ className }: { className?: string }) {
@@ -635,13 +634,14 @@ export function CompletedLogDetails({ entry, onChange }: CompletedLogDetailsProp
   );
 }
 
-export function CompletedRecordSheetContent({
+export function CompletedRecordSheet({
   date,
   entry,
   allowEditing = true,
   initialEditing = false,
-  onSave
-}: CompletedRecordSheetContentProps) {
+  onSave,
+  onClose
+}: CompletedRecordSheetProps) {
   const [isEditing, setIsEditing] = useState(initialEditing);
   const [draftEntry, setDraftEntry] = useState<DailyEntry | undefined>(entry ?? { date });
 
@@ -653,60 +653,52 @@ export function CompletedRecordSheetContent({
     }));
   };
 
-  if (isEditing) {
-    return (
-      <div className="grid gap-4">
-        <div className="pb-20">
-          <CompletedLogDetails entry={draftEntry} onChange={updateDraftEntry} />
-        </div>
-        <div className={recordSheetActionBarClassName}>
-          <div className="grid grid-cols-2 gap-3">
-            <Button
-              variant="secondary"
-              className={uiLayoutStyles.sheetSecondaryActionButton}
-              onClick={() => {
-                setDraftEntry(entry ?? { date });
-                setIsEditing(false);
-              }}
-            >
-              取消
-            </Button>
-            <Button
-              variant="primary"
-              className={uiLayoutStyles.sheetPrimaryActionButton}
-              onClick={() => {
-                if (draftEntry) {
-                  onSave(draftEntry);
-                }
-                setIsEditing(false);
-              }}
-            >
-              保存
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const footer = isEditing ? (
+    <div className="grid grid-cols-2 gap-3">
+      <Button
+        variant="secondary"
+        className={uiLayoutStyles.sheetSecondaryActionButton}
+        onClick={() => {
+          setDraftEntry(entry ?? { date });
+          setIsEditing(false);
+        }}
+      >
+        取消
+      </Button>
+      <Button
+        variant="primary"
+        className={uiLayoutStyles.sheetPrimaryActionButton}
+        onClick={() => {
+          if (draftEntry) {
+            onSave(draftEntry);
+          }
+          setIsEditing(false);
+        }}
+      >
+        保存
+      </Button>
+    </div>
+  ) : allowEditing ? (
+    <Button
+      variant="secondary"
+      className={uiLayoutStyles.sheetSecondaryActionButton}
+      onClick={() => {
+        setDraftEntry(entry ?? { date });
+        setIsEditing(true);
+      }}
+    >
+      编辑
+    </Button>
+  ) : undefined;
 
   return (
-    <div className="grid gap-4">
-      <LogAnswerSummary entry={entry} />
-      {allowEditing ? (
-        <div className={recordSheetActionBarClassName}>
-          <Button
-            variant="secondary"
-            className={uiLayoutStyles.sheetSecondaryActionButton}
-            onClick={() => {
-              setDraftEntry(entry ?? { date });
-              setIsEditing(true);
-            }}
-          >
-            编辑
-          </Button>
-        </div>
-      ) : null}
-    </div>
+    <Sheet
+      onClose={onClose}
+      header={<CompletedRecordSheetHeader date={date} />}
+      footer={footer}
+    >
+      {isEditing ? <CompletedLogDetails entry={draftEntry} onChange={updateDraftEntry} /> : <LogAnswerSummary entry={entry} />}
+    </Sheet>
   );
 }
 
@@ -1058,17 +1050,13 @@ export function QuickLogCard({
         </button>
 
         {isExpanded ? (
-          <Sheet
+          <CompletedRecordSheet
+            date={date}
+            entry={entry}
+            allowEditing={allowEditingCompleted}
+            onSave={(nextEntry) => updateEntry(date, nextEntry)}
             onClose={() => setIsExpanded(false)}
-            header={<CompletedRecordSheetHeader date={date} />}
-          >
-            <CompletedRecordSheetContent
-              date={date}
-              entry={entry}
-              allowEditing={allowEditingCompleted}
-              onSave={(nextEntry) => updateEntry(date, nextEntry)}
-            />
-          </Sheet>
+          />
         ) : null}
       </>
     );

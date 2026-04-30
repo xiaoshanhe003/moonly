@@ -209,7 +209,6 @@ function InstallHelpSheet({
         </p>
       }
       bodyClassName="sm:max-w-md"
-      contentClassName="px-6 pb-8 pt-6"
       onClose={onClose}
     >
       <ol className="space-y-6">

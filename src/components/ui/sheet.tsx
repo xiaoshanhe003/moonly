@@ -44,7 +44,11 @@ export function Sheet({ header, onClose, footer, bodyClassName, contentClassName
         <div className={uiLayoutStyles.sheetBody}>
           <div className={uiLayoutStyles.sheetHeader}>{header}</div>
           <div className={cn(uiLayoutStyles.sheetContent, "overscroll-contain", contentClassName)}>{children}</div>
-          {footer ? <div className={uiLayoutStyles.sheetFooter}>{footer}</div> : null}
+          {footer ? (
+            <div className={uiLayoutStyles.sheetFooter}>
+              <div className={uiLayoutStyles.sheetFooterContent}>{footer}</div>
+            </div>
+          ) : null}
         </div>
       </div>
     </div>,
