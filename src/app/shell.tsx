@@ -120,6 +120,7 @@ export function AppShell({ initialView }: AppShellProps) {
         <div
           className={cn(
             "sticky top-0 z-40 w-full",
+            uiLayoutStyles.pageHeaderSafeArea,
             currentView === "calendar" && "bg-[var(--color-canvas)] backdrop-blur"
           )}
           data-sticky-shell-header

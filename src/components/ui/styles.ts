@@ -34,6 +34,7 @@ export const uiSurfaceStyles = {
 
 export const uiLayoutStyles = {
   pageHeaderBar: "h-[72px]",
+  pageHeaderSafeArea: "pt-[env(safe-area-inset-top,0px)]",
   pageHeaderInner: "mx-auto flex h-[72px] w-full max-w-md items-center px-4 sm:px-6",
   sheetOverlay:
     "fixed inset-0 z-50 flex items-end justify-center bg-[color:var(--overlay)] p-0 pt-[calc(env(safe-area-inset-top,0px)+0.75rem)] backdrop-blur-sm sm:items-center sm:p-6",

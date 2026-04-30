@@ -172,7 +172,7 @@ export function SettingsPage() {
 
   return (
     <main className="min-h-screen bg-[var(--color-canvas)] text-[var(--color-ink)]">
-      <div className="sticky top-0 z-40 w-full bg-[color:var(--color-canvas)]/85 backdrop-blur">
+      <div className={cn("sticky top-0 z-40 w-full bg-[color:var(--color-canvas)]/85 backdrop-blur", uiLayoutStyles.pageHeaderSafeArea)}>
         <header className={cn(uiLayoutStyles.pageHeaderInner, "gap-3")}>
           <Button variant="ghost" size="icon" onClick={goBack} aria-label="返回">
             <ArrowLeft className="size-5 text-[var(--color-ink)]" />

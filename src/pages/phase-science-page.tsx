@@ -327,7 +327,7 @@ export function PhaseSciencePage() {
 
   return (
     <main className="min-h-screen bg-[var(--color-canvas)] text-[var(--color-ink)]">
-      <div className={scienceStyles.stickyHeader}>
+      <div className={cn(scienceStyles.stickyHeader, uiLayoutStyles.pageHeaderSafeArea)}>
         <header className={scienceStyles.headerInner}>
           <div className={cn(uiLayoutStyles.pageHeaderBar, "flex items-center")}>
             <Button variant="ghost" size="icon" onClick={() => navigate(-1)} aria-label="返回">
