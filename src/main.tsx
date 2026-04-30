@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { RouterProvider } from "react-router-dom";
 import { registerSW } from "virtual:pwa-register";
 import { router } from "./app/router";
+import { setupInstallStorageHandoff } from "./features/install/storage-handoff";
 import "./app/styles.css";
 
 registerSW({
@@ -19,6 +20,8 @@ registerSW({
     });
   }
 });
+
+setupInstallStorageHandoff();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>

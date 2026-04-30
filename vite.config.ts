@@ -23,10 +23,12 @@ export default defineConfig({
         name: "Moonly",
         short_name: "Moonly",
         description: "A calm cycle tracking app for daily understanding and gentle guidance.",
+        id: "/",
+        scope: "/",
         theme_color: "#E0F2FE",
         background_color: "#E0F2FE",
         display: "standalone",
-        start_url: "/",
+        start_url: "/today",
         icons: [
           {
             src: "/icon-192.png",
