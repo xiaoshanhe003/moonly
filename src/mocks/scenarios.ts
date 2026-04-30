@@ -1,12 +1,13 @@
 import type { AppScenario, CycleProfile, DailyEntry } from "../features/cycle/types";
+import { formatDateKey } from "../lib/date";
 
 const today = new Date();
-const isoToday = today.toISOString().slice(0, 10);
+const isoToday = formatDateKey(today);
 
 function daysAgo(days: number) {
   const value = new Date(today);
   value.setDate(value.getDate() - days);
-  return value.toISOString().slice(0, 10);
+  return formatDateKey(value);
 }
 
 const baseProfile: CycleProfile = {
