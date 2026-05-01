@@ -1,5 +1,13 @@
 import type { PhaseKey } from "../../features/cycle/cycle";
 import { cn } from "../../lib/utils";
+import follicular2Svg from "../../assets/phase/follicular-2.svg?raw";
+import follicular3Svg from "../../assets/phase/follicular-3.svg?raw";
+import luteal2Svg from "../../assets/phase/luteal-2.svg?raw";
+import luteal3Svg from "../../assets/phase/luteal-3.svg?raw";
+import menstrual2Svg from "../../assets/phase/menstrual-2.svg?raw";
+import menstrual3Svg from "../../assets/phase/menstrual-3.svg?raw";
+import ovulation2Svg from "../../assets/phase/ovulation-2.svg?raw";
+import ovulation3Svg from "../../assets/phase/ovulation-3.svg?raw";
 
 const phaseSvgMarkup: Record<PhaseKey, string> = {
   menstrual: `<svg width="500" height="500" viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -44,17 +52,45 @@ const phaseSvgMarkup: Record<PhaseKey, string> = {
 </svg>`
 };
 
+const phaseSvgVariants: Record<PhaseKey, string[]> = {
+  menstrual: [phaseSvgMarkup.menstrual, menstrual2Svg, menstrual3Svg],
+  follicular: [phaseSvgMarkup.follicular, follicular2Svg, follicular3Svg],
+  ovulation: [phaseSvgMarkup.ovulation, ovulation2Svg, ovulation3Svg],
+  luteal: [phaseSvgMarkup.luteal, luteal2Svg, luteal3Svg]
+};
+
+function hashString(value: string) {
+  let hash = 0;
+
+  for (const char of value) {
+    hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+  }
+
+  return hash;
+}
+
+function getDailyPhaseSvg(phase: PhaseKey, variantSeed?: string) {
+  const variants = phaseSvgVariants[phase];
+
+  if (!variantSeed) {
+    return variants[0];
+  }
+
+  return variants[hashString(`${variantSeed}:${phase}`) % variants.length];
+}
+
 type PhaseIllustrationProps = {
   phase: PhaseKey;
   className?: string;
+  variantSeed?: string;
 };
 
-export function PhaseIllustration({ phase, className }: PhaseIllustrationProps) {
+export function PhaseIllustration({ phase, className, variantSeed }: PhaseIllustrationProps) {
   return (
     <div
       aria-hidden="true"
       className={cn("text-[color:var(--foreground)] [&_svg]:size-full [&_svg]:max-w-full", className)}
-      dangerouslySetInnerHTML={{ __html: phaseSvgMarkup[phase].replaceAll("#111827", "currentColor") }}
+      dangerouslySetInnerHTML={{ __html: getDailyPhaseSvg(phase, variantSeed).replaceAll("#111827", "currentColor") }}
     />
   );
 }

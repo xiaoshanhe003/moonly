@@ -10,6 +10,14 @@ type PhaseHeroCardProps = {
   summary: ReturnTypeOfGetCycleSummary;
 };
 
+function formatDateKey(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
 function getPhaseKeyFromLabel(label: string): PhaseKey {
   const labelMap: Record<string, PhaseKey> = {
     月经期: "menstrual",
@@ -24,6 +32,7 @@ function getPhaseKeyFromLabel(label: string): PhaseKey {
 export function PhaseHeroCard({ summary }: PhaseHeroCardProps) {
   const navigate = useNavigate();
   const phaseKey = getPhaseKeyFromLabel(summary.phase.label);
+  const dateKey = formatDateKey(new Date());
   const adviceMatch = summary.phase.advice.match(/^宜\s+(.+?)\s+忌\s+(.+)$/);
   const doText = adviceMatch?.[1] ?? summary.phase.advice;
   const dontText = adviceMatch?.[2] ?? "";
@@ -71,7 +80,11 @@ export function PhaseHeroCard({ summary }: PhaseHeroCardProps) {
               }}
             />
           </div>
-          <PhaseIllustration phase={phaseKey} className="relative z-10 size-[clamp(11rem,32dvh,18rem)]" />
+          <PhaseIllustration
+            phase={phaseKey}
+            className="relative z-10 size-[clamp(11rem,32dvh,18rem)]"
+            variantSeed={dateKey}
+          />
         </div>
 
         <div className={cn("flex shrink-0 items-center justify-center gap-3 leading-none", uiTextStyles.sm)}>
