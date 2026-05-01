@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ArrowLeft, BookOpen, Check, ChevronRight, Database, Info, RotateCcw, Upload } from "lucide-react";
+import { ArrowLeft, BookOpen, Check, ChevronRight, Database, Info, RefreshCw, RotateCcw, Upload } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Sheet } from "../components/ui/sheet";
 import { uiLayoutStyles, uiTextStyles } from "../components/ui/styles";
@@ -8,6 +8,7 @@ import { cn } from "../lib/utils";
 import { createBackupText, parseBackupText } from "../features/backup/backup-text";
 import { useCycleStore } from "../features/cycle/store";
 import { appVersion, recentUpdates } from "../features/app-info/app-info";
+import { installAppUpdate, useAppUpdateStatus } from "../features/install/app-update";
 
 const appIcon = "/icon.svg";
 
@@ -45,12 +46,14 @@ function SettingsRow({
   title,
   description,
   meta,
+  metaClassName,
   onClick
 }: {
   icon: ReactNode;
   title: string;
   description?: string;
   meta?: string;
+  metaClassName?: string;
   onClick: () => void;
 }) {
   return (
@@ -68,7 +71,7 @@ function SettingsRow({
           <span className={cn("mt-1 block leading-snug", uiTextStyles.sm, uiTextStyles.muted)}>{description}</span>
         ) : null}
       </span>
-      {meta ? <span className={cn("shrink-0", uiTextStyles.sm, uiTextStyles.muted)}>{meta}</span> : null}
+      {meta ? <span className={cn("shrink-0", uiTextStyles.sm, uiTextStyles.muted, metaClassName)}>{meta}</span> : null}
       <ChevronRight className="size-5 shrink-0 text-[color:var(--muted-foreground)]" aria-hidden="true" />
     </button>
   );
@@ -84,6 +87,7 @@ export function SettingsPage() {
   const [isRestartSheetOpen, setIsRestartSheetOpen] = useState(false);
   const [backupCopied, setBackupCopied] = useState(false);
   const [backupInput, setBackupInput] = useState("");
+  const { isUpdateAvailable, isUpdating } = useAppUpdateStatus();
   const recordCountForRestart = Object.keys(entries).length;
 
   useEffect(() => {
@@ -172,6 +176,10 @@ export function SettingsPage() {
     });
   };
 
+  const handleUpdateApp = () => {
+    void installAppUpdate().catch(() => undefined);
+  };
+
   return (
     <main className="min-h-screen bg-[var(--color-canvas)] text-[var(--color-ink)]">
       <div className={cn("sticky top-0 z-40 w-full bg-[color:var(--color-canvas)]/85 backdrop-blur", uiLayoutStyles.pageHeaderSafeArea)}>
@@ -213,7 +221,8 @@ export function SettingsPage() {
             <SettingsRow
               icon={<Info className="size-5" aria-hidden="true" />}
               title="关于月信"
-              meta={`v${appVersion}`}
+              meta={isUpdateAvailable ? "有新版本可用" : `v${appVersion}`}
+              metaClassName={isUpdateAvailable ? "font-medium text-[color:var(--brand-blue)]" : undefined}
               onClick={() => setView("about")}
             />
           </div>
@@ -298,12 +307,24 @@ export function SettingsPage() {
 
         {view === "about" ? (
           <div className="space-y-6">
-            <div className="flex items-center gap-4 rounded-[var(--radius-md)] bg-[color:var(--muted)] p-4">
-              <img src={appIcon} alt="" className="size-12 rounded-[12px]" aria-hidden="true" />
-              <div className="min-w-0">
-                <p className={cn("font-semibold", uiTextStyles.lg)}>月信</p>
-                <p className={cn("mt-1", uiTextStyles.sm, uiTextStyles.muted)}>版本 {appVersion}</p>
+            <div className="flex items-center justify-between gap-4 rounded-[var(--radius-md)] bg-[color:var(--muted)] p-4">
+              <div className="flex min-w-0 items-center gap-4">
+                <img src={appIcon} alt="" className="size-12 shrink-0 rounded-[12px]" aria-hidden="true" />
+                <div className="min-w-0">
+                  <p className={cn("font-semibold", uiTextStyles.lg)}>月信</p>
+                  <p className={cn("mt-1", uiTextStyles.sm, uiTextStyles.muted)}>版本 {appVersion}</p>
+                </div>
               </div>
+              {isUpdateAvailable ? (
+                <Button
+                  className="h-10 shrink-0 gap-1.5 rounded-full bg-[color:var(--foreground)] px-3 text-sm font-medium text-[color:var(--background)]"
+                  onClick={handleUpdateApp}
+                  disabled={isUpdating}
+                >
+                  <RefreshCw className={cn("size-4", isUpdating && "motion-safe:animate-spin")} aria-hidden="true" />
+                  <span>{isUpdating ? "更新中" : "更新"}</span>
+                </Button>
+              ) : null}
             </div>
 
             <div className="space-y-3">
