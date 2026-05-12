@@ -12,7 +12,9 @@ type OnboardingStep = 0 | 1 | 2;
 
 const totalSteps = 3;
 const onboardingScreenClass =
-  "mx-auto flex h-dvh w-full max-w-md flex-col overflow-hidden bg-[var(--color-canvas)] px-7 pb-9 pt-12";
+  "mx-auto flex h-dvh w-full max-w-md flex-col overflow-hidden bg-[var(--color-canvas)] px-7 pt-12";
+const onboardingFooterClass =
+  "relative z-10 -mx-7 shrink-0 bg-[var(--color-canvas)] px-7 pb-[calc(2.25rem+env(safe-area-inset-bottom,0px))] pt-4 before:pointer-events-none before:absolute before:inset-x-0 before:bottom-full before:h-16 before:bg-gradient-to-t before:from-[var(--color-canvas)] before:to-transparent before:content-['']";
 const onboardingControlShadow = "shadow-[0_6px_18px_rgba(17,24,39,0.035),0_1px_0_rgba(17,24,39,0.02)]";
 const questions = [
   "你最近一次月经从哪天开始？",
@@ -318,7 +320,7 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
           />
         </div>
 
-        <div className="shrink-0 space-y-5 text-center">
+        <div className="shrink-0 space-y-5 pb-[calc(2.25rem+env(safe-area-inset-bottom,0px))] text-center">
           <div className="space-y-5">
             <h1 className="text-xl font-semibold leading-tight text-black">欢迎来到“月信”</h1>
             <p className="mx-auto max-w-[280px] text-base leading-[1.45] text-black">
@@ -338,13 +340,13 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
     <section className={onboardingScreenClass}>
       <MoonlyMark />
 
-      <div className="flex flex-1 flex-col pt-[94px]">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-10 pt-12">
         <div className="space-y-4 text-center">
           <p className="text-sm leading-none text-[#6b7280]">{step + 1}/{totalSteps}</p>
           <h1 className="text-xl font-semibold leading-tight text-black">{questions[step]}</h1>
         </div>
 
-        <div className="mt-9 px-4">
+        <div className="mt-7 px-4">
           {step === 0 ? (
             <OnboardingCalendarPicker value={lastPeriodStart} today={today} onChange={setLastPeriodStart} />
           ) : null}
@@ -430,7 +432,7 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
       </div>
 
       {step === 0 ? (
-        <div className="space-y-4 text-center">
+        <div className={cn(onboardingFooterClass, "space-y-4 text-center")}>
           <p className="text-sm leading-none text-[#6b7280]">
             已选择 {selectedLastPeriodLabel}
             {selectedLastPeriodIsToday ? "（今天）" : ""}
@@ -440,20 +442,22 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-[var(--space-5)]">
-          <Button className={cn("h-[50px] rounded-[10px] bg-white text-base font-semibold text-black", onboardingControlShadow)} variant="secondary" onClick={previousStep}>
-            上一步
-          </Button>
+        <div className={onboardingFooterClass}>
+          <div className="grid grid-cols-2 gap-[var(--space-5)]">
+            <Button className={cn("h-[50px] rounded-[10px] bg-white text-base font-semibold text-black", onboardingControlShadow)} variant="secondary" onClick={previousStep}>
+              上一步
+            </Button>
 
-          {step < totalSteps - 1 ? (
-            <Button className={cn("h-[50px] rounded-[10px] bg-black text-base font-semibold text-white", onboardingControlShadow)} onClick={nextStep}>
-              下一步
-            </Button>
-          ) : (
-            <Button className={cn("h-[50px] rounded-[10px] bg-black text-base font-semibold text-white", onboardingControlShadow)} onClick={completeOnboarding}>
-              完成
-            </Button>
-          )}
+            {step < totalSteps - 1 ? (
+              <Button className={cn("h-[50px] rounded-[10px] bg-black text-base font-semibold text-white", onboardingControlShadow)} onClick={nextStep}>
+                下一步
+              </Button>
+            ) : (
+              <Button className={cn("h-[50px] rounded-[10px] bg-black text-base font-semibold text-white", onboardingControlShadow)} onClick={completeOnboarding}>
+                完成
+              </Button>
+            )}
+          </div>
         </div>
       )}
     </section>
