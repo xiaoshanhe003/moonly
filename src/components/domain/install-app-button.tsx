@@ -152,7 +152,7 @@ export function InstallAppButton({ isCompact = false, placement = "floating" }: 
           aria-label="更新到最新版本"
         >
           <RefreshCw className={cn("size-4", isUpdating && "motion-safe:animate-spin")} aria-hidden="true" />
-          <span>{isUpdating ? "更新中" : "更新到最新版本"}</span>
+          <span className="max-[360px]:hidden">{isUpdating ? "更新中" : "更新到最新版本"}</span>
         </Button>
       );
     }
@@ -192,7 +192,7 @@ export function InstallAppButton({ isCompact = false, placement = "floating" }: 
           aria-label="添加到主屏幕"
         >
           <Download className="size-4" aria-hidden="true" />
-          <span>安装</span>
+          <span className="max-[360px]:hidden">安装</span>
         </Button>
 
         {isHelpOpen ? (
