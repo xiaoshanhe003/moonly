@@ -199,7 +199,7 @@ export function CalendarPage({ onVisibleMonthChange }: CalendarPageProps) {
   }, [onVisibleMonthChange, visibleMonthKey]);
 
   return (
-    <div className="space-y-4 pb-32">
+    <div className="space-y-4 pb-[calc(8rem+env(safe-area-inset-bottom,0px))]">
       <div className="space-y-4">
         {months.map((month) => (
           <div
@@ -225,7 +225,7 @@ export function CalendarPage({ onVisibleMonthChange }: CalendarPageProps) {
         ))}
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-30">
+      <div className="fixed inset-x-0 bottom-0 z-30 bg-[var(--color-canvas)] pb-[env(safe-area-inset-bottom,0px)] before:pointer-events-none before:absolute before:inset-x-0 before:bottom-full before:h-12 before:bg-gradient-to-t before:from-[var(--color-canvas)] before:to-transparent before:content-['']">
         <Card
           className={[
             "mx-auto flex max-w-md flex-wrap gap-4 rounded-b-none border-b-0 px-4 pb-5 pt-3 text-sm shadow-none sm:px-6",
