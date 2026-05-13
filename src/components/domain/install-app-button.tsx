@@ -149,10 +149,10 @@ export function InstallAppButton({ isCompact = false, placement = "floating" }: 
           variant="ghost"
           onClick={handleUpdateClick}
           disabled={isUpdating}
-          aria-label="更新到最新版本"
+          aria-label="立即更新"
         >
           <RefreshCw className={cn("size-4", isUpdating && "motion-safe:animate-spin")} aria-hidden="true" />
-          <span className="max-[360px]:hidden">{isUpdating ? "更新中" : "更新到最新版本"}</span>
+          <span className="max-[360px]:hidden">{isUpdating ? "更新中" : "立即更新"}</span>
         </Button>
       );
     }
@@ -168,11 +168,11 @@ export function InstallAppButton({ isCompact = false, placement = "floating" }: 
         variant="ghost"
         onClick={handleUpdateClick}
         disabled={isUpdating}
-        aria-label="更新到最新版本"
+        aria-label="立即更新"
       >
         <RefreshCw className={cn("size-4", isUpdating && "motion-safe:animate-spin")} aria-hidden="true" />
         <span className={isCompact ? "sr-only sm:not-sr-only" : ""}>
-          {isUpdating ? "更新中" : "更新到最新版本"}
+          {isUpdating ? "更新中" : "立即更新"}
         </span>
       </Button>
     );
