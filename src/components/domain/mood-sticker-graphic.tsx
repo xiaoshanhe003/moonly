@@ -2,6 +2,7 @@ import calmSvg from "../../assets/mood/calm.svg?raw";
 import greatSvg from "../../assets/mood/great.svg?raw";
 import happySvg from "../../assets/mood/happy.svg?raw";
 import sadSvg from "../../assets/mood/sad.svg?raw";
+import tenseSvg from "../../assets/mood/tense.svg?raw";
 import unhappySvg from "../../assets/mood/unhappy.svg?raw";
 import type { MoodValue } from "./mood-options";
 import { InlineStickerSvg } from "./inline-sticker-svg";
@@ -10,6 +11,7 @@ const moodStickerSvg: Record<MoodValue, string> = {
   great: greatSvg,
   happy: happySvg,
   calm: calmSvg,
+  tense: tenseSvg,
   unhappy: unhappySvg,
   sad: sadSvg
 };

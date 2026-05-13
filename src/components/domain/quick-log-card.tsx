@@ -9,7 +9,7 @@ import { cn } from "../../lib/utils";
 import { useCycleStore } from "../../features/cycle/store";
 import { uiLayoutStyles, uiSpacingStyles, uiSurfaceStyles, uiTextStyles } from "../ui/styles";
 import { formatFullDate } from "../../lib/utils";
-import { getMoodOption, moodOptions, type MoodValue } from "./mood-options";
+import { getEditableMoodOptions, getMoodOption, moodOptions, type MoodValue } from "./mood-options";
 import { MoodStickerGraphic } from "./mood-sticker-graphic";
 import { EnergyStickerGraphic } from "./energy-sticker-graphic";
 import { FlowStickerGraphic } from "./flow-sticker-graphic";
@@ -26,16 +26,17 @@ const moodStickerLayout: Record<
   great: { rotate: "-rotate-[7deg]", placement: "-left-1 top-1" },
   happy: { rotate: "-rotate-[4deg]", placement: "left-[20%] top-[3.5rem] sm:top-16" },
   calm: { rotate: "rotate-[8deg]", placement: "left-1/2 top-2 -translate-x-1/2" },
+  tense: { rotate: "rotate-[5deg]", placement: "right-[19%] top-[3.7rem] sm:top-[4.15rem]" },
   unhappy: { rotate: "rotate-[5deg]", placement: "right-[19%] top-[3.7rem] sm:top-[4.15rem]" },
   sad: { rotate: "rotate-[6deg]", placement: "-right-1 top-1" }
 };
 
 const noSymptomLabel = "没有不适";
 const energyOptions = [
-  { label: "省电模式", value: "low", rotate: "-rotate-[5deg]" },
-  { label: "从从容容", value: "medium", rotate: "rotate-[3deg]" },
-  { label: "状态在线", value: "higher", rotate: "-rotate-[2deg]" },
-  { label: "能量满满", value: "high", rotate: "rotate-[4deg]" }
+  { label: "很低", value: "low", rotate: "-rotate-[5deg]" },
+  { label: "中等", value: "medium", rotate: "rotate-[3deg]" },
+  { label: "较高", value: "higher", rotate: "-rotate-[2deg]" },
+  { label: "满格", value: "high", rotate: "rotate-[4deg]" }
 ] as const;
 const symptomOptions = ["疲惫", "头痛", "乳房胀痛", "腹痛", "腰痛"];
 const symptomStickerRotations = ["-rotate-[3deg]", "rotate-[2deg]", "-rotate-[1deg]", "rotate-[3deg]", "-rotate-[2deg]", "rotate-[1deg]"] as const;
@@ -513,6 +514,7 @@ export function CompletedLogDetails({ entry, onChange }: CompletedLogDetailsProp
   const questionClassName = "text-base font-medium text-[color:var(--foreground)]";
   const entryDate = entry?.date ? parseDateKey(entry.date) : null;
   const moodFillColor = getEntryMoodFillColor(profile, entries, entry?.date);
+  const editableMoodOptions = getEditableMoodOptions(entry?.mood);
   const energyColors = getPhaseEnergyColors(
     profile && entryDate ? getCycleSummary(profile, entries, entryDate).phase.color : undefined
   );
@@ -526,7 +528,7 @@ export function CompletedLogDetails({ entry, onChange }: CompletedLogDetailsProp
       <div className={recordSheetSectionClassName}>
         <p className={questionClassName}>今天心情如何？</p>
         <div className="relative mx-auto h-[7.5rem] w-full max-w-[19rem] sm:h-[8.25rem] sm:max-w-[21rem]">
-          {moodOptions.map((mood) => (
+          {editableMoodOptions.map((mood) => (
             <MoodSticker
               key={mood.value}
               active={entry?.mood === mood.value}

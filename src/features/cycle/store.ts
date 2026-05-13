@@ -18,7 +18,7 @@ type CycleState = {
 
 const defaultScenario = scenarios["first-run"];
 
-type LegacyMood = DailyEntry["mood"] | "low" | "tense";
+type LegacyMood = DailyEntry["mood"] | "low";
 type LegacyPeriodSignal = DailyEntry["periodSignal"] | "possible_start";
 type LegacyDailyEntry = Omit<DailyEntry, "mood" | "bleedingLevel" | "periodSignal"> & {
   mood?: LegacyMood;
@@ -31,10 +31,6 @@ type LegacyDailyEntry = Omit<DailyEntry, "mood" | "bleedingLevel" | "periodSigna
 function normalizeMood(mood?: LegacyMood): DailyEntry["mood"] | undefined {
   if (mood === "low") {
     return "unhappy";
-  }
-
-  if (mood === "tense") {
-    return "sad";
   }
 
   return mood;
