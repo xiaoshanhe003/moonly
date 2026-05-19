@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useState } from "react";
 import { ArrowLeft, MapPin } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
@@ -303,7 +303,6 @@ export function PhaseSciencePage() {
   const locationState = location.state as LocationState | null;
   const currentPhase = getPhaseKeyFromLabel(locationState?.initialPhaseLabel) ?? getPhaseKeyFromLabel(summary.phase.label) ?? "follicular";
   const [activeTab, setActiveTab] = useState<ScienceTabKey>("overview");
-  const hasMounted = useRef(false);
   const activeContent = scienceContentMap[activeTab];
   const activeIllustrationPhase = activeTab === "overview" ? currentPhase : activeTab;
   const introText = `${activeContent.subtitle} ${activeContent.overview}`;
@@ -313,11 +312,6 @@ export function PhaseSciencePage() {
   const bodyTextClass = cn(uiTextStyles.md, "leading-[var(--line-height-body)] text-[var(--color-ink-subtle)]");
 
   useLayoutEffect(() => {
-    if (!hasMounted.current) {
-      hasMounted.current = true;
-      return;
-    }
-
     window.scrollTo({
       top: 0,
       left: 0,

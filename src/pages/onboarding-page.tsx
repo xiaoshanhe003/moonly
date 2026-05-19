@@ -232,6 +232,7 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
   const restartWithProfile = useCycleStore((state) => state.restartWithProfile);
   const periodLengthInputRef = useRef<HTMLInputElement | null>(null);
   const cycleLengthInputRef = useRef<HTMLInputElement | null>(null);
+  const stepContentRef = useRef<HTMLDivElement | null>(null);
   const pendingFocusRef = useRef<"period" | "cycle" | null>(null);
   const today = startOfDay(new Date());
   const [hasStarted, setHasStarted] = useState(() => Boolean(restartProfile));
@@ -287,6 +288,10 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
     });
 
   useEffect(() => {
+    stepContentRef.current?.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [hasStarted, step]);
+
+  useEffect(() => {
     if (!pendingFocusRef.current) {
       return;
     }
@@ -340,7 +345,7 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
     <section className={onboardingScreenClass}>
       <MoonlyMark />
 
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-10 pt-12">
+      <div ref={stepContentRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-10 pt-12">
         <div className="space-y-4 text-center">
           <p className="text-sm leading-none text-[#6b7280]">{step + 1}/{totalSteps}</p>
           <h1 className="text-xl font-semibold leading-tight text-black">{questions[step]}</h1>
