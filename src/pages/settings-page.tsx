@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useMemo, useState, type ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft, BookOpen, Check, ChevronRight, Database, Info, RefreshCw, RotateCcw, Upload } from "lucide-react";
 import { Button } from "../components/ui/button";
@@ -121,6 +121,10 @@ export function SettingsPage() {
     import: "导入数据",
     about: "关于月信"
   }[view];
+
+  useLayoutEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [view]);
 
   const goBack = () => {
     if (view !== "home") {
