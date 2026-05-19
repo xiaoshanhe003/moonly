@@ -65,6 +65,10 @@ export async function installAppUpdate() {
 
   try {
     await updateServiceWorker(true);
+    setSnapshot({
+      isUpdateAvailable: false,
+      isUpdating: false
+    });
   } catch (error) {
     setSnapshot({
       ...snapshot,

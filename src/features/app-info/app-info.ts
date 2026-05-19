@@ -1,4 +1,5 @@
-export const appVersion = "0.2.0";
+export const appVersion = __APP_VERSION__;
+export const appBuildCommit = __APP_BUILD_COMMIT__;
 
 export const recentUpdates = [
   {
