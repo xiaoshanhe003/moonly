@@ -398,14 +398,8 @@ function getContinuationWindow(profile: CycleProfile) {
   return Math.max(profile.periodLength + CONTINUATION_BUFFER_DAYS, MIN_CONTINUATION_WINDOW_DAYS);
 }
 
-function getCorePeriodLength(streak: BleedingStreak, eventDate: Date) {
-  const strongEntriesFromStart = streak.entries.filter((entry) => {
-    const entryDate = parseDateKey(entry.date);
-    return entryDate >= eventDate && isStrongBleeding(getBleedingLevel(entry)!);
-  });
-  const lastStrongEntry = strongEntriesFromStart.at(-1);
-
-  return lastStrongEntry ? diffInDays(parseDateKey(lastStrongEntry.date), eventDate) + 1 : null;
+function getPeriodBleedingLength(streak: BleedingStreak, eventDate: Date) {
+  return diffInDays(streak.end, eventDate) + 1;
 }
 
 function classifyPeriodStart(
@@ -424,7 +418,7 @@ function classifyPeriodStart(
   const firstStrongOffset = getFirstStrongBleedingOffset(streak);
   const spottingTurnsStrong =
     firstLevel === "spotting" && firstStrongEntry && firstStrongOffset !== null && firstStrongOffset <= SPOTTING_CONFIRMATION_WINDOW_DAYS;
-  const candidateDate = spottingTurnsStrong ? parseDateKey(firstStrongEntry.date) : streak.start;
+  const candidateDate = streak.start;
   const daysSincePreviousStart = diffInDays(candidateDate, previousPeriodStart);
 
   if (daysSincePreviousStart <= getContinuationWindow(profile) || daysSincePreviousStart < MIN_CYCLE_LENGTH_DAYS) {
@@ -507,10 +501,10 @@ function resolveCycleMetrics(
   const recentIntervals = recentEventDates.slice(1).map((date, index) => diffInDays(date, recentEventDates[index]));
 
   const cycleLength = recentIntervals.length > 0 ? average(recentIntervals) : profile.cycleLength;
-  const latestCorePeriodLength = latestCompletedReliable
-    ? getCorePeriodLength(latestCompletedReliable.streak, latestCompletedReliable.event.date)
+  const latestPeriodBleedingLength = latestCompletedReliable
+    ? getPeriodBleedingLength(latestCompletedReliable.streak, latestCompletedReliable.event.date)
     : null;
-  const periodLength = latestCorePeriodLength ?? profile.periodLength;
+  const periodLength = latestPeriodBleedingLength ?? profile.periodLength;
   const lastPeriodStart = latestReliable?.event.date ?? parseDateKey(profile.lastPeriodStart);
 
   return {
