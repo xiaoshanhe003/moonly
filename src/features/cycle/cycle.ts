@@ -402,6 +402,20 @@ function getPeriodBleedingLength(streak: BleedingStreak, eventDate: Date) {
   return diffInDays(streak.end, eventDate) + 1;
 }
 
+function getReliablePeriodStarts(calibrationStart: Date, events: Array<{ event: PeriodStartEvent }>) {
+  const starts = [
+    calibrationStart,
+    ...events
+      .filter((item) => item.event.confidence === "confirmed")
+      .map((item) => item.event.date)
+  ];
+
+  return starts.filter((date, index) => {
+    const previous = starts[index - 1];
+    return !previous || startOfDay(date).getTime() !== startOfDay(previous).getTime();
+  });
+}
+
 function classifyPeriodStart(
   streak: BleedingStreak,
   profile: CycleProfile,
@@ -460,7 +474,7 @@ function isCompletedPeriodStreak(
   return hasLaterNoBleedingEntry || diffInDays(normalizedToday, streakEnd) >= profile.periodLength;
 }
 
-function resolveCycleMetrics(
+function getPeriodEvents(
   profile: CycleProfile,
   entries: Record<string, DailyEntry>,
   today: Date
@@ -486,6 +500,17 @@ function resolveCycleMetrics(
     }
   }
 
+  return periodEvents;
+}
+
+function resolveCycleMetrics(
+  profile: CycleProfile,
+  entries: Record<string, DailyEntry>,
+  today: Date
+) {
+  const periodEvents = getPeriodEvents(profile, entries, today);
+  const calibrationStart = parseDateKey(profile.lastPeriodStart);
+
   const reliableEvents = periodEvents.filter((item) => item.event.confidence === "confirmed");
   const latestReliable = reliableEvents.at(-1);
   const completedReliableEvents = reliableEvents.filter((item, index) => {
@@ -497,7 +522,8 @@ function resolveCycleMetrics(
   });
   const latestCompletedReliable = completedReliableEvents.at(-1);
 
-  const recentEventDates = reliableEvents.slice(-4).map((item) => item.event.date);
+  const reliablePeriodStarts = getReliablePeriodStarts(calibrationStart, periodEvents);
+  const recentEventDates = reliablePeriodStarts.slice(-4);
   const recentIntervals = recentEventDates.slice(1).map((date, index) => diffInDays(date, recentEventDates[index]));
 
   const cycleLength = recentIntervals.length > 0 ? average(recentIntervals) : profile.cycleLength;
@@ -505,7 +531,7 @@ function resolveCycleMetrics(
     ? getPeriodBleedingLength(latestCompletedReliable.streak, latestCompletedReliable.event.date)
     : null;
   const periodLength = latestPeriodBleedingLength ?? profile.periodLength;
-  const lastPeriodStart = latestReliable?.event.date ?? parseDateKey(profile.lastPeriodStart);
+  const lastPeriodStart = latestReliable?.event.date ?? calibrationStart;
 
   return {
     cycleLength,
@@ -519,8 +545,12 @@ export function getCycleSummary(
   entries: Record<string, DailyEntry>,
   today: Date
 ) {
-  const { cycleLength, periodLength, lastPeriodStart } = resolveCycleMetrics(profile, entries, today);
+  const { cycleLength: resolvedCycleLength, periodLength, lastPeriodStart } = resolveCycleMetrics(profile, entries, today);
   const elapsed = diffInDays(today, lastPeriodStart);
+  const todayEntry = entries[formatDateKey(today)];
+  const hasNoBleedingToday = hasTrackedNoBleeding(todayEntry);
+  const shouldExtendCurrentCycle = elapsed >= resolvedCycleLength && hasNoBleedingToday;
+  const cycleLength = shouldExtendCurrentCycle ? elapsed + 1 : resolvedCycleLength;
   const dayIndex = ((elapsed % cycleLength) + cycleLength) % cycleLength;
   const dayOfCycle = dayIndex + 1;
   const ovulationDay = Math.max(10, cycleLength - 14);
@@ -549,6 +579,12 @@ export function getCycleSummary(
   } else {
     phaseRemainingDays = phaseBoundaries.lutealEnd - dayOfCycle;
     nextPhaseKey = "menstrual";
+  }
+
+  if (phase === "menstrual" && hasNoBleedingToday) {
+    phase = "follicular";
+    phaseRemainingDays = Math.max(0, phaseBoundaries.follicularEnd - dayOfCycle);
+    nextPhaseKey = "ovulation";
   }
 
   const nextPeriodStart = addDays(lastPeriodStart, elapsed - dayIndex + cycleLength);
