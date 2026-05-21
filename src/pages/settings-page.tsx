@@ -1,6 +1,18 @@
 import { useEffect, useLayoutEffect, useMemo, useState, type ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ArrowLeft, BookOpen, Check, ChevronRight, Database, Info, RefreshCw, RotateCcw, Upload } from "lucide-react";
+import {
+  ArrowLeft,
+  BookOpen,
+  Check,
+  ChevronRight,
+  ClipboardPenLine,
+  Database,
+  ExternalLink,
+  Info,
+  RefreshCw,
+  RotateCcw,
+  Upload
+} from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Sheet } from "../components/ui/sheet";
 import { uiLayoutStyles, uiTextStyles } from "../components/ui/styles";
@@ -14,6 +26,17 @@ const appIcon = "/icon.svg";
 
 type SettingsView = "home" | "backup" | "import" | "about";
 type ConflictMode = "skip" | "overwrite";
+type FeedbackStep = "type" | "content";
+type FeedbackSubmitStatus = "idle" | "submitting" | "success" | "error" | "unconfigured";
+
+const feedbackEndpoint = import.meta.env.VITE_FEEDBACK_ENDPOINT?.trim() ?? "";
+const feedbackFormUrl = import.meta.env.VITE_FEEDBACK_FORM_URL?.trim() ?? "";
+const feedbackTypes = [
+  { value: "bug", label: "遇到问题" },
+  { value: "idea", label: "功能建议" },
+  { value: "content", label: "内容反馈" },
+  { value: "other", label: "其他反馈类型" }
+];
 
 function formatDisplayDate(value: string) {
   return new Intl.DateTimeFormat("zh-CN", {
@@ -85,6 +108,12 @@ export function SettingsPage() {
   const importEntries = useCycleStore((state) => state.importEntries);
   const [view, setView] = useState<SettingsView>("home");
   const [isRestartSheetOpen, setIsRestartSheetOpen] = useState(false);
+  const [isFeedbackSheetOpen, setIsFeedbackSheetOpen] = useState(false);
+  const [feedbackStep, setFeedbackStep] = useState<FeedbackStep>("type");
+  const [feedbackType, setFeedbackType] = useState(feedbackTypes[0].value);
+  const [feedbackMessage, setFeedbackMessage] = useState("");
+  const [feedbackContact, setFeedbackContact] = useState("");
+  const [feedbackStatus, setFeedbackStatus] = useState<FeedbackSubmitStatus>("idle");
   const [backupCopied, setBackupCopied] = useState(false);
   const [backupInput, setBackupInput] = useState("");
   const { isUpdateAvailable, isUpdating } = useAppUpdateStatus();
@@ -114,6 +143,7 @@ export function SettingsPage() {
     ? Object.keys(parsedBackupData.data.entries).filter((date) => entries[date]).length
     : 0;
   const recordCount = parsedBackupData ? Object.keys(parsedBackupData.data.entries).length : 0;
+  const selectedFeedbackType = feedbackTypes.find((type) => type.value === feedbackType) ?? feedbackTypes[0];
 
   const headerTitle = {
     home: "设置",
@@ -184,6 +214,75 @@ export function SettingsPage() {
     void installAppUpdate().catch(() => undefined);
   };
 
+  const openFeedbackSheet = () => {
+    if (feedbackFormUrl) {
+      openFeedbackForm();
+      return;
+    }
+
+    setFeedbackStatus("idle");
+    setFeedbackStep("type");
+    setIsFeedbackSheetOpen(true);
+  };
+
+  const openFeedbackForm = () => {
+    if (!feedbackFormUrl) {
+      return;
+    }
+
+    const openedWindow = window.open(feedbackFormUrl, "_blank", "noopener,noreferrer");
+
+    if (!openedWindow) {
+      window.location.assign(feedbackFormUrl);
+    }
+  };
+
+  const handleSubmitFeedback = async () => {
+    const message = feedbackMessage.trim();
+
+    if (!message) {
+      return;
+    }
+
+    if (!feedbackEndpoint) {
+      setFeedbackStatus(feedbackFormUrl ? "unconfigured" : "error");
+      if (feedbackFormUrl) {
+        openFeedbackForm();
+      }
+      return;
+    }
+
+    setFeedbackStatus("submitting");
+
+    try {
+      const response = await fetch(feedbackEndpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          type: feedbackType,
+          message,
+          contact: feedbackContact.trim(),
+          appVersion,
+          pagePath: window.location.pathname,
+          userAgent: navigator.userAgent,
+          submittedAt: new Date().toISOString()
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error("feedback submit failed");
+      }
+
+      setFeedbackStatus("success");
+      setFeedbackMessage("");
+      setFeedbackContact("");
+    } catch {
+      setFeedbackStatus("error");
+    }
+  };
+
   return (
     <main className="min-h-screen bg-[var(--color-canvas)] text-[var(--color-ink)]">
       <div className={cn("sticky top-0 z-40 w-full bg-[color:var(--color-canvas)]/85 backdrop-blur", uiLayoutStyles.pageHeaderSafeArea)}>
@@ -221,6 +320,12 @@ export function SettingsPage() {
               icon={<BookOpen className="size-5" aria-hidden="true" />}
               title="了解周期"
               onClick={() => navigate("/phase-science")}
+            />
+            <div className="my-4 h-px bg-[color:var(--border)]" aria-hidden="true" />
+            <SettingsRow
+              icon={<ClipboardPenLine className="size-5" aria-hidden="true" />}
+              title="我要反馈"
+              onClick={openFeedbackSheet}
             />
             <SettingsRow
               icon={<Info className="size-5" aria-hidden="true" />}
@@ -367,6 +472,152 @@ export function SettingsPage() {
           </p>
         </Sheet>
       ) : null}
+
+      {isFeedbackSheetOpen ? (
+        <Sheet
+          header={
+            <p className={cn("font-semibold leading-snug", uiTextStyles.xl)}>
+              {feedbackStep === "type" && feedbackStatus !== "success" ? "想反馈哪一类内容？" : selectedFeedbackType.label}
+            </p>
+          }
+          bodyClassName="sm:max-w-md"
+          onClose={() => setIsFeedbackSheetOpen(false)}
+          footer={
+            <div className="grid gap-3">
+              {feedbackStatus === "success" ? (
+                <Button className={uiLayoutStyles.sheetPrimaryActionButton} onClick={() => setIsFeedbackSheetOpen(false)}>
+                  完成
+                </Button>
+              ) : null}
+              {feedbackStatus !== "success" && feedbackStep === "type" ? (
+                <Button className={uiLayoutStyles.sheetPrimaryActionButton} onClick={() => setFeedbackStep("content")}>
+                  下一步
+                </Button>
+              ) : null}
+              {feedbackStatus !== "success" && feedbackStep === "content" ? (
+                <div className="grid grid-cols-2 gap-3">
+                  <Button
+                    variant="secondary"
+                    className={uiLayoutStyles.sheetSecondaryActionButton}
+                    onClick={() => {
+                      setFeedbackStatus("idle");
+                      setFeedbackStep("type");
+                    }}
+                  >
+                    上一步
+                  </Button>
+                  <Button
+                    className={uiLayoutStyles.sheetPrimaryActionButton}
+                    onClick={handleSubmitFeedback}
+                    disabled={!feedbackMessage.trim() || feedbackStatus === "submitting"}
+                  >
+                    {feedbackStatus === "submitting" ? (
+                      <>
+                        <RefreshCw className="mr-2 size-4 motion-safe:animate-spin" aria-hidden="true" />
+                        发送中
+                      </>
+                    ) : (
+                      "发送"
+                    )}
+                  </Button>
+                </div>
+              ) : null}
+              {feedbackStatus !== "success" && feedbackFormUrl ? (
+                <Button
+                  variant="secondary"
+                  className={uiLayoutStyles.sheetSecondaryActionButton}
+                  onClick={openFeedbackForm}
+                >
+                  <ExternalLink className="mr-2 size-4" aria-hidden="true" />
+                  打开反馈表
+                </Button>
+              ) : null}
+            </div>
+          }
+        >
+          {feedbackStatus === "success" ? (
+            <p className="rounded-[var(--radius-md)] bg-[color:var(--muted)] p-4 text-sm leading-relaxed text-[color:var(--foreground)]">
+              已收到，谢谢你的反馈。
+            </p>
+          ) : null}
+
+          {feedbackStatus !== "success" && feedbackStep === "type" ? (
+            <div className="space-y-3">
+              <div className="grid gap-3">
+                {feedbackTypes.map((type) => (
+                  <button
+                    key={type.value}
+                    type="button"
+                    className={cn(
+                      "flex h-12 items-center justify-between rounded-[var(--radius-md)] border px-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ring)]",
+                      feedbackType === type.value
+                        ? "border-[color:var(--foreground)] bg-[color:var(--muted)] text-[color:var(--foreground)]"
+                        : "border-[color:var(--input)] bg-[color:var(--muted)] text-[color:var(--foreground)]"
+                    )}
+                    onClick={() => {
+                      setFeedbackType(type.value);
+                      setFeedbackStatus("idle");
+                    }}
+                  >
+                    <span>{type.label}</span>
+                    {feedbackType === type.value ? <Check className="size-4" aria-hidden="true" /> : null}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {feedbackStatus !== "success" && feedbackStep === "content" ? (
+          <div className="space-y-6">
+            <div className="space-y-3">
+              <label className={cn("block font-medium", uiTextStyles.md)} htmlFor="feedback-message">
+                反馈内容
+              </label>
+              <textarea
+                id="feedback-message"
+                className={cn(uiLayoutStyles.input, "min-h-36 resize-none leading-relaxed")}
+                value={feedbackMessage}
+                placeholder="写下你遇到的问题或想要的改进"
+                maxLength={1200}
+                onChange={(event) => {
+                  setFeedbackMessage(event.target.value);
+                  setFeedbackStatus("idle");
+                }}
+              />
+            </div>
+
+            <div className="space-y-3">
+              <label className={cn("block font-medium", uiTextStyles.md)} htmlFor="feedback-contact">
+                联系方式
+              </label>
+              <input
+                id="feedback-contact"
+                className={cn(uiLayoutStyles.input, "h-12")}
+                value={feedbackContact}
+                placeholder="愿意的话，欢迎留下联系方式"
+                maxLength={120}
+                onChange={(event) => {
+                  setFeedbackContact(event.target.value);
+                  setFeedbackStatus("idle");
+                }}
+              />
+            </div>
+
+            {feedbackStatus === "unconfigured" ? (
+              <p className="rounded-[var(--radius-md)] bg-[color:var(--muted)] p-4 text-sm leading-relaxed text-[color:var(--foreground)]">
+                当前使用外部反馈表收集，已为你打开反馈表。
+              </p>
+            ) : null}
+            {feedbackStatus === "error" ? (
+              <p className="rounded-[var(--radius-md)] bg-red-50 p-4 text-sm leading-relaxed text-red-700">
+                {feedbackFormUrl ? "暂时无法发送。你可以稍后再试，或通过反馈表提交。" : "暂时无法发送。请稍后再试。"}
+              </p>
+            ) : null}
+          </div>
+          ) : null}
+        </Sheet>
+      ) : null}
+
     </main>
   );
 }
