@@ -52,6 +52,18 @@ const cardSlideAnimationMs = 440;
 const recordSheetSectionClassName = "grid gap-3 border-b border-[color:var(--border)] pb-6";
 type FlowOption = (typeof flowOptions)[number];
 
+function canShowPeriodStartSignal(
+  bleedingLevel: ReturnType<typeof getBleedingLevel>,
+  phaseLabel: string | null,
+  periodSignal?: DailyEntry["periodSignal"]
+) {
+  return Boolean(
+    bleedingLevel &&
+    bleedingLevel !== "none" &&
+    (phaseLabel !== "月经期" || periodSignal === "confirmed_start")
+  );
+}
+
 type CompletedLogDetailsProps = {
   entry?: DailyEntry;
   onChange: (patch: Partial<DailyEntry>) => void;
@@ -508,20 +520,18 @@ export function CompletedLogDetails({ entry, onChange }: CompletedLogDetailsProp
   const profile = useCycleStore((state) => state.profile);
   const entries = useCycleStore((state) => state.entries);
   const bleedingLevel = getBleedingLevel(entry);
-  const canShowPeriodSignal = Boolean(bleedingLevel && bleedingLevel !== "none");
   const noSymptomSelected = entry?.symptoms !== undefined && entry.symptoms.length === 0;
   const hasSelectedSymptoms = entry?.symptoms !== undefined;
   const questionClassName = "text-base font-medium text-[color:var(--foreground)]";
   const entryDate = entry?.date ? parseDateKey(entry.date) : null;
+  const phaseLabel = profile && entryDate ? getCycleSummary(profile, entries, entryDate).phase.label : null;
+  const canShowPeriodSignal = canShowPeriodStartSignal(bleedingLevel, phaseLabel, entry?.periodSignal);
   const moodFillColor = getEntryMoodFillColor(profile, entries, entry?.date);
   const editableMoodOptions = getEditableMoodOptions(entry?.mood);
   const energyColors = getPhaseEnergyColors(
     profile && entryDate ? getCycleSummary(profile, entries, entryDate).phase.color : undefined
   );
-  const flowQuestion =
-    profile && entryDate && getCycleSummary(profile, entries, entryDate).phase.label === "月经期"
-      ? "今天经血量如何？"
-      : "今天有经血吗？";
+  const flowQuestion = phaseLabel === "月经期" ? "今天经血量如何？" : "今天有经血吗？";
 
   return (
     <div className="grid gap-6">
@@ -744,7 +754,8 @@ export function QuickLogCard({
   const energyColors = getPhaseEnergyColors(phase?.color);
   const flowQuestion = phaseLabel === "月经期" ? "今天经血量如何？" : "今天有经血吗？";
 
-  const canShowPeriodSignal = Boolean(bleedingLevel && bleedingLevel !== "none");
+  const hasSelectedBleeding = Boolean(bleedingLevel && bleedingLevel !== "none");
+  const canShowPeriodSignal = canShowPeriodStartSignal(bleedingLevel, phaseLabel, entry?.periodSignal);
   const noSymptomSelected = entry?.symptoms !== undefined && entry.symptoms.length === 0;
   const hasSelectedSymptoms = entry?.symptoms !== undefined;
 
@@ -956,13 +967,16 @@ export function QuickLogCard({
                   dimInactive={bleedingLevel !== undefined}
                   option={flow}
                   onClick={() => {
+                    const periodSignal = flow.value === "none" ? "none" : entry?.periodSignal ?? "none";
+                    const shouldShowPeriodSignal = canShowPeriodStartSignal(flow.value, phaseLabel, periodSignal);
+
                     setStepOverride("flow");
                     setIsReviewingFlowSignal(flow.value !== "none");
                     updateEntry(date, {
                       bleedingLevel: flow.value,
-                      periodSignal: flow.value === "none" ? "none" : entry?.periodSignal ?? "none"
+                      periodSignal
                     });
-                    if (flow.value === "none") {
+                    if (flow.value === "none" || !shouldShowPeriodSignal) {
                       scheduleCompletion();
                     }
                   }}
@@ -970,22 +984,24 @@ export function QuickLogCard({
               ))}
             </div>
           </div>
-          {canShowPeriodSignal ? (
+          {hasSelectedBleeding ? (
             <div className="flex shrink-0 flex-wrap items-center justify-between gap-3">
-              <label className="inline-flex min-h-11 items-center gap-3 text-sm font-medium text-[color:var(--foreground)]">
-                <input
-                  type="checkbox"
-                  checked={entry?.periodSignal === "confirmed_start"}
-                  onChange={() =>
-                    updateEntry(date, {
-                      bleedingLevel,
-                      periodSignal: entry?.periodSignal === "confirmed_start" ? "none" : "confirmed_start"
-                    })
-                  }
-                  className="size-4 rounded border-[color:var(--border)] text-[color:var(--foreground)] accent-[color:var(--foreground)]"
-                />
-                <span>这是经期第一天</span>
-              </label>
+              {canShowPeriodSignal ? (
+                <label className="inline-flex min-h-11 items-center gap-3 text-sm font-medium text-[color:var(--foreground)]">
+                  <input
+                    type="checkbox"
+                    checked={entry?.periodSignal === "confirmed_start"}
+                    onChange={() =>
+                      updateEntry(date, {
+                        bleedingLevel,
+                        periodSignal: entry?.periodSignal === "confirmed_start" ? "none" : "confirmed_start"
+                      })
+                    }
+                    className="size-4 rounded border-[color:var(--border)] text-[color:var(--foreground)] accent-[color:var(--foreground)]"
+                  />
+                  <span>这是经期第一天</span>
+                </label>
+              ) : null}
               <Button
                 variant="primary"
                 onClick={scheduleCompletion}
