@@ -1,13 +1,41 @@
 import { type PointerEvent, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, FlaskConical } from "lucide-react";
-import { scenarios } from "../../mocks/scenarios";
+import { buildPhaseProfile, scenarios } from "../../mocks/scenarios";
 import { useCycleStore } from "../../features/cycle/store";
 import { cn } from "../../lib/utils";
 import { getOptionPillClass, uiTextStyles } from "../ui/styles";
+import { formatDateKey } from "../../lib/date";
+import type { AppScenario } from "../../features/cycle/types";
 
 const PANEL_GAP = 8;
 const DEFAULT_TOP = 96;
 const visibleScenarioKeys = ["first-run", "today-pending", "today-complete", "spotting-to-period"] as const;
+const phaseScenarioKeys = ["phase-menstrual", "phase-follicular", "phase-ovulation", "phase-luteal"] as const;
+const phaseDayByScenario = {
+  "phase-menstrual": 2,
+  "phase-follicular": 7,
+  "phase-ovulation": 14,
+  "phase-luteal": 21
+} as const;
+
+type PhaseScenarioKey = (typeof phaseScenarioKeys)[number];
+
+function buildDevScenarioEntries(scenario: AppScenario) {
+  const today = formatDateKey(new Date());
+  const current = scenarios[scenario];
+
+  if (scenario === "spotting-to-period" && current.entries) {
+    return Object.fromEntries(current.entries.map((entry) => [entry.date, entry]));
+  }
+
+  const todayEntry = current.entries?.find((entry) => entry.date === today) ?? current.entry;
+
+  if (todayEntry) {
+    return { [today]: todayEntry };
+  }
+
+  return { [today]: { date: today } };
+}
 
 function isInteractiveTarget(target: EventTarget | null) {
   return target instanceof Element && Boolean(target.closest("button, a, input, select, textarea"));
@@ -16,6 +44,7 @@ function isInteractiveTarget(target: EventTarget | null) {
 export function DevScenarioBar() {
   const activeScenario = useCycleStore((state) => state.activeScenario);
   const loadScenario = useCycleStore((state) => state.loadScenario);
+  const [selectedPhase, setSelectedPhase] = useState<PhaseScenarioKey>("phase-luteal");
   const [isCollapsed, setIsCollapsed] = useState(true);
   const panelRef = useRef<HTMLElement | null>(null);
   const dragStateRef = useRef({
@@ -110,6 +139,18 @@ export function DevScenarioBar() {
     dragStateRef.current.pointerId = null;
   };
 
+  const loadScenarioForSelectedPhase = (scenario: AppScenario) => {
+    if (scenario === "first-run") {
+      loadScenario(scenario);
+      return;
+    }
+
+    loadScenario(scenario, {
+      profile: buildPhaseProfile(phaseDayByScenario[selectedPhase]),
+      entries: buildDevScenarioEntries(scenario)
+    });
+  };
+
   return (
     <div className="pointer-events-none fixed inset-0 z-[60]">
       <aside
@@ -151,25 +192,55 @@ export function DevScenarioBar() {
 
         <div
           className={cn(
-            "flex flex-wrap items-center gap-2 overflow-hidden transition-[max-height,opacity] duration-300",
-            isCollapsed ? "max-h-0 opacity-0" : "max-h-72 opacity-100"
+            "grid gap-3 overflow-hidden transition-[max-height,opacity] duration-300",
+            isCollapsed ? "max-h-0 opacity-0" : "max-h-80 opacity-100"
           )}
           aria-hidden={isCollapsed}
         >
-          {visibleScenarioKeys.map((key) => {
-            const scenario = scenarios[key];
+          <div className="flex flex-wrap items-center gap-2">
+            {visibleScenarioKeys.map((key) => {
+              const scenario = scenarios[key];
 
-            return (
-              <button
-                key={key}
-                type="button"
-                onClick={() => loadScenario(key)}
-                className={cn(getOptionPillClass(activeScenario === key), uiTextStyles.xs, "px-3 py-1.5")}
-              >
-                {scenario.label}
-              </button>
-            );
-          })}
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => loadScenarioForSelectedPhase(key)}
+                  className={cn(getOptionPillClass(activeScenario === key), uiTextStyles.xs, "px-3 py-1.5")}
+                >
+                  {scenario.label}
+                </button>
+              );
+            })}
+          </div>
+
+          <label className="grid gap-1.5">
+            <span className={cn(uiTextStyles.xs, uiTextStyles.muted)}>Phase</span>
+            <select
+              value={selectedPhase}
+              onChange={(event) => {
+                const nextPhase = event.target.value as PhaseScenarioKey;
+                setSelectedPhase(nextPhase);
+
+                if (activeScenario !== "first-run") {
+                  loadScenario(activeScenario, {
+                    profile: buildPhaseProfile(phaseDayByScenario[nextPhase]),
+                    entries: buildDevScenarioEntries(activeScenario)
+                  });
+                }
+              }}
+              className={cn(
+                "h-9 w-full rounded-[var(--radius-sm)] border border-[color:var(--border)] bg-[color:var(--background)] px-3 text-[color:var(--foreground)] outline-none transition focus:border-[color:var(--border-strong)] focus:ring-2 focus:ring-[color:var(--ring-soft)]",
+                uiTextStyles.sm
+              )}
+            >
+              {phaseScenarioKeys.map((key) => (
+                <option key={key} value={key}>
+                  {scenarios[key].label}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
       </aside>
     </div>

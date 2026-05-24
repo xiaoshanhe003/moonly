@@ -29,4 +29,8 @@ export type AppScenario =
   | "today-in-progress"
   | "today-complete"
   | "spotting-to-period"
+  | "phase-menstrual"
+  | "phase-follicular"
+  | "phase-ovulation"
+  | "phase-luteal"
   | "calendar-forecast";

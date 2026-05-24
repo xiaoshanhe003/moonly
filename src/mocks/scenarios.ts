@@ -10,6 +10,16 @@ function daysAgo(days: number) {
   return formatDateKey(value);
 }
 
+export function buildPhaseProfile(dayOfCycle: number): CycleProfile {
+  return {
+    lastPeriodStart: daysAgo(dayOfCycle - 1),
+    periodLength: 5,
+    cycleLength: 28,
+    isPeriodLengthEstimated: false,
+    isCycleLengthEstimated: false
+  };
+}
+
 const baseProfile: CycleProfile = {
   lastPeriodStart: daysAgo(19),
   periodLength: 5,
@@ -119,6 +129,26 @@ export const scenarios: Record<
         bleedingLevel: "medium"
       }
     ]
+  },
+  "phase-menstrual": {
+    label: "月经期",
+    profile: buildPhaseProfile(2),
+    entry: { date: isoToday }
+  },
+  "phase-follicular": {
+    label: "卵泡期",
+    profile: buildPhaseProfile(7),
+    entry: { date: isoToday }
+  },
+  "phase-ovulation": {
+    label: "排卵期",
+    profile: buildPhaseProfile(14),
+    entry: { date: isoToday }
+  },
+  "phase-luteal": {
+    label: "黄体期",
+    profile: buildPhaseProfile(21),
+    entry: { date: isoToday }
   },
   "calendar-forecast": {
     label: "日历预测",

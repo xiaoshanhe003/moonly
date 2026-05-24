@@ -754,7 +754,6 @@ export function QuickLogCard({
   const energyColors = getPhaseEnergyColors(phase?.color);
   const flowQuestion = phaseLabel === "月经期" ? "今天经血量如何？" : "今天有经血吗？";
 
-  const hasSelectedBleeding = Boolean(bleedingLevel && bleedingLevel !== "none");
   const canShowPeriodSignal = canShowPeriodStartSignal(bleedingLevel, phaseLabel, entry?.periodSignal);
   const noSymptomSelected = entry?.symptoms !== undefined && entry.symptoms.length === 0;
   const hasSelectedSymptoms = entry?.symptoms !== undefined;
@@ -984,24 +983,22 @@ export function QuickLogCard({
               ))}
             </div>
           </div>
-          {hasSelectedBleeding ? (
+          {canShowPeriodSignal ? (
             <div className="flex shrink-0 flex-wrap items-center justify-between gap-3">
-              {canShowPeriodSignal ? (
-                <label className="inline-flex min-h-11 items-center gap-3 text-sm font-medium text-[color:var(--foreground)]">
-                  <input
-                    type="checkbox"
-                    checked={entry?.periodSignal === "confirmed_start"}
-                    onChange={() =>
-                      updateEntry(date, {
-                        bleedingLevel,
-                        periodSignal: entry?.periodSignal === "confirmed_start" ? "none" : "confirmed_start"
-                      })
-                    }
-                    className="size-4 rounded border-[color:var(--border)] text-[color:var(--foreground)] accent-[color:var(--foreground)]"
-                  />
-                  <span>这是经期第一天</span>
-                </label>
-              ) : null}
+              <label className="inline-flex min-h-11 items-center gap-3 text-sm font-medium text-[color:var(--foreground)]">
+                <input
+                  type="checkbox"
+                  checked={entry?.periodSignal === "confirmed_start"}
+                  onChange={() =>
+                    updateEntry(date, {
+                      bleedingLevel,
+                      periodSignal: entry?.periodSignal === "confirmed_start" ? "none" : "confirmed_start"
+                    })
+                  }
+                  className="size-4 rounded border-[color:var(--border)] text-[color:var(--foreground)] accent-[color:var(--foreground)]"
+                />
+                <span>这是经期第一天</span>
+              </label>
               <Button
                 variant="primary"
                 onClick={scheduleCompletion}

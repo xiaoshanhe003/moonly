@@ -12,7 +12,7 @@ type CycleState = {
   updateProfile: (patch: Partial<CycleProfile>) => void;
   updateEntry: (date: string, patch: Partial<DailyEntry>) => void;
   importEntries: (profile: CycleProfile, entries: Record<string, DailyEntry>, conflictMode: "skip" | "overwrite") => void;
-  loadScenario: (scenario: AppScenario) => void;
+  loadScenario: (scenario: AppScenario, override?: { profile?: CycleProfile | null; entries?: Record<string, DailyEntry> }) => void;
   reset: () => void;
 };
 
@@ -110,12 +110,12 @@ export const useCycleStore = create<CycleState>()(
             entries: mergedEntries
           };
         }),
-      loadScenario: (scenario) =>
+      loadScenario: (scenario, override) =>
         set(() => {
           const current = scenarios[scenario];
           return {
-            profile: current.profile,
-            entries: buildScenarioEntries(current),
+            profile: override?.profile ?? current.profile,
+            entries: override?.entries ?? buildScenarioEntries(current),
             activeScenario: scenario
           };
         }),
