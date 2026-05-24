@@ -9,6 +9,15 @@ const SPOTTING_CONFIRMATION_WINDOW_DAYS = 2;
 export type PhaseKey = "menstrual" | "follicular" | "ovulation" | "luteal";
 export type PeriodStartConfidence = "likely" | "confirmed";
 
+export type MissedPeriodCandidate = {
+  id: string;
+  previousStart: string;
+  suggestedStart: string;
+  nextStart: string;
+  gapDays: number;
+  expectedCycleLength: number;
+};
+
 type BleedingStreak = {
   start: Date;
   end: Date;
@@ -410,10 +419,20 @@ function getReliablePeriodStarts(calibrationStart: Date, events: Array<{ event: 
       .map((item) => item.event.date)
   ];
 
-  return starts.filter((date, index) => {
-    const previous = starts[index - 1];
+  const sortedStarts = starts.sort((a, b) => startOfDay(a).getTime() - startOfDay(b).getTime());
+
+  return sortedStarts.filter((date, index) => {
+    const previous = sortedStarts[index - 1];
     return !previous || startOfDay(date).getTime() !== startOfDay(previous).getTime();
   });
+}
+
+function buildMissedPeriodCandidateId(previousStart: Date, suggestedStart: Date, nextStart: Date) {
+  return [
+    formatDateKey(previousStart),
+    formatDateKey(suggestedStart),
+    formatDateKey(nextStart)
+  ].join(":");
 }
 
 function classifyPeriodStart(
@@ -538,6 +557,46 @@ function resolveCycleMetrics(
     periodLength,
     lastPeriodStart
   };
+}
+
+export function getMissedPeriodCandidate(
+  profile: CycleProfile,
+  entries: Record<string, DailyEntry>,
+  today: Date
+): MissedPeriodCandidate | null {
+  const periodEvents = getPeriodEvents(profile, entries, today);
+  const calibrationStart = parseDateKey(profile.lastPeriodStart);
+  const reliablePeriodStarts = getReliablePeriodStarts(calibrationStart, periodEvents);
+  const expectedCycleLength = profile.cycleLength;
+  const minSuspiciousGap = Math.round(expectedCycleLength * 1.65);
+  const maxSingleMissedGap = Math.round(expectedCycleLength * 2.35);
+
+  for (let index = reliablePeriodStarts.length - 1; index > 0; index -= 1) {
+    const previousStart = reliablePeriodStarts[index - 1];
+    const nextStart = reliablePeriodStarts[index];
+    const gapDays = diffInDays(nextStart, previousStart);
+
+    if (gapDays < minSuspiciousGap || gapDays > maxSingleMissedGap) {
+      continue;
+    }
+
+    const suggestedStart = addDays(previousStart, expectedCycleLength);
+
+    if (diffInDays(nextStart, suggestedStart) < MIN_CYCLE_LENGTH_DAYS) {
+      continue;
+    }
+
+    return {
+      id: buildMissedPeriodCandidateId(previousStart, suggestedStart, nextStart),
+      previousStart: formatDateKey(previousStart),
+      suggestedStart: formatDateKey(suggestedStart),
+      nextStart: formatDateKey(nextStart),
+      gapDays,
+      expectedCycleLength
+    };
+  }
+
+  return null;
 }
 
 export function getCycleSummary(
