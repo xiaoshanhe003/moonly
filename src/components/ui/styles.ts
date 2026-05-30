@@ -17,6 +17,7 @@ export const uiTextStyles = {
 export const uiSpacingStyles = {
   stackSm: "space-y-[var(--space-3)]",
   stackMd: "space-y-[var(--space-4)]",
+  stackLg: "space-y-[var(--space-6)]",
   gapSm: "gap-[var(--space-3)]",
   gapMd: "gap-[var(--space-4)]",
   gapLg: "gap-[var(--space-6)]",
@@ -26,6 +27,9 @@ export const uiSpacingStyles = {
 export const uiSurfaceStyles = {
   card:
     "rounded-[var(--radius-xl)] border border-[color:var(--border-strong)] bg-[color:var(--card)] p-[var(--space-5)] shadow-[var(--shadow-card)] backdrop-blur",
+  compactCard:
+    "rounded-[var(--radius-md)] border border-[color:var(--border)] bg-[color:var(--card-elevated)] p-[var(--space-5)] shadow-[var(--shadow-card)]",
+  divider: "h-[var(--line-thin)] bg-[color:var(--border)]",
   elevated:
     "border-[color:var(--border-strong)] bg-[color:var(--card-elevated)] shadow-[var(--shadow-elevated)] backdrop-blur-xl",
   panel: "rounded-[var(--radius-md)] bg-[color:var(--muted)] p-[var(--space-4)]",
@@ -52,6 +56,8 @@ export const uiLayoutStyles = {
     "h-[50px] w-full rounded-[10px] bg-[color:var(--foreground)] text-base font-semibold text-[color:var(--background)]",
   sheetSecondaryActionButton:
     "h-[50px] w-full rounded-[10px] bg-[color:var(--muted)] text-base font-semibold text-[color:var(--foreground)]",
+  iconActionButton:
+    "size-11 shrink-0 rounded-[var(--radius-md)] p-0 text-[color:var(--foreground)] [&_svg]:shrink-0",
   input:
     "w-full rounded-[var(--radius-md)] border border-[color:var(--input)] bg-[color:var(--muted)] px-[var(--space-4)] py-[var(--space-3)] text-[color:var(--foreground)]"
 };

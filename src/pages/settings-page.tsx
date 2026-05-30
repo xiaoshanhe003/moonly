@@ -6,16 +6,19 @@ import {
   Check,
   ChevronRight,
   ClipboardPenLine,
+  Copy,
   Database,
   ExternalLink,
   Info,
+  MessageCircle,
+  QrCode,
   RefreshCw,
   RotateCcw,
   Upload
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Sheet } from "../components/ui/sheet";
-import { uiLayoutStyles, uiTextStyles } from "../components/ui/styles";
+import { uiLayoutStyles, uiSpacingStyles, uiSurfaceStyles, uiTextStyles } from "../components/ui/styles";
 import { cn } from "../lib/utils";
 import { createBackupText, parseBackupText } from "../features/backup/backup-text";
 import { useCycleStore } from "../features/cycle/store";
@@ -24,13 +27,16 @@ import { installAppUpdate, useAppUpdateStatus } from "../features/install/app-up
 
 const appIcon = "/icon.svg";
 
-type SettingsView = "home" | "backup" | "import" | "about";
+type SettingsView = "home" | "backup" | "import" | "contact" | "about";
 type ConflictMode = "skip" | "overwrite";
 type FeedbackStep = "type" | "content";
 type FeedbackSubmitStatus = "idle" | "submitting" | "success" | "error" | "unconfigured";
 
 const feedbackEndpoint = import.meta.env.VITE_FEEDBACK_ENDPOINT?.trim() ?? "";
 const feedbackFormUrl = import.meta.env.VITE_FEEDBACK_FORM_URL?.trim() ?? "";
+const xiaohongshuName = import.meta.env.VITE_XIAOHONGSHU_NAME?.trim() ?? "突然染上了 Coding";
+const xiaohongshuAccount = import.meta.env.VITE_XIAOHONGSHU_ACCOUNT?.trim() ?? "1621278011";
+const xiaohongshuQrCodeUrl = import.meta.env.VITE_XIAOHONGSHU_QR_CODE_URL?.trim() || "/xiaohongshu-qr.jpg";
 const feedbackTypes = [
   { value: "bug", label: "遇到问题" },
   { value: "idea", label: "功能建议" },
@@ -64,6 +70,42 @@ async function copyText(value: string) {
   }
 }
 
+const settingsStyles = {
+  row:
+    "flex h-16 w-full items-center gap-[var(--space-4)] rounded-[var(--radius-md)] px-[var(--space-1)] text-left transition-colors hover:bg-[color:var(--muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ring)]",
+  sectionDivider: cn("my-[var(--space-5)]", uiSurfaceStyles.divider),
+  homeList: "space-y-[var(--space-1)]",
+  pageStack: "space-y-[var(--space-5)]",
+  fieldStack: uiSpacingStyles.stackSm,
+  actionGrid: "grid gap-[var(--space-4)]",
+  compactStack: "space-y-[var(--space-1)]",
+  infoPanel: cn(uiSurfaceStyles.panel, "leading-relaxed"),
+  statusPanel: cn(uiSurfaceStyles.panel, "text-sm leading-relaxed text-[color:var(--foreground)]"),
+  errorPanel: "rounded-[var(--radius-md)] bg-red-50 p-[var(--space-5)] text-sm leading-relaxed text-red-700",
+  contentCard: uiSurfaceStyles.compactCard,
+  pageContent: "mx-auto w-full max-w-md px-[var(--space-5)] pb-[var(--space-8)] pt-[var(--space-2)] sm:px-[var(--space-8)]",
+  pageTitle: "mb-[var(--space-8)] px-[var(--space-1)] font-semibold leading-none text-[color:var(--foreground)]",
+  qrFrame:
+    "mx-auto flex aspect-square w-full max-w-56 items-center justify-center overflow-hidden rounded-[var(--radius-md)] py-[var(--space-3)]",
+  qrFallback:
+    "flex h-full w-full flex-col items-center justify-center rounded-[var(--radius-md)] border border-dashed border-[color:var(--border)]",
+  primaryAction: "h-11 w-full rounded-[var(--radius-md)]",
+  secondaryAction: "h-11 rounded-[var(--radius-md)]",
+  feedbackAction: "h-12 w-full rounded-[var(--radius-md)]",
+  iconSize: "size-5",
+  inlineIconSize: "size-4",
+  appIcon: "size-12 shrink-0 rounded-[var(--radius-md)]",
+  updateAction:
+    "h-10 shrink-0 gap-[var(--space-2)] rounded-full bg-[color:var(--foreground)] px-[var(--space-4)] text-sm font-medium text-[color:var(--background)]",
+  sheetActionGrid: "grid gap-[var(--space-4)]",
+  sheetTwoColumnGrid: "grid grid-cols-2 gap-[var(--space-4)]",
+  feedbackTypeButton:
+    "flex h-12 items-center justify-between rounded-[var(--radius-md)] border px-[var(--space-5)] text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ring)]",
+  feedbackTypeActive: "border-[color:var(--foreground)] bg-[color:var(--muted)] text-[color:var(--foreground)]",
+  feedbackTypeInactive: "border-[color:var(--input)] bg-[color:var(--muted)] text-[color:var(--foreground)]",
+  inputHeight: "h-12"
+};
+
 function SettingsRow({
   icon,
   title,
@@ -82,7 +124,7 @@ function SettingsRow({
   return (
     <button
       type="button"
-      className="flex h-16 w-full items-center gap-3 rounded-[10px] px-1 text-left transition-colors hover:bg-[color:var(--muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ring)]"
+      className={settingsStyles.row}
       onClick={onClick}
     >
       <span className="flex size-8 shrink-0 items-center justify-center text-[color:var(--foreground)]">
@@ -115,6 +157,8 @@ export function SettingsPage() {
   const [feedbackContact, setFeedbackContact] = useState("");
   const [feedbackStatus, setFeedbackStatus] = useState<FeedbackSubmitStatus>("idle");
   const [backupCopied, setBackupCopied] = useState(false);
+  const [xiaohongshuAccountCopied, setXiaohongshuAccountCopied] = useState(false);
+  const [isXiaohongshuQrCodeUnavailable, setIsXiaohongshuQrCodeUnavailable] = useState(false);
   const [backupInput, setBackupInput] = useState("");
   const { isUpdateAvailable, isUpdating } = useAppUpdateStatus();
   const recordCountForRestart = Object.keys(entries).length;
@@ -149,6 +193,7 @@ export function SettingsPage() {
     home: "设置",
     backup: "数据备份",
     import: "导入数据",
+    contact: "联系我们",
     about: "关于月信"
   }[view];
 
@@ -177,6 +222,11 @@ export function SettingsPage() {
 
     await copyText(createBackupText({ profile, entries }));
     setBackupCopied(true);
+  };
+
+  const handleCopyXiaohongshuAccount = async () => {
+    await copyText(xiaohongshuAccount);
+    setXiaohongshuAccountCopied(true);
   };
 
   const handleRestart = () => {
@@ -286,49 +336,49 @@ export function SettingsPage() {
   return (
     <main className="min-h-screen bg-[var(--color-canvas)] text-[var(--color-ink)]">
       <div className={cn("sticky top-0 z-40 w-full bg-[color:var(--color-canvas)]/85 backdrop-blur", uiLayoutStyles.pageHeaderSafeArea)}>
-        <header className="mx-auto flex h-[72px] w-full max-w-md items-center px-4 sm:px-6">
+        <header className={uiLayoutStyles.pageHeaderInner}>
           <Button variant="ghost" size="icon" onClick={goBack} aria-label="返回">
             <ArrowLeft className="size-5 text-[var(--color-ink)]" />
           </Button>
         </header>
       </div>
 
-      <div className="mx-auto w-full max-w-md px-4 pb-8 pt-2 sm:px-6">
-        <h1 className={cn("mb-8 px-1 font-semibold leading-none text-[color:var(--foreground)]", uiTextStyles.xxl)}>
+      <div className={settingsStyles.pageContent}>
+        <h1 className={cn(settingsStyles.pageTitle, uiTextStyles.xxl)}>
           {headerTitle}
         </h1>
 
         {view === "home" ? (
-          <div className="space-y-1">
+          <div className={settingsStyles.homeList}>
             <SettingsRow
-              icon={<Database className="size-5" aria-hidden="true" />}
+              icon={<Database className={settingsStyles.iconSize} aria-hidden="true" />}
               title="数据备份"
               onClick={() => setView("backup")}
             />
             <SettingsRow
-              icon={<Upload className="size-5" aria-hidden="true" />}
+              icon={<Upload className={settingsStyles.iconSize} aria-hidden="true" />}
               title="导入数据"
               onClick={() => setView("import")}
             />
             <SettingsRow
-              icon={<RotateCcw className="size-5" aria-hidden="true" />}
+              icon={<RotateCcw className={settingsStyles.iconSize} aria-hidden="true" />}
               title="重新开始"
               onClick={() => setIsRestartSheetOpen(true)}
             />
-            <div className="my-4 h-px bg-[color:var(--border)]" aria-hidden="true" />
+            <div className={settingsStyles.sectionDivider} aria-hidden="true" />
             <SettingsRow
-              icon={<BookOpen className="size-5" aria-hidden="true" />}
+              icon={<BookOpen className={settingsStyles.iconSize} aria-hidden="true" />}
               title="了解周期"
               onClick={() => navigate("/phase-science")}
             />
-            <div className="my-4 h-px bg-[color:var(--border)]" aria-hidden="true" />
+            <div className={settingsStyles.sectionDivider} aria-hidden="true" />
             <SettingsRow
-              icon={<ClipboardPenLine className="size-5" aria-hidden="true" />}
-              title="我要反馈"
-              onClick={openFeedbackSheet}
+              icon={<MessageCircle className={settingsStyles.iconSize} aria-hidden="true" />}
+              title="联系我们"
+              onClick={() => setView("contact")}
             />
             <SettingsRow
-              icon={<Info className="size-5" aria-hidden="true" />}
+              icon={<Info className={settingsStyles.iconSize} aria-hidden="true" />}
               title="关于月信"
               meta={isUpdateAvailable ? "有新版本可用" : `v${appVersion}`}
               metaClassName={isUpdateAvailable ? "font-medium text-[color:var(--brand-blue)]" : undefined}
@@ -337,17 +387,72 @@ export function SettingsPage() {
           </div>
         ) : null}
 
+        {view === "contact" ? (
+          <div className={uiSpacingStyles.stackLg}>
+            <p className={cn("px-[var(--space-1)] leading-relaxed", uiTextStyles.md, uiTextStyles.muted)}>
+              嗨👋，我是月信开发者。扫描下方二维码关注我的小红书，可以获取开发动态和新功能信息，帖子里也有反馈群聊的入口。你也可以直接点击底部按钮反馈问题。
+            </p>
+
+            <div className={uiSurfaceStyles.compactCard}>
+              <div className={settingsStyles.qrFrame}>
+                {!isXiaohongshuQrCodeUnavailable ? (
+                  <img
+                    src={xiaohongshuQrCodeUrl}
+                    alt="小红书二维码"
+                    className="h-full w-full object-contain"
+                    onError={() => setIsXiaohongshuQrCodeUnavailable(true)}
+                  />
+                ) : (
+                  <div className={cn(settingsStyles.qrFallback, uiSpacingStyles.gapSm, uiTextStyles.muted)}>
+                    <QrCode className="size-16" aria-hidden="true" />
+                    <span className={cn("font-medium", uiTextStyles.sm)}>小红书二维码</span>
+                  </div>
+                )}
+              </div>
+
+              <div className={cn("my-[var(--space-5)]", uiSurfaceStyles.divider)} aria-hidden="true" />
+
+              <div className={cn("flex items-center justify-between", uiSpacingStyles.gapSm)}>
+                <div className="min-w-0">
+                  <p className={cn("truncate font-semibold text-[color:var(--foreground)]", uiTextStyles.md)}>
+                    {xiaohongshuName}
+                  </p>
+                  <p className={cn("mt-1", uiTextStyles.sm, uiTextStyles.muted)}>小红书号：{xiaohongshuAccount}</p>
+                </div>
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  className={uiLayoutStyles.iconActionButton}
+                  onClick={handleCopyXiaohongshuAccount}
+                  aria-label="复制小红书号"
+                >
+                  {xiaohongshuAccountCopied ? (
+                    <Check className="size-4" aria-hidden="true" />
+                  ) : (
+                    <Copy className="size-4" aria-hidden="true" />
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            <Button className={settingsStyles.feedbackAction} onClick={openFeedbackSheet}>
+              <ClipboardPenLine className={cn("mr-[var(--space-3)]", settingsStyles.inlineIconSize)} aria-hidden="true" />
+              反馈问题
+            </Button>
+          </div>
+        ) : null}
+
         {view === "backup" ? (
-          <div className="space-y-5">
-            <p className={cn("rounded-[var(--radius-md)] bg-[color:var(--muted)] p-4 leading-relaxed", uiTextStyles.sm)}>
+          <div className={settingsStyles.pageStack}>
+            <p className={cn(settingsStyles.infoPanel, uiTextStyles.sm)}>
               数据只保存在当前设备的浏览器中。换设备、重装浏览器或清除浏览器数据前，请先复制备份文本。
             </p>
 
-            <div className="space-y-3">
-              <Button className="h-11 w-full rounded-[10px]" onClick={handleCopyBackup}>
+            <div className={settingsStyles.fieldStack}>
+              <Button className={settingsStyles.primaryAction} onClick={handleCopyBackup}>
                 {backupCopied ? (
                   <>
-                    <Check className="mr-2 size-4" aria-hidden="true" />
+                    <Check className={cn("mr-[var(--space-3)]", settingsStyles.inlineIconSize)} aria-hidden="true" />
                     已复制
                   </>
                 ) : (
@@ -364,11 +469,11 @@ export function SettingsPage() {
         ) : null}
 
         {view === "import" ? (
-          <div className="space-y-5">
-            <p className={cn("rounded-[var(--radius-md)] bg-[color:var(--muted)] p-4 leading-relaxed", uiTextStyles.sm)}>
+          <div className={settingsStyles.pageStack}>
+            <p className={cn(settingsStyles.infoPanel, uiTextStyles.sm)}>
               粘贴从月信复制出的完整备份文本。导入后会合并到当前设备的本地记录中。
             </p>
-            <div className="space-y-3">
+            <div className={settingsStyles.fieldStack}>
               <label className={cn("block font-medium", uiTextStyles.md)} htmlFor="backup-text">
                 导入备份文本
               </label>
@@ -382,29 +487,29 @@ export function SettingsPage() {
               {parsedBackup.error ? <p className="text-sm text-red-600">{parsedBackup.error}</p> : null}
 
               {parsedBackupData ? (
-                <div className="space-y-4 rounded-[var(--radius-md)] border border-[color:var(--border)] bg-white p-4">
-                  <div className="space-y-1">
+                <div className={cn(uiSpacingStyles.stackMd, settingsStyles.contentCard)}>
+                  <div className={settingsStyles.compactStack}>
                     <p className={cn("font-semibold", uiTextStyles.md)}>识别到月信备份文本</p>
                     <p className={cn(uiTextStyles.sm, uiTextStyles.muted)}>创建时间：{formatDisplayDate(parsedBackupData.createdAt)}</p>
                     <p className={cn(uiTextStyles.sm, uiTextStyles.muted)}>包含记录：{recordCount} 天</p>
                   </div>
 
                   {duplicateCount > 0 ? (
-                    <div className="space-y-3">
+                    <div className={settingsStyles.fieldStack}>
                       <p className={cn("leading-relaxed", uiTextStyles.md)}>
                         发现{duplicateCount}个日期的记录已存在，你想如何处理这些记录？
                       </p>
-                      <div className="grid gap-3">
-                        <Button variant="secondary" className="h-11 rounded-[10px]" onClick={() => handleImport("skip")}>
+                      <div className={settingsStyles.actionGrid}>
+                        <Button variant="secondary" className={settingsStyles.secondaryAction} onClick={() => handleImport("skip")}>
                           跳过重复日期
                         </Button>
-                        <Button className="h-11 rounded-[10px]" onClick={() => handleImport("overwrite")}>
+                        <Button className={settingsStyles.secondaryAction} onClick={() => handleImport("overwrite")}>
                           覆盖全部并导入
                         </Button>
                       </div>
                     </div>
                   ) : (
-                    <Button className="h-11 w-full rounded-[10px]" onClick={() => handleImport("skip")}>
+                    <Button className={settingsStyles.primaryAction} onClick={() => handleImport("skip")}>
                       确认导入
                     </Button>
                   )}
@@ -415,10 +520,10 @@ export function SettingsPage() {
         ) : null}
 
         {view === "about" ? (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between gap-4 rounded-[var(--radius-md)] bg-[color:var(--muted)] p-4">
-              <div className="flex min-w-0 items-center gap-4">
-                <img src={appIcon} alt="" className="size-12 shrink-0 rounded-[12px]" aria-hidden="true" />
+          <div className={uiSpacingStyles.stackLg}>
+            <div className={cn("flex items-center justify-between", uiSpacingStyles.gapMd, uiSurfaceStyles.panel)}>
+              <div className={cn("flex min-w-0 items-center", uiSpacingStyles.gapMd)}>
+                <img src={appIcon} alt="" className={settingsStyles.appIcon} aria-hidden="true" />
                 <div className="min-w-0">
                   <p className={cn("font-semibold", uiTextStyles.lg)}>月信</p>
                   <p className={cn("mt-1", uiTextStyles.sm, uiTextStyles.muted)}>版本 {appVersion}</p>
@@ -426,22 +531,22 @@ export function SettingsPage() {
               </div>
               {isUpdateAvailable ? (
                 <Button
-                  className="h-10 shrink-0 gap-1.5 rounded-full bg-[color:var(--foreground)] px-3 text-sm font-medium text-[color:var(--background)]"
+                  className={settingsStyles.updateAction}
                   onClick={handleUpdateApp}
                   disabled={isUpdating}
                 >
-                  <RefreshCw className={cn("size-4", isUpdating && "motion-safe:animate-spin")} aria-hidden="true" />
+                  <RefreshCw className={cn(settingsStyles.inlineIconSize, isUpdating && "motion-safe:animate-spin")} aria-hidden="true" />
                   <span>{isUpdating ? "更新中" : "更新"}</span>
                 </Button>
               ) : null}
             </div>
 
-            <div className="space-y-3">
+            <div className={settingsStyles.fieldStack}>
               <p className={cn("font-semibold", uiTextStyles.md)}>最近更新</p>
-              <div className="space-y-3">
+              <div className={settingsStyles.fieldStack}>
                 {recentUpdates.map((update) => (
-                  <div key={`${update.date}-${update.title}`} className="rounded-[var(--radius-md)] border border-[color:var(--border)] bg-white p-4">
-                    <div className="flex items-baseline justify-between gap-3">
+                  <div key={`${update.date}-${update.title}`} className={settingsStyles.contentCard}>
+                    <div className={cn("flex items-baseline justify-between", uiSpacingStyles.gapSm)}>
                       <p className={cn("font-semibold", uiTextStyles.md)}>{update.title}</p>
                       <p className={cn("shrink-0", uiTextStyles.xs, uiTextStyles.muted)}>{update.date}</p>
                     </div>
@@ -483,7 +588,7 @@ export function SettingsPage() {
           bodyClassName="sm:max-w-md"
           onClose={() => setIsFeedbackSheetOpen(false)}
           footer={
-            <div className="grid gap-3">
+            <div className={settingsStyles.sheetActionGrid}>
               {feedbackStatus === "success" ? (
                 <Button className={uiLayoutStyles.sheetPrimaryActionButton} onClick={() => setIsFeedbackSheetOpen(false)}>
                   完成
@@ -495,7 +600,7 @@ export function SettingsPage() {
                 </Button>
               ) : null}
               {feedbackStatus !== "success" && feedbackStep === "content" ? (
-                <div className="grid grid-cols-2 gap-3">
+                <div className={settingsStyles.sheetTwoColumnGrid}>
                   <Button
                     variant="secondary"
                     className={uiLayoutStyles.sheetSecondaryActionButton}
@@ -536,23 +641,21 @@ export function SettingsPage() {
           }
         >
           {feedbackStatus === "success" ? (
-            <p className="rounded-[var(--radius-md)] bg-[color:var(--muted)] p-4 text-sm leading-relaxed text-[color:var(--foreground)]">
+            <p className={settingsStyles.statusPanel}>
               已收到，谢谢你的反馈。
             </p>
           ) : null}
 
           {feedbackStatus !== "success" && feedbackStep === "type" ? (
-            <div className="space-y-3">
-              <div className="grid gap-3">
+            <div className={settingsStyles.fieldStack}>
+              <div className={settingsStyles.sheetActionGrid}>
                 {feedbackTypes.map((type) => (
                   <button
                     key={type.value}
                     type="button"
                     className={cn(
-                      "flex h-12 items-center justify-between rounded-[var(--radius-md)] border px-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ring)]",
-                      feedbackType === type.value
-                        ? "border-[color:var(--foreground)] bg-[color:var(--muted)] text-[color:var(--foreground)]"
-                        : "border-[color:var(--input)] bg-[color:var(--muted)] text-[color:var(--foreground)]"
+                      settingsStyles.feedbackTypeButton,
+                      feedbackType === type.value ? settingsStyles.feedbackTypeActive : settingsStyles.feedbackTypeInactive
                     )}
                     onClick={() => {
                       setFeedbackType(type.value);
@@ -568,8 +671,8 @@ export function SettingsPage() {
           ) : null}
 
           {feedbackStatus !== "success" && feedbackStep === "content" ? (
-          <div className="space-y-6">
-            <div className="space-y-3">
+          <div className={uiSpacingStyles.stackLg}>
+            <div className={settingsStyles.fieldStack}>
               <label className={cn("block font-medium", uiTextStyles.md)} htmlFor="feedback-message">
                 反馈内容
               </label>
@@ -586,13 +689,13 @@ export function SettingsPage() {
               />
             </div>
 
-            <div className="space-y-3">
+            <div className={settingsStyles.fieldStack}>
               <label className={cn("block font-medium", uiTextStyles.md)} htmlFor="feedback-contact">
                 联系方式
               </label>
               <input
                 id="feedback-contact"
-                className={cn(uiLayoutStyles.input, "h-12")}
+                className={cn(uiLayoutStyles.input, settingsStyles.inputHeight)}
                 value={feedbackContact}
                 placeholder="愿意的话，欢迎留下联系方式"
                 maxLength={120}
@@ -604,12 +707,12 @@ export function SettingsPage() {
             </div>
 
             {feedbackStatus === "unconfigured" ? (
-              <p className="rounded-[var(--radius-md)] bg-[color:var(--muted)] p-4 text-sm leading-relaxed text-[color:var(--foreground)]">
+              <p className={settingsStyles.statusPanel}>
                 当前使用外部反馈表收集，已为你打开反馈表。
               </p>
             ) : null}
             {feedbackStatus === "error" ? (
-              <p className="rounded-[var(--radius-md)] bg-red-50 p-4 text-sm leading-relaxed text-red-700">
+              <p className={settingsStyles.errorPanel}>
                 {feedbackFormUrl ? "暂时无法发送。你可以稍后再试，或通过反馈表提交。" : "暂时无法发送。请稍后再试。"}
               </p>
             ) : null}
