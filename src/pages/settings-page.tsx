@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Sheet } from "../components/ui/sheet";
-import { uiLayoutStyles, uiSpacingStyles, uiSurfaceStyles, uiTextStyles } from "../components/ui/styles";
+import { uiFeedbackStyles, uiLayoutStyles, uiSpacingStyles, uiSurfaceStyles, uiTextStyles } from "../components/ui/styles";
 import { cn } from "../lib/utils";
 import { createBackupText, parseBackupText } from "../features/backup/backup-text";
 import { useCycleStore } from "../features/cycle/store";
@@ -31,6 +31,10 @@ type SettingsView = "home" | "backup" | "import" | "contact" | "about";
 type ConflictMode = "skip" | "overwrite";
 type FeedbackStep = "type" | "content";
 type FeedbackSubmitStatus = "idle" | "submitting" | "success" | "error" | "unconfigured";
+type CopyBubble = {
+  id: number;
+  isLeaving: boolean;
+};
 
 const feedbackEndpoint = import.meta.env.VITE_FEEDBACK_ENDPOINT?.trim() ?? "";
 const feedbackFormUrl = import.meta.env.VITE_FEEDBACK_FORM_URL?.trim() ?? "";
@@ -103,7 +107,8 @@ const settingsStyles = {
     "flex h-12 items-center justify-between rounded-[var(--radius-md)] border px-[var(--space-5)] text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ring)]",
   feedbackTypeActive: "border-[color:var(--foreground)] bg-[color:var(--muted)] text-[color:var(--foreground)]",
   feedbackTypeInactive: "border-[color:var(--input)] bg-[color:var(--muted)] text-[color:var(--foreground)]",
-  inputHeight: "h-12"
+  inputHeight: "h-12",
+  copyButtonWrap: "relative shrink-0"
 };
 
 function SettingsRow({
@@ -157,7 +162,7 @@ export function SettingsPage() {
   const [feedbackContact, setFeedbackContact] = useState("");
   const [feedbackStatus, setFeedbackStatus] = useState<FeedbackSubmitStatus>("idle");
   const [backupCopied, setBackupCopied] = useState(false);
-  const [xiaohongshuAccountCopied, setXiaohongshuAccountCopied] = useState(false);
+  const [xiaohongshuAccountCopyBubble, setXiaohongshuAccountCopyBubble] = useState<CopyBubble | null>(null);
   const [isXiaohongshuQrCodeUnavailable, setIsXiaohongshuQrCodeUnavailable] = useState(false);
   const [backupInput, setBackupInput] = useState("");
   const { isUpdateAvailable, isUpdating } = useAppUpdateStatus();
@@ -201,6 +206,30 @@ export function SettingsPage() {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, [view]);
 
+  useEffect(() => {
+    if (!xiaohongshuAccountCopyBubble) {
+      return;
+    }
+
+    if (xiaohongshuAccountCopyBubble.isLeaving) {
+      const removeTimeoutId = window.setTimeout(() => {
+        setXiaohongshuAccountCopyBubble((current) =>
+          current?.id === xiaohongshuAccountCopyBubble.id ? null : current
+        );
+      }, 200);
+
+      return () => window.clearTimeout(removeTimeoutId);
+    }
+
+    const leaveTimeoutId = window.setTimeout(() => {
+      setXiaohongshuAccountCopyBubble((current) =>
+        current?.id === xiaohongshuAccountCopyBubble.id ? { ...current, isLeaving: true } : current
+      );
+    }, 1500);
+
+    return () => window.clearTimeout(leaveTimeoutId);
+  }, [xiaohongshuAccountCopyBubble]);
+
   const goBack = () => {
     if (view !== "home") {
       setView("home");
@@ -226,7 +255,10 @@ export function SettingsPage() {
 
   const handleCopyXiaohongshuAccount = async () => {
     await copyText(xiaohongshuAccount);
-    setXiaohongshuAccountCopied(true);
+    setXiaohongshuAccountCopyBubble({
+      id: Date.now(),
+      isLeaving: false
+    });
   };
 
   const handleRestart = () => {
@@ -419,19 +451,32 @@ export function SettingsPage() {
                   </p>
                   <p className={cn("mt-1", uiTextStyles.sm, uiTextStyles.muted)}>小红书号：{xiaohongshuAccount}</p>
                 </div>
-                <Button
-                  variant="secondary"
-                  size="icon"
-                  className={uiLayoutStyles.iconActionButton}
-                  onClick={handleCopyXiaohongshuAccount}
-                  aria-label="复制小红书号"
-                >
-                  {xiaohongshuAccountCopied ? (
-                    <Check className="size-4" aria-hidden="true" />
-                  ) : (
+                <div className={settingsStyles.copyButtonWrap}>
+                  {xiaohongshuAccountCopyBubble ? (
+                    <span
+                      key={xiaohongshuAccountCopyBubble.id}
+                      className={cn(
+                        uiFeedbackStyles.copyBubble,
+                        xiaohongshuAccountCopyBubble.isLeaving
+                          ? uiFeedbackStyles.bubbleLeave
+                          : uiFeedbackStyles.bubbleEnter
+                      )}
+                      role="status"
+                    >
+                      已复制
+                      <span className={uiFeedbackStyles.copyBubbleArrow} aria-hidden="true" />
+                    </span>
+                  ) : null}
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    className={uiLayoutStyles.iconActionButton}
+                    onClick={handleCopyXiaohongshuAccount}
+                    aria-label="复制小红书号"
+                  >
                     <Copy className="size-4" aria-hidden="true" />
-                  )}
-                </Button>
+                  </Button>
+                </div>
               </div>
             </div>
 

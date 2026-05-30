@@ -62,6 +62,15 @@ export const uiLayoutStyles = {
     "w-full rounded-[var(--radius-md)] border border-[color:var(--input)] bg-[color:var(--muted)] px-[var(--space-4)] py-[var(--space-3)] text-[color:var(--foreground)]"
 };
 
+export const uiFeedbackStyles = {
+  copyBubble:
+    "absolute left-1/2 top-0 z-10 whitespace-nowrap rounded-[0.65rem] border border-[color:var(--border)] bg-[color:var(--card-elevated)] px-2.5 py-1.5 text-sm font-medium leading-none text-[color:var(--foreground)] shadow-[var(--shadow-card)]",
+  copyBubbleArrow:
+    "absolute left-1/2 top-full h-2 w-2 -translate-x-1/2 -translate-y-1/2 rotate-45 border-b border-r border-[color:var(--border)] bg-[color:var(--card-elevated)]",
+  bubbleEnter: "[animation:phase-bubble-float_160ms_ease-out_forwards]",
+  bubbleLeave: "[animation:phase-bubble-fade_200ms_ease-in_forwards]"
+};
+
 export function getOptionPillClass(active: boolean) {
   return cn(
     "inline-flex items-center gap-[var(--space-2)] rounded-full px-[var(--space-4)] py-[var(--space-2)] text-sm transition",

@@ -3,7 +3,7 @@ import { Copy, Download, RefreshCw } from "lucide-react";
 import { Button } from "../ui/button";
 import { Sheet } from "../ui/sheet";
 import { cn } from "../../lib/utils";
-import { uiTextStyles } from "../ui/styles";
+import { uiFeedbackStyles, uiTextStyles } from "../ui/styles";
 import { installAppUpdate, useAppUpdateStatus } from "../../features/install/app-update";
 import shareButtonImage from "../../assets/install/share-button.png";
 import addToHomeScreenImage from "../../assets/install/add-to-home-screen.png";
@@ -271,16 +271,14 @@ function InstallHelpSheet({
                 <div
                   key={copyBubble.id}
                   className={cn(
-                    "absolute left-1/2 top-0 z-10 whitespace-nowrap rounded-[0.65rem] border border-[color:var(--border)] bg-[color:var(--card-elevated)] px-2.5 py-1.5 text-sm font-medium leading-none text-[color:var(--foreground)] shadow-[var(--shadow-card)]",
-                    copyBubble.isLeaving
-                      ? "[animation:phase-bubble-fade_200ms_ease-in_forwards]"
-                      : "[animation:phase-bubble-float_160ms_ease-out_forwards]"
+                    uiFeedbackStyles.copyBubble,
+                    copyBubble.isLeaving ? uiFeedbackStyles.bubbleLeave : uiFeedbackStyles.bubbleEnter
                   )}
                   role="status"
                 >
                   已复制
                   <span
-                    className="absolute left-1/2 top-full h-2 w-2 -translate-x-1/2 -translate-y-1/2 rotate-45 border-b border-r border-[color:var(--border)] bg-[color:var(--card-elevated)]"
+                    className={uiFeedbackStyles.copyBubbleArrow}
                     aria-hidden="true"
                   />
                 </div>
