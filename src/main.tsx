@@ -4,8 +4,11 @@ import { RouterProvider } from "react-router-dom";
 import { registerSW } from "virtual:pwa-register";
 import { router } from "./app/router";
 import { configureAppUpdate, markAppUpdateAvailable } from "./features/install/app-update";
+import { setupInstallPromptCapture } from "./features/install/install-prompt";
 import { setupInstallStorageHandoff } from "./features/install/storage-handoff";
 import "./app/styles.css";
+
+setupInstallPromptCapture();
 
 const updateServiceWorker = registerSW({
   immediate: true,

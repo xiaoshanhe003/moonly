@@ -5,18 +5,9 @@ import { Sheet } from "../ui/sheet";
 import { cn } from "../../lib/utils";
 import { uiFeedbackStyles, uiTextStyles } from "../ui/styles";
 import { installAppUpdate, useAppUpdateStatus } from "../../features/install/app-update";
+import { clearInstallPrompt, useInstallPrompt } from "../../features/install/install-prompt";
 import shareButtonImage from "../../assets/install/share-button.png";
 import addToHomeScreenImage from "../../assets/install/add-to-home-screen.png";
-
-type BeforeInstallPromptChoice = {
-  outcome: "accepted" | "dismissed";
-  platform?: string;
-};
-
-type BeforeInstallPromptEvent = Event & {
-  prompt: () => Promise<BeforeInstallPromptChoice>;
-  userChoice: Promise<BeforeInstallPromptChoice>;
-};
 
 type CopyBubble = {
   id: number;
@@ -40,7 +31,7 @@ const headerButtonClassName =
   "h-10 shrink-0 gap-1.5 rounded-full border border-[color:var(--border-strong)] bg-[color:var(--card-elevated)] px-3 text-sm font-medium text-[color:var(--foreground)] shadow-[var(--shadow-card)] backdrop-blur-xl hover:bg-white";
 
 export function InstallAppButton({ isCompact = false, placement = "floating" }: InstallAppButtonProps) {
-  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const installPrompt = useInstallPrompt();
   const [isInstalled, setIsInstalled] = useState(() => isStandaloneDisplay());
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [copyBubble, setCopyBubble] = useState<CopyBubble | null>(null);
@@ -62,22 +53,14 @@ export function InstallAppButton({ isCompact = false, placement = "floating" }: 
   }, []);
 
   useEffect(() => {
-    const handleBeforeInstallPrompt = (event: Event) => {
-      event.preventDefault();
-      setInstallPrompt(event as BeforeInstallPromptEvent);
-    };
-
     const handleAppInstalled = () => {
-      setInstallPrompt(null);
       setIsInstalled(true);
       setIsHelpOpen(false);
     };
 
-    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
     window.addEventListener("appinstalled", handleAppInstalled);
 
     return () => {
-      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
       window.removeEventListener("appinstalled", handleAppInstalled);
     };
   }, []);
@@ -129,8 +112,10 @@ export function InstallAppButton({ isCompact = false, placement = "floating" }: 
       return;
     }
 
-    const result = await installPrompt.prompt();
-    setInstallPrompt(null);
+    await installPrompt.prompt();
+    clearInstallPrompt();
+
+    const result = await installPrompt.userChoice;
 
     if (result.outcome === "accepted") {
       setIsInstalled(true);
