@@ -493,6 +493,11 @@ function isCompletedPeriodStreak(
   return hasLaterNoBleedingEntry || diffInDays(normalizedToday, streakEnd) >= profile.periodLength;
 }
 
+function hasExplicitPeriodEndMarker(streak: BleedingStreak, entries: Record<string, DailyEntry>) {
+  const nextDayEntry = entries[formatDateKey(addDays(streak.end, 1))];
+  return hasTrackedNoBleeding(nextDayEntry);
+}
+
 function getPeriodEvents(
   profile: CycleProfile,
   entries: Record<string, DailyEntry>,
@@ -539,15 +544,17 @@ function resolveCycleMetrics(
 
     return isCompletedPeriodStreak(item.streak, entries, today, profile);
   });
-  const latestCompletedReliable = completedReliableEvents.at(-1);
+  const latestLengthCalibratedReliable = completedReliableEvents
+    .filter((item) => hasExplicitPeriodEndMarker(item.streak, entries))
+    .at(-1);
 
   const reliablePeriodStarts = getReliablePeriodStarts(calibrationStart, periodEvents);
   const recentEventDates = reliablePeriodStarts.slice(-4);
   const recentIntervals = recentEventDates.slice(1).map((date, index) => diffInDays(date, recentEventDates[index]));
 
   const cycleLength = recentIntervals.length > 0 ? average(recentIntervals) : profile.cycleLength;
-  const latestPeriodBleedingLength = latestCompletedReliable
-    ? getPeriodBleedingLength(latestCompletedReliable.streak, latestCompletedReliable.event.date)
+  const latestPeriodBleedingLength = latestLengthCalibratedReliable
+    ? getPeriodBleedingLength(latestLengthCalibratedReliable.streak, latestLengthCalibratedReliable.event.date)
     : null;
   const periodLength = latestPeriodBleedingLength ?? profile.periodLength;
   const lastPeriodStart = latestReliable?.event.date ?? calibrationStart;
