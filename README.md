@@ -19,6 +19,7 @@ Recommended validation after non-trivial changes:
 
 ```bash
 npm run lint
+npm run test:cycle
 npm run build
 ```
 
@@ -59,6 +60,7 @@ npm install
 npm run dev:agent
 npm run dev
 npm run lint
+npm run test:cycle
 npm run build
 npm run preview
 ```
@@ -67,6 +69,7 @@ npm run preview
 - `npm run dev`: start the local Vite dev server
 - `npm run dev -- --host`: expose the dev server to the local network when needed
 - `npm run lint`: run ESLint on the codebase
+- `npm run test:cycle`: run sparse-record regression tests for cycle prediction logic
 - `npm run build`: type-check and create a production build
 - `npm run preview`: serve the production build locally
 

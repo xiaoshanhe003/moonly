@@ -411,6 +411,20 @@ function getPeriodBleedingLength(streak: BleedingStreak, eventDate: Date) {
   return diffInDays(streak.end, eventDate) + 1;
 }
 
+function hasCompleteBleedingRecordsFromStart(
+  streak: BleedingStreak,
+  eventDate: Date,
+  entries: Record<string, DailyEntry>
+) {
+  for (let date = startOfDay(eventDate); date <= startOfDay(streak.end); date = addDays(date, 1)) {
+    if (!hasTrackedBleeding(entries[formatDateKey(date)])) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 function getReliablePeriodStarts(calibrationStart: Date, events: Array<{ event: PeriodStartEvent }>) {
   const starts = [
     calibrationStart,
@@ -498,6 +512,11 @@ function hasExplicitPeriodEndMarker(streak: BleedingStreak, entries: Record<stri
   return hasTrackedNoBleeding(nextDayEntry);
 }
 
+function isCycleIntervalSafeForCalibration(interval: number, profile: CycleProfile) {
+  const missedCycleThreshold = Math.round(profile.cycleLength * 1.65);
+  return interval < missedCycleThreshold;
+}
+
 function getPeriodEvents(
   profile: CycleProfile,
   entries: Record<string, DailyEntry>,
@@ -545,12 +564,18 @@ function resolveCycleMetrics(
     return isCompletedPeriodStreak(item.streak, entries, today, profile);
   });
   const latestLengthCalibratedReliable = completedReliableEvents
-    .filter((item) => hasExplicitPeriodEndMarker(item.streak, entries))
+    .filter((item) =>
+      hasExplicitPeriodEndMarker(item.streak, entries) &&
+      hasCompleteBleedingRecordsFromStart(item.streak, item.event.date, entries)
+    )
     .at(-1);
 
   const reliablePeriodStarts = getReliablePeriodStarts(calibrationStart, periodEvents);
   const recentEventDates = reliablePeriodStarts.slice(-4);
-  const recentIntervals = recentEventDates.slice(1).map((date, index) => diffInDays(date, recentEventDates[index]));
+  const recentIntervals = recentEventDates
+    .slice(1)
+    .map((date, index) => diffInDays(date, recentEventDates[index]))
+    .filter((interval) => isCycleIntervalSafeForCalibration(interval, profile));
 
   const cycleLength = recentIntervals.length > 0 ? average(recentIntervals) : profile.cycleLength;
   const latestPeriodBleedingLength = latestLengthCalibratedReliable
