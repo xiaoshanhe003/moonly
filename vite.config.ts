@@ -34,6 +34,10 @@ export default defineConfig({
         theme_color: "#E0F2FE",
         background_color: "#E0F2FE",
         display: "standalone",
+        display_override: ["standalone", "browser"],
+        launch_handler: {
+          client_mode: ["focus-existing", "auto"]
+        },
         start_url: "/today",
         icons: [
           {

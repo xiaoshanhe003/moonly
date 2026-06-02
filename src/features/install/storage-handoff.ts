@@ -1,10 +1,15 @@
+import { useCycleStore } from "../cycle/store";
+import type { AppScenario, CycleProfile, DailyEntry } from "../cycle/types";
+
 const cycleStoreKey = "moonly-store";
 const handoffChannelName = "moonly-storage-handoff";
 
 type PersistedCycleState = {
   state?: {
-    profile?: unknown;
-    entries?: Record<string, unknown>;
+    profile?: CycleProfile | null;
+    entries?: Record<string, DailyEntry>;
+    activeScenario?: AppScenario;
+    lastUpdatedAt?: number;
   };
   version?: number;
 };
@@ -18,6 +23,11 @@ type HandoffMessage =
   | {
       type: "moonly-store-response";
       requestId: string;
+      senderId: string;
+      storeValue: string;
+    }
+  | {
+      type: "moonly-store-sync";
       senderId: string;
       storeValue: string;
     };
@@ -71,19 +81,102 @@ function hasUserCycleData(value: string | null) {
   return Boolean(profile) || Boolean(entries && Object.keys(entries).length > 0);
 }
 
-export function setupInstallStorageHandoff() {
-  if (!("BroadcastChannel" in window)) {
-    return;
+function getPersistedUpdatedAt(value: string | null) {
+  const updatedAt = parseCycleStore(value)?.state?.lastUpdatedAt;
+
+  return typeof updatedAt === "number" ? updatedAt : 0;
+}
+
+function applyPersistedCycleStore(value: string | null) {
+  const persistedState = parseCycleStore(value);
+  const nextState = persistedState?.state;
+
+  if (!nextState) {
+    return false;
   }
 
-  const channel = new BroadcastChannel(handoffChannelName);
+  const currentUpdatedAt = useCycleStore.getState().lastUpdatedAt;
+  const nextUpdatedAt = typeof nextState.lastUpdatedAt === "number" ? nextState.lastUpdatedAt : 0;
+
+  if (nextUpdatedAt <= currentUpdatedAt) {
+    return false;
+  }
+
+  useCycleStore.setState({
+    profile: nextState.profile ?? null,
+    entries: nextState.entries ?? {},
+    activeScenario: nextState.activeScenario ?? "first-run",
+    lastUpdatedAt: nextUpdatedAt
+  });
+
+  return true;
+}
+
+export function setupInstallStorageHandoff() {
+  const channel = "BroadcastChannel" in window ? new BroadcastChannel(handoffChannelName) : null;
   const senderId = createId();
   const pendingRequestId = isStandaloneDisplay() && !hasUserCycleData(readCycleStore()) ? createId() : null;
+  let isApplyingRemoteStore = false;
 
-  channel.addEventListener("message", (event: MessageEvent<HandoffMessage>) => {
+  function applyRemoteStore(value: string | null) {
+    isApplyingRemoteStore = true;
+
+    try {
+      return applyPersistedCycleStore(value);
+    } finally {
+      window.setTimeout(() => {
+        isApplyingRemoteStore = false;
+      }, 0);
+    }
+  }
+
+  window.addEventListener("storage", (event) => {
+    if (event.key !== cycleStoreKey) {
+      return;
+    }
+
+    applyRemoteStore(event.newValue);
+  });
+
+  const unsubscribeStore = channel
+    ? useCycleStore.subscribe(() => {
+        if (isApplyingRemoteStore) {
+          return;
+        }
+
+        window.setTimeout(() => {
+          if (isApplyingRemoteStore) {
+            return;
+          }
+
+          const storeValue = readCycleStore();
+
+          if (!storeValue) {
+            return;
+          }
+
+          channel.postMessage({
+            type: "moonly-store-sync",
+            senderId,
+            storeValue
+          } satisfies HandoffMessage);
+        }, 0);
+      })
+    : null;
+
+  channel?.addEventListener("message", (event: MessageEvent<HandoffMessage>) => {
     const message = event.data;
 
     if (!message || message.senderId === senderId) {
+      return;
+    }
+
+    if (message.type === "moonly-store-sync") {
+      if (getPersistedUpdatedAt(message.storeValue) > useCycleStore.getState().lastUpdatedAt) {
+        writeCycleStore(message.storeValue);
+        applyRemoteStore(message.storeValue);
+      }
+
       return;
     }
 
@@ -111,11 +204,12 @@ export function setupInstallStorageHandoff() {
       hasUserCycleData(message.storeValue) &&
       writeCycleStore(message.storeValue)
     ) {
+      unsubscribeStore?.();
       window.location.reload();
     }
   });
 
-  if (pendingRequestId) {
+  if (pendingRequestId && channel) {
     window.setTimeout(() => {
       channel.postMessage({
         type: "moonly-store-request",

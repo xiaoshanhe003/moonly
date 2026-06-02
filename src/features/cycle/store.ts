@@ -7,6 +7,7 @@ type CycleState = {
   profile: CycleProfile | null;
   entries: Record<string, DailyEntry>;
   activeScenario: AppScenario;
+  lastUpdatedAt: number;
   setProfile: (profile: CycleProfile) => void;
   restartWithProfile: (profile: CycleProfile) => void;
   updateProfile: (patch: Partial<CycleProfile>) => void;
@@ -65,22 +66,33 @@ function buildScenarioEntries(scenario: (typeof scenarios)[AppScenario]) {
   return scenario.entry ? { [scenario.entry.date]: scenario.entry } : {};
 }
 
+function nextStoreTimestamp(currentTimestamp: number) {
+  return Math.max(Date.now(), currentTimestamp + 1);
+}
+
 export const useCycleStore = create<CycleState>()(
   persist(
     (set) => ({
       profile: defaultScenario.profile,
       entries: buildScenarioEntries(defaultScenario),
       activeScenario: "first-run",
-      setProfile: (profile) => set({ profile }),
+      lastUpdatedAt: 0,
+      setProfile: (profile) =>
+        set((state) => ({
+          profile,
+          lastUpdatedAt: nextStoreTimestamp(state.lastUpdatedAt)
+        })),
       restartWithProfile: (profile) =>
-        set({
+        set((state) => ({
           profile,
           entries: {},
-          activeScenario: "first-run"
-        }),
+          activeScenario: "first-run",
+          lastUpdatedAt: nextStoreTimestamp(state.lastUpdatedAt)
+        })),
       updateProfile: (patch) =>
         set((state) => ({
-          profile: state.profile ? { ...state.profile, ...patch } : null
+          profile: state.profile ? { ...state.profile, ...patch } : null,
+          lastUpdatedAt: nextStoreTimestamp(state.lastUpdatedAt)
         })),
       updateEntry: (date, patch) =>
         set((state) => ({
@@ -91,7 +103,8 @@ export const useCycleStore = create<CycleState>()(
               ...patch,
               date
             }
-          }
+          },
+          lastUpdatedAt: nextStoreTimestamp(state.lastUpdatedAt)
         })),
       importEntries: (profile, entries, conflictMode) =>
         set((state) => {
@@ -107,34 +120,38 @@ export const useCycleStore = create<CycleState>()(
 
           return {
             profile: state.profile && Object.keys(state.entries).length > 0 ? state.profile : profile,
-            entries: mergedEntries
+            entries: mergedEntries,
+            lastUpdatedAt: nextStoreTimestamp(state.lastUpdatedAt)
           };
         }),
       loadScenario: (scenario, override) =>
-        set(() => {
+        set((state) => {
           const current = scenarios[scenario];
           return {
             profile: override?.profile ?? current.profile,
             entries: override?.entries ?? buildScenarioEntries(current),
-            activeScenario: scenario
+            activeScenario: scenario,
+            lastUpdatedAt: nextStoreTimestamp(state.lastUpdatedAt)
           };
         }),
       reset: () =>
-        set({
+        set((state) => ({
           profile: scenarios["first-run"].profile,
           entries: {},
-          activeScenario: "first-run"
-        })
+          activeScenario: "first-run",
+          lastUpdatedAt: nextStoreTimestamp(state.lastUpdatedAt)
+        }))
     }),
     {
       name: "moonly-store",
-      version: 4,
+      version: 5,
       migrate: (persistedState) => {
         const state = persistedState as Partial<CycleState>;
 
         return {
           ...state,
-          entries: normalizeEntries((state.entries ?? {}) as Record<string, LegacyDailyEntry>)
+          entries: normalizeEntries((state.entries ?? {}) as Record<string, LegacyDailyEntry>),
+          lastUpdatedAt: typeof state.lastUpdatedAt === "number" ? state.lastUpdatedAt : Date.now()
         };
       }
     }
