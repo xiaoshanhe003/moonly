@@ -116,6 +116,20 @@ describe("cycle prediction with sparse records", () => {
     assert.equal(noBleedingResult.cycleLength, 36);
   });
 
+  it("keeps the whole overdue predicted period in luteal when a later day records no bleeding", () => {
+    const entries = {
+      "2026-05-03": entry("2026-05-03", "none")
+    };
+
+    const firstPredictedPeriodDay = summary(entries, "2026-05-02");
+    const recordedNoBleedingDay = summary(entries, "2026-05-03");
+    const nextPredictedPeriodDay = summary(entries, "2026-05-04");
+
+    assert.equal(firstPredictedPeriodDay.phase.label, "黄体期");
+    assert.equal(recordedNoBleedingDay.phase.label, "黄体期");
+    assert.equal(nextPredictedPeriodDay.phase.label, "月经期");
+  });
+
   it("ignores single unconfirmed ovulation spotting for cycle calibration", () => {
     const entries = {
       "2026-04-17": entry("2026-04-17", "spotting"),

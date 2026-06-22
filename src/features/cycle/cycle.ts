@@ -591,6 +591,23 @@ function resolveCycleMetrics(
   };
 }
 
+function getOverdueNoBleedingCycleLength(
+  entries: Record<string, DailyEntry>,
+  lastPeriodStart: Date,
+  cycleLength: number
+) {
+  const overdueNoBleedingElapsedDays = Object.values(entries)
+    .filter((entry) => hasTrackedNoBleeding(entry))
+    .map((entry) => diffInDays(parseDateKey(entry.date), lastPeriodStart))
+    .filter((elapsed) => elapsed >= cycleLength);
+
+  if (overdueNoBleedingElapsedDays.length === 0) {
+    return cycleLength;
+  }
+
+  return Math.max(cycleLength, Math.max(...overdueNoBleedingElapsedDays) + 1);
+}
+
 export function getMissedPeriodCandidate(
   profile: CycleProfile,
   entries: Record<string, DailyEntry>,
@@ -638,10 +655,7 @@ export function getCycleSummary(
 ) {
   const { cycleLength: resolvedCycleLength, periodLength, lastPeriodStart } = resolveCycleMetrics(profile, entries, today);
   const elapsed = diffInDays(today, lastPeriodStart);
-  const todayEntry = entries[formatDateKey(today)];
-  const hasNoBleedingToday = hasTrackedNoBleeding(todayEntry);
-  const shouldExtendCurrentCycle = elapsed >= resolvedCycleLength && hasNoBleedingToday;
-  const cycleLength = shouldExtendCurrentCycle ? elapsed + 1 : resolvedCycleLength;
+  const cycleLength = getOverdueNoBleedingCycleLength(entries, lastPeriodStart, resolvedCycleLength);
   const dayIndex = ((elapsed % cycleLength) + cycleLength) % cycleLength;
   const dayOfCycle = dayIndex + 1;
   const ovulationDay = Math.max(10, cycleLength - 14);
@@ -671,6 +685,9 @@ export function getCycleSummary(
     phaseRemainingDays = phaseBoundaries.lutealEnd - dayOfCycle;
     nextPhaseKey = "menstrual";
   }
+
+  const todayEntry = entries[formatDateKey(today)];
+  const hasNoBleedingToday = hasTrackedNoBleeding(todayEntry);
 
   if (phase === "menstrual" && hasNoBleedingToday) {
     phase = "follicular";
