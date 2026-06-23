@@ -1,5 +1,6 @@
 import type { BleedingLevel, CycleProfile, DailyEntry, LegacyFlowLevel, PeriodSignal } from "./types";
 
+// Prediction edits are easy to regress. Read docs/cycle-prediction-principles.md before changing this file.
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
 const MIN_CYCLE_LENGTH_DAYS = 21;
 const CONTINUATION_BUFFER_DAYS = 3;

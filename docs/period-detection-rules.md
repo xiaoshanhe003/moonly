@@ -1,5 +1,8 @@
 # Period Detection Rules
 
+For the current code-level prediction principles and regression checklist, read
+`docs/cycle-prediction-principles.md` before changing cycle prediction logic.
+
 ## Goal
 
 Moonly should not treat "period start" as a single perfect tap from the user.
