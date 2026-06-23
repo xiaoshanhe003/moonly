@@ -130,6 +130,25 @@ describe("cycle prediction with sparse records", () => {
     assert.equal(nextPredictedPeriodDay.phase.label, "月经期");
   });
 
+  it("does not use future no-bleeding logs to stretch historical cycle summaries", () => {
+    const profile: CycleProfile = {
+      lastPeriodStart: "2026-03-25",
+      periodLength: 5,
+      cycleLength: 28,
+      isPeriodLengthEstimated: false,
+      isCycleLengthEstimated: false
+    };
+    const entries = {
+      "2026-04-30": entry("2026-04-30", "none"),
+      "2026-05-30": entry("2026-05-30", "none")
+    };
+
+    const result = getCycleSummary(profile, entries, new Date("2026-04-10T12:00:00"));
+
+    assert.equal(result.cycleLength, 28);
+    assert.equal(result.phase.label, "黄体期");
+  });
+
   it("ignores single unconfirmed ovulation spotting for cycle calibration", () => {
     const entries = {
       "2026-04-17": entry("2026-04-17", "spotting"),

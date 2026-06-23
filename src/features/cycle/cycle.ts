@@ -594,10 +594,29 @@ function resolveCycleMetrics(
 function getOverdueNoBleedingCycleLength(
   entries: Record<string, DailyEntry>,
   lastPeriodStart: Date,
-  cycleLength: number
+  cycleLength: number,
+  calculationDate: Date
 ) {
-  const overdueNoBleedingElapsedDays = Object.values(entries)
-    .filter((entry) => hasTrackedNoBleeding(entry))
+  const entryValues = Object.values(entries);
+  const normalizedCalculationDate = startOfDay(calculationDate);
+  const calculationElapsed = diffInDays(normalizedCalculationDate, lastPeriodStart);
+  const calculationDateEntry = entries[formatDateKey(normalizedCalculationDate)];
+  const overdueNoBleedingElapsedDays = entryValues
+    .filter((entry) => {
+      const entryDate = startOfDay(parseDateKey(entry.date));
+      const elapsed = diffInDays(entryDate, lastPeriodStart);
+      const isCurrentOrPastEntry = entryDate <= normalizedCalculationDate;
+      const canClarifyCurrentOverdueWindow =
+        calculationElapsed >= cycleLength &&
+        calculationElapsed <= elapsed &&
+        !hasTrackedBleeding(calculationDateEntry) &&
+        !entryValues.some((candidate) => {
+          const candidateDate = startOfDay(parseDateKey(candidate.date));
+          return candidateDate >= normalizedCalculationDate && candidateDate <= entryDate && hasTrackedBleeding(candidate);
+        });
+
+      return (isCurrentOrPastEntry || canClarifyCurrentOverdueWindow) && hasTrackedNoBleeding(entry);
+    })
     .map((entry) => diffInDays(parseDateKey(entry.date), lastPeriodStart))
     .filter((elapsed) => elapsed >= cycleLength);
 
@@ -655,7 +674,7 @@ export function getCycleSummary(
 ) {
   const { cycleLength: resolvedCycleLength, periodLength, lastPeriodStart } = resolveCycleMetrics(profile, entries, today);
   const elapsed = diffInDays(today, lastPeriodStart);
-  const cycleLength = getOverdueNoBleedingCycleLength(entries, lastPeriodStart, resolvedCycleLength);
+  const cycleLength = getOverdueNoBleedingCycleLength(entries, lastPeriodStart, resolvedCycleLength, today);
   const dayIndex = ((elapsed % cycleLength) + cycleLength) % cycleLength;
   const dayOfCycle = dayIndex + 1;
   const ovulationDay = Math.max(10, cycleLength - 14);
