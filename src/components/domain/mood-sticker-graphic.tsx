@@ -1,18 +1,19 @@
-import calmImage from "../../assets/mood/calm.png";
-import greatImage from "../../assets/mood/great.png";
-import happyImage from "../../assets/mood/happy.png";
-import sadImage from "../../assets/mood/sad.png";
-import unhappyImage from "../../assets/mood/unhappy.png";
+import calmSvg from "../../assets/mood/calm.svg?raw";
+import greatSvg from "../../assets/mood/great.svg?raw";
+import happySvg from "../../assets/mood/happy.svg?raw";
+import sadSvg from "../../assets/mood/sad.svg?raw";
+import tenseSvg from "../../assets/mood/tense.svg?raw";
+import unhappySvg from "../../assets/mood/unhappy.svg?raw";
 import type { MoodValue } from "./mood-options";
-import { cn } from "../../lib/utils";
+import { InlineStickerSvg } from "./inline-sticker-svg";
 
-const moodStickerImage: Record<MoodValue, string> = {
-  great: greatImage,
-  happy: happyImage,
-  calm: calmImage,
-  tense: unhappyImage,
-  unhappy: unhappyImage,
-  sad: sadImage
+const moodStickerSvg: Record<MoodValue, string> = {
+  great: greatSvg,
+  happy: happySvg,
+  calm: calmSvg,
+  tense: tenseSvg,
+  unhappy: unhappySvg,
+  sad: sadSvg
 };
 
 type MoodStickerGraphicProps = {
@@ -25,16 +26,20 @@ type MoodStickerGraphicProps = {
 
 export function MoodStickerGraphic({
   mood,
+  fillColor = "#BAE6FD",
+  strokeColor = "var(--foreground)",
   className,
   title
 }: MoodStickerGraphicProps) {
   return (
-    <img
-      src={moodStickerImage[mood]}
-      alt={title ?? ""}
-      aria-hidden={title ? undefined : true}
-      className={cn("inline-block h-auto w-auto object-contain", className)}
+    <InlineStickerSvg
+      svg={moodStickerSvg[mood]}
       title={title}
+      className={className}
+      replacements={[
+        { from: "#BAE6FD", to: fillColor },
+        { from: "#0369A1", to: strokeColor }
+      ]}
     />
   );
 }
