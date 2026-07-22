@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { getCycleSummary, getMissedPeriodCandidate } from "../../../src/features/cycle/cycle.ts";
+import { getCycleSummary, getMissedPeriodCandidate, getSuggestedStep } from "../../../src/features/cycle/cycle.ts";
 import type { CycleProfile, DailyEntry } from "../../../src/features/cycle/types.ts";
 
 const baseProfile: CycleProfile = {
@@ -159,5 +159,20 @@ describe("cycle prediction with sparse records", () => {
 
     assert.equal(result.cycleLength, 32);
     assert.equal(formatDateKey(result.lastPeriodStart), "2026-06-01");
+  });
+});
+
+describe("daily log step order", () => {
+  const menstrualStepOrder = ["flow", "mood", "energy", "symptoms"] as const;
+
+  it("asks for bleeding level first during the menstrual phase", () => {
+    assert.equal(getSuggestedStep({ date: "2026-06-01" }, [...menstrualStepOrder]), "flow");
+  });
+
+  it("moves from bleeding level to mood during the menstrual phase", () => {
+    assert.equal(
+      getSuggestedStep({ date: "2026-06-01", bleedingLevel: "medium" }, [...menstrualStepOrder]),
+      "mood"
+    );
   });
 });

@@ -47,10 +47,15 @@ const flowOptions = [
   { label: "中等", value: "medium", rotate: "rotate-[3deg]" },
   { label: "较多", value: "heavy", rotate: "-rotate-[2deg]" }
 ] as const;
-const stepOrder: QuickLogStep[] = ["mood", "energy", "symptoms", "flow"];
+const defaultStepOrder: QuickLogStep[] = ["mood", "energy", "symptoms", "flow"];
+const menstrualStepOrder: QuickLogStep[] = ["flow", "mood", "energy", "symptoms"];
 const cardSlideAnimationMs = 440;
 const recordSheetSectionClassName = "grid gap-3 border-b border-[color:var(--border)] pb-6";
 type FlowOption = (typeof flowOptions)[number];
+
+function getStepOrder(phaseLabel: string | null) {
+  return phaseLabel === "月经期" ? menstrualStepOrder : defaultStepOrder;
+}
 
 function canShowPeriodStartSignal(
   bleedingLevel: ReturnType<typeof getBleedingLevel>,
@@ -533,115 +538,136 @@ export function CompletedLogDetails({ entry, onChange }: CompletedLogDetailsProp
   );
   const flowQuestion = phaseLabel === "月经期" ? "今天经血量如何？" : "今天有经血吗？";
 
-  return (
-    <div className="grid gap-6">
-      <div className={recordSheetSectionClassName}>
-        <p className={questionClassName}>今天心情如何？</p>
-        <div className="relative mx-auto h-[7.5rem] w-full max-w-[19rem] sm:h-[8.25rem] sm:max-w-[21rem]">
-          {editableMoodOptions.map((mood) => (
-            <MoodSticker
-              key={mood.value}
-              active={entry?.mood === mood.value}
-              dimInactive={Boolean(entry?.mood)}
-              fillColor={moodFillColor}
-              label={mood.label}
-              value={mood.value}
-              onClick={() => onChange({ mood: mood.value })}
-            />
-          ))}
-        </div>
-      </div>
-
-      <div className={recordSheetSectionClassName}>
-        <p className={questionClassName}>感觉体内的能量如何？</p>
-        <div className="grid grid-cols-4 gap-1.5">
-          {energyOptions.map((energy) => (
-            <EnergyStickerButton
-              key={energy.value}
-              active={entry?.energy === energy.value}
-              dimInactive={Boolean(entry?.energy)}
-              backgroundColor={energyColors.backgroundColor}
-              fillColor={energyColors.fillColor}
-              label={energy.label}
-              value={energy.value}
-              rotate={energy.rotate}
-              onClick={() => onChange({ energy: energy.value })}
-            />
-          ))}
-        </div>
-      </div>
-
-      <div className={recordSheetSectionClassName}>
-        <p className={questionClassName}>身体有什么信号？</p>
-        <div className="flex flex-wrap gap-2.5">
-          <SymptomStickerButton
-            active={noSymptomSelected}
-            dimInactive={hasSelectedSymptoms}
-            label={noSymptomLabel}
-            rotate="rotate-[2deg]"
-            onClick={() => onChange({ symptoms: [] })}
+  const moodSection = (
+    <div className={recordSheetSectionClassName}>
+      <p className={questionClassName}>今天心情如何？</p>
+      <div className="relative mx-auto h-[7.5rem] w-full max-w-[19rem] sm:h-[8.25rem] sm:max-w-[21rem]">
+        {editableMoodOptions.map((mood) => (
+          <MoodSticker
+            key={mood.value}
+            active={entry?.mood === mood.value}
+            dimInactive={Boolean(entry?.mood)}
+            fillColor={moodFillColor}
+            label={mood.label}
+            value={mood.value}
+            onClick={() => onChange({ mood: mood.value })}
           />
-          {symptomOptions.map((symptom, index) =>
-            <SymptomStickerButton
-              key={symptom}
-              active={Boolean(entry?.symptoms?.includes(symptom))}
-              dimInactive={hasSelectedSymptoms}
-              label={symptom}
-              rotate={symptomStickerRotations[index % symptomStickerRotations.length]}
-              onClick={() => {
-                const previous = new Set(entry?.symptoms ?? []);
-                if (noSymptomSelected) {
-                  previous.clear();
-                }
-                if (previous.has(symptom)) {
-                  previous.delete(symptom);
-                } else {
-                  previous.add(symptom);
-                }
-                onChange({ symptoms: [...previous] });
-              }}
-            />
-          )}
-        </div>
+        ))}
       </div>
-
-      <div className={cn(recordSheetSectionClassName, "border-b-0 pb-0")}>
-        <p className={questionClassName}>{flowQuestion}</p>
-        <div className="grid grid-cols-5 gap-1.5">
-          {flowOptions.map((flow) =>
-            <FlowStickerButton
-              key={flow.value}
-              active={bleedingLevel === flow.value}
-              dimInactive={bleedingLevel !== undefined}
-              option={flow}
-              onClick={() =>
+    </div>
+  );
+  const energySection = (
+    <div className={recordSheetSectionClassName}>
+      <p className={questionClassName}>感觉体内的能量如何？</p>
+      <div className="grid grid-cols-4 gap-1.5">
+        {energyOptions.map((energy) => (
+          <EnergyStickerButton
+            key={energy.value}
+            active={entry?.energy === energy.value}
+            dimInactive={Boolean(entry?.energy)}
+            backgroundColor={energyColors.backgroundColor}
+            fillColor={energyColors.fillColor}
+            label={energy.label}
+            value={energy.value}
+            rotate={energy.rotate}
+            onClick={() => onChange({ energy: energy.value })}
+          />
+        ))}
+      </div>
+    </div>
+  );
+  const symptomsSection = (
+    <div className={recordSheetSectionClassName}>
+      <p className={questionClassName}>身体有什么信号？</p>
+      <div className="flex flex-wrap gap-2.5">
+        <SymptomStickerButton
+          active={noSymptomSelected}
+          dimInactive={hasSelectedSymptoms}
+          label={noSymptomLabel}
+          rotate="rotate-[2deg]"
+          onClick={() => onChange({ symptoms: [] })}
+        />
+        {symptomOptions.map((symptom, index) => (
+          <SymptomStickerButton
+            key={symptom}
+            active={Boolean(entry?.symptoms?.includes(symptom))}
+            dimInactive={hasSelectedSymptoms}
+            label={symptom}
+            rotate={symptomStickerRotations[index % symptomStickerRotations.length]}
+            onClick={() => {
+              const previous = new Set(entry?.symptoms ?? []);
+              if (noSymptomSelected) {
+                previous.clear();
+              }
+              if (previous.has(symptom)) {
+                previous.delete(symptom);
+              } else {
+                previous.add(symptom);
+              }
+              onChange({ symptoms: [...previous] });
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+  const flowSection = (
+    <div className={cn(recordSheetSectionClassName, "border-b-0 pb-0")}>
+      <p className={questionClassName}>{flowQuestion}</p>
+      <div className="grid grid-cols-5 gap-1.5">
+        {flowOptions.map((flow) => (
+          <FlowStickerButton
+            key={flow.value}
+            active={bleedingLevel === flow.value}
+            dimInactive={bleedingLevel !== undefined}
+            option={flow}
+            onClick={() =>
+              onChange({
+                bleedingLevel: flow.value,
+                periodSignal: flow.value === "none" ? "none" : entry?.periodSignal ?? "none"
+              })
+            }
+          />
+        ))}
+      </div>
+      {canShowPeriodSignal ? (
+        <div className="pt-1">
+          <label className="inline-flex items-center gap-3 text-sm font-medium text-[color:var(--foreground)]">
+            <input
+              type="checkbox"
+              checked={entry?.periodSignal === "confirmed_start"}
+              onChange={() =>
                 onChange({
-                  bleedingLevel: flow.value,
-                  periodSignal: flow.value === "none" ? "none" : entry?.periodSignal ?? "none"
+                  bleedingLevel,
+                  periodSignal: entry?.periodSignal === "confirmed_start" ? "none" : "confirmed_start"
                 })
               }
+              className="size-4 rounded border-[color:var(--border)] text-[color:var(--foreground)] accent-[color:var(--foreground)]"
             />
-          )}
+            <span>这是经期第一天</span>
+          </label>
         </div>
-        {canShowPeriodSignal ? (
-          <div className="pt-1">
-            <label className="inline-flex items-center gap-3 text-sm font-medium text-[color:var(--foreground)]">
-              <input
-                type="checkbox"
-                checked={entry?.periodSignal === "confirmed_start"}
-                onChange={() =>
-                  onChange({
-                    bleedingLevel,
-                    periodSignal: entry?.periodSignal === "confirmed_start" ? "none" : "confirmed_start"
-                  })
-                }
-                className="size-4 rounded border-[color:var(--border)] text-[color:var(--foreground)] accent-[color:var(--foreground)]"
-              />
-              <span>这是经期第一天</span>
-            </label>
-          </div>
-        ) : null}
-      </div>
+      ) : null}
+    </div>
+  );
+
+  return (
+    <div className="grid gap-6">
+      {phaseLabel === "月经期" ? (
+        <>
+          {flowSection}
+          {moodSection}
+          {energySection}
+          {symptomsSection}
+        </>
+      ) : (
+        <>
+          {moodSection}
+          {energySection}
+          {symptomsSection}
+          {flowSection}
+        </>
+      )}
     </div>
   );
 }
@@ -744,12 +770,13 @@ export function QuickLogCard({
   const cardTransitionTimeoutRef = useRef<number | null>(null);
   const completionCelebrationTimeoutRef = useRef<number | null>(null);
   const progress = getLogProgress(entry);
-  const nextStep = getSuggestedStep(entry);
-  const currentStep = stepOverride ?? nextStep ?? "mood";
   const bleedingLevel = getBleedingLevel(entry);
   const currentDate = parseDateKey(date);
   const phase = profile ? getCycleSummary(profile, entries, currentDate).phase : null;
   const phaseLabel = phase?.label ?? null;
+  const stepOrder = getStepOrder(phaseLabel);
+  const nextStep = getSuggestedStep(entry, stepOrder);
+  const currentStep = stepOverride ?? nextStep ?? "mood";
   const moodFillColor = getPhaseStickerFillColor(phase?.color);
   const energyColors = getPhaseEnergyColors(phase?.color);
   const flowQuestion = phaseLabel === "月经期" ? "今天经血量如何？" : "今天有经血吗？";
@@ -816,6 +843,20 @@ export function QuickLogCard({
     }, cardSlideAnimationMs);
   };
 
+  const getNextStep = (step: QuickLogStep) => {
+    const stepIndex = stepOrder.indexOf(step);
+    return stepIndex >= 0 ? stepOrder[stepIndex + 1] ?? null : null;
+  };
+
+  const advanceFromStep = (step: QuickLogStep) => {
+    const targetStep = getNextStep(step);
+    if (targetStep) {
+      scheduleStepOverride(targetStep, targetStep);
+    } else {
+      scheduleCompletion();
+    }
+  };
+
   const renderStep = (step: QuickLogStep) => {
     const progressText = `${stepOrder.indexOf(step) + 1}/${stepOrder.length}`;
     const questionClassName = "text-sm font-medium text-[color:var(--foreground)]";
@@ -844,7 +885,7 @@ export function QuickLogCard({
                     onClick={() => {
                       setStepOverride("mood");
                       updateEntry(date, { mood: mood.value });
-                      scheduleStepOverride("energy", "energy");
+                      advanceFromStep("mood");
                     }}
                   />
                 ))}
@@ -878,7 +919,7 @@ export function QuickLogCard({
                     onClick={() => {
                       setStepOverride("energy");
                       updateEntry(date, { energy: energy.value });
-                      scheduleStepOverride("symptoms", "symptoms");
+                      advanceFromStep("energy");
                     }}
                   />
                 ))}
@@ -939,7 +980,7 @@ export function QuickLogCard({
             <div className={cn("flex shrink-0 flex-wrap items-center justify-end", uiSpacingStyles.gapSm)}>
               <Button
                 variant="primary"
-                onClick={() => scheduleStepOverride(null, "flow")}
+                onClick={() => advanceFromStep("symptoms")}
                 disabled={entry?.symptoms === undefined}
               >
                 下一步
@@ -968,14 +1009,17 @@ export function QuickLogCard({
                   onClick={() => {
                     const periodSignal = flow.value === "none" ? "none" : entry?.periodSignal ?? "none";
                     const shouldShowPeriodSignal = canShowPeriodStartSignal(flow.value, phaseLabel, periodSignal);
+                    const shouldContinueAfterFlow = phaseLabel === "月经期" && getNextStep("flow") !== null;
 
                     setStepOverride("flow");
-                    setIsReviewingFlowSignal(flow.value !== "none");
+                    setIsReviewingFlowSignal(!shouldContinueAfterFlow && flow.value !== "none");
                     updateEntry(date, {
                       bleedingLevel: flow.value,
                       periodSignal
                     });
-                    if (flow.value === "none" || !shouldShowPeriodSignal) {
+                    if (shouldContinueAfterFlow) {
+                      advanceFromStep("flow");
+                    } else if (flow.value === "none" || !shouldShowPeriodSignal) {
                       scheduleCompletion();
                     }
                   }}

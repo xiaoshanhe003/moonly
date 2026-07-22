@@ -1,4 +1,4 @@
-import type { BleedingLevel, CycleProfile, DailyEntry, LegacyFlowLevel, PeriodSignal } from "./types";
+import type { BleedingLevel, CycleProfile, DailyEntry, LegacyFlowLevel, PeriodSignal, QuickLogStep } from "./types";
 
 // Prediction edits are easy to regress. Read docs/cycle-prediction-principles.md before changing this file.
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
@@ -798,22 +798,13 @@ export function getLogProgress(entry?: DailyEntry) {
   return "in-progress";
 }
 
-export function getSuggestedStep(entry?: DailyEntry) {
-  if (!entry?.mood) {
-    return "mood";
-  }
+export function getSuggestedStep(entry?: DailyEntry, stepOrder: QuickLogStep[] = ["mood", "energy", "symptoms", "flow"]) {
+  const isStepComplete: Record<QuickLogStep, boolean> = {
+    mood: Boolean(entry?.mood),
+    energy: Boolean(entry?.energy),
+    symptoms: entry?.symptoms !== undefined,
+    flow: getBleedingLevel(entry) !== undefined
+  };
 
-  if (!entry?.energy) {
-    return "energy";
-  }
-
-  if (entry?.symptoms === undefined) {
-    return "symptoms";
-  }
-
-  if (getBleedingLevel(entry) === undefined) {
-    return "flow";
-  }
-
-  return null;
+  return stepOrder.find((step) => !isStepComplete[step]) ?? null;
 }
