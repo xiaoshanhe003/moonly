@@ -9,12 +9,9 @@ import { InstallAppButton } from "../components/domain/install-app-button";
 import { SegmentedControl } from "../components/domain/segmented-control";
 import { Button } from "../components/ui/button";
 import { useCycleStore } from "../features/cycle/store";
-import { getCycleSummary } from "../features/cycle/cycle";
 import type { CycleProfile } from "../features/cycle/types";
-import { cn, formatShortDate } from "../lib/utils";
-import { uiLayoutStyles, uiTextStyles } from "../components/ui/styles";
-
-const weekdays = ["日", "一", "二", "三", "四", "五", "六"];
+import { cn } from "../lib/utils";
+import { uiLayoutStyles } from "../components/ui/styles";
 
 type AppShellProps = {
   initialView: "today" | "calendar";
@@ -26,26 +23,11 @@ export function AppShell({ initialView }: AppShellProps) {
   const location = useLocation();
   const profile = useCycleStore((state) => state.profile);
   const setProfile = useCycleStore((state) => state.setProfile);
-  const entries = useCycleStore((state) => state.entries);
   const currentView = location.pathname.includes("calendar") ? "calendar" : initialView;
   const previousProfileRef = useRef(profile);
   const previousViewRef = useRef(currentView);
   const [animateQuickLog, setAnimateQuickLog] = useState(false);
   const [importNotice, setImportNotice] = useState("");
-  const [visibleCalendarMonthKey, setVisibleCalendarMonthKey] = useState(() =>
-    new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()
-  );
-
-  const cycleSummary = profile ? getCycleSummary(profile, entries, new Date()) : null;
-  const visibleCalendarMonth = new Date(visibleCalendarMonthKey);
-  const visibleMonthLabel = `${visibleCalendarMonth.getMonth() + 1}月`;
-  const visibleYearLabel = visibleCalendarMonth.getFullYear();
-
-  useEffect(() => {
-    if (currentView === "calendar") {
-      setVisibleCalendarMonthKey(new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString());
-    }
-  }, [currentView]);
 
   useEffect(() => {
     const locationState = location.state as { importNotice?: string } | null;
@@ -113,8 +95,7 @@ export function AppShell({ initialView }: AppShellProps) {
         <div
           className={cn(
             "sticky top-0 z-40 isolate w-full bg-[var(--color-canvas)]",
-            uiLayoutStyles.pageHeaderSafeArea,
-            currentView === "calendar" && "backdrop-blur"
+            uiLayoutStyles.pageHeaderSafeArea
           )}
           data-sticky-shell-header
         >
@@ -142,52 +123,6 @@ export function AppShell({ initialView }: AppShellProps) {
               </div>
             </div>
 
-            {currentView === "calendar" && cycleSummary ? (
-              <div className="mt-6 space-y-6">
-                <div className="flex gap-[var(--space-10)] pb-6">
-                  <div className="min-w-0">
-                    <p className={cn("leading-none", uiTextStyles.sm, uiTextStyles.muted)}>周期长度</p>
-                    <p className={cn("mt-2.5 font-semibold leading-none tracking-[-0.04em]", uiTextStyles.md)}>
-                      {cycleSummary.cycleLength}天
-                    </p>
-                  </div>
-                  <div className="min-w-0">
-                    <p className={cn("leading-none", uiTextStyles.sm, uiTextStyles.muted)}>月经</p>
-                    <p className={cn("mt-2.5 font-semibold leading-none tracking-[-0.04em]", uiTextStyles.md)}>
-                      {cycleSummary.periodLength}天
-                    </p>
-                  </div>
-                  <div className="min-w-0">
-                    <p className={cn("leading-none", uiTextStyles.sm, uiTextStyles.muted)}>下次月经</p>
-                    <p className={cn("mt-2.5 whitespace-nowrap font-semibold leading-none tracking-[-0.04em]", uiTextStyles.md)}>
-                      {formatShortDate(cycleSummary.nextPeriodStart)}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-3.5">
-                  <div className="flex items-baseline gap-2">
-                    <p className={cn("font-semibold leading-none tracking-[-0.04em]", uiTextStyles.xxl)}>
-                      {visibleMonthLabel}
-                    </p>
-                    <span className={cn("font-semibold leading-none tracking-[-0.04em]", uiTextStyles.xxl)}>
-                      {visibleYearLabel}
-                    </span>
-                  </div>
-                  <div
-                    className={cn(
-                      "grid grid-cols-7 gap-0 border-b border-[color:var(--border)] pb-3 text-center",
-                      uiTextStyles.xs,
-                      uiTextStyles.muted
-                    )}
-                  >
-                    {weekdays.map((weekday) => (
-                      <div key={weekday}>{weekday}</div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            ) : null}
           </header>
         </div>
       ) : null}
@@ -208,7 +143,7 @@ export function AppShell({ initialView }: AppShellProps) {
         ) : currentView === "today" ? (
           <TodayPage animateQuickLog={animateQuickLog} />
         ) : (
-          <CalendarPage onVisibleMonthChange={setVisibleCalendarMonthKey} />
+          <CalendarPage />
         )}
       </div>
 
