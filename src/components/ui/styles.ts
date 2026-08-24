@@ -68,7 +68,7 @@ export const uiFeedbackStyles = {
   copyBubbleArrow:
     "absolute left-1/2 top-full h-2 w-2 -translate-x-1/2 -translate-y-1/2 rotate-45 border-b border-r border-[color:var(--border)] bg-[color:var(--card-elevated)]",
   bubbleEnter: "[animation:phase-bubble-float_160ms_ease-out_forwards]",
-  bubbleLeave: "[animation:phase-bubble-fade_200ms_ease-in_forwards]"
+  bubbleLeave: "[animation:phase-bubble-fade_200ms_ease-out_forwards]"
 };
 
 export function getOptionPillClass(active: boolean) {

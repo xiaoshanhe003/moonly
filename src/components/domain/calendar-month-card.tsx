@@ -98,9 +98,9 @@ function DayCellContent({
         <span
           key={phaseBubbleId}
           className={cn(
-            "absolute left-1/2 top-0 z-10 whitespace-nowrap rounded-[0.65rem] border border-[color:var(--border)] bg-[color:var(--card-elevated)] px-2.5 py-1.5 text-sm font-medium leading-none text-[color:var(--foreground)] shadow-[var(--shadow-card)]",
+            "phase-bubble absolute left-1/2 top-0 z-10 whitespace-nowrap rounded-[0.65rem] border border-[color:var(--border)] bg-[color:var(--card-elevated)] px-2.5 py-1.5 text-sm font-medium leading-none text-[color:var(--foreground)] shadow-[var(--shadow-card)]",
             isPhaseBubbleLeaving
-              ? "[animation:phase-bubble-fade_200ms_ease-in_forwards]"
+              ? "[animation:phase-bubble-fade_200ms_ease-out_forwards]"
               : "[animation:phase-bubble-float_160ms_ease-out_forwards]"
           )}
           role="status"
