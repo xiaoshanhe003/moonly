@@ -68,6 +68,8 @@ Adopt a simple commit convention:
 - Keep the first line under 72 characters
 - Separate unrelated changes into different commits
 
+Before every commit or push, perform a code review. The review may be skipped when the changes were reviewed recently, or when the changes are minor and do not affect code functionality, such as replacing an image or updating copy.
+
 Pull requests should include a short summary, testing notes, and screenshots for UI changes. Link related issues when applicable and note any follow-up work explicitly.
 
 ## Configuration & Security
