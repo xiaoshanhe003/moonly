@@ -49,7 +49,7 @@ const flowOptions = [
 ] as const;
 const defaultStepOrder: QuickLogStep[] = ["mood", "energy", "symptoms", "flow"];
 const menstrualStepOrder: QuickLogStep[] = ["flow", "mood", "energy", "symptoms"];
-const cardSlideAnimationMs = 440;
+const cardSlideAnimationMs = 540;
 const recordSheetSectionClassName = "grid gap-3 border-b border-[color:var(--border)] pb-6";
 type FlowOption = (typeof flowOptions)[number];
 
@@ -1123,6 +1123,7 @@ export function QuickLogCard({
 
   const activeCard = (
     <Card
+      key={`quick-log-card-active-${currentStep}`}
       className={cn(
         "quick-log-card rounded-[var(--radius-record-card)] quick-log-card--front",
         isCardSwitching && "quick-log-card--slide-out",
@@ -1140,7 +1141,10 @@ export function QuickLogCard({
   ) : (
     <div className="quick-log-deck">
       {isCardSwitching && transitionTargetStep ? (
-        <Card className={cn("quick-log-card rounded-[var(--radius-record-card)] quick-log-card--behind", className)}>
+        <Card
+          key={`quick-log-card-behind-${transitionTargetStep}`}
+          className={cn("quick-log-card rounded-[var(--radius-record-card)] quick-log-card--behind", className)}
+        >
           <div className="h-full">
             {renderStep(transitionTargetStep)}
           </div>

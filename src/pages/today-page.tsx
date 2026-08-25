@@ -45,11 +45,13 @@ export function TodayPage({ animateQuickLog = false }: TodayPageProps) {
         <PhaseHeroCard summary={summary} />
       </div>
       <div className="quick-log-sticky-shell sticky z-[45] mt-auto shrink-0 pt-8">
-        <QuickLogCard
-          date={dateKey}
-          entry={entry}
-          className={`${uiSurfaceStyles.elevated} ${animateQuickLog ? "motion-safe:animate-[quick-log-enter_620ms_cubic-bezier(0.16,1,0.3,1)_both]" : ""}`}
-        />
+        <div className={animateQuickLog ? "motion-safe:animate-[quick-log-enter_620ms_cubic-bezier(0.16,1,0.3,1)_both]" : ""}>
+          <QuickLogCard
+            date={dateKey}
+            entry={entry}
+            className={uiSurfaceStyles.elevated}
+          />
+        </div>
       </div>
     </div>
   );
