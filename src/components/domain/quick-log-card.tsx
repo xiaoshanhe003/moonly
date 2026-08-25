@@ -983,7 +983,7 @@ export function QuickLogCard({
                 onClick={() => advanceFromStep("symptoms")}
                 disabled={entry?.symptoms === undefined}
               >
-                下一步
+                {getNextStep("symptoms") ? "下一步" : "完成"}
               </Button>
             </div>
           </div>
@@ -1056,7 +1056,7 @@ export function QuickLogCard({
     );
   };
 
-  if (progress === "complete" && !isCompletionSwitching && !isReviewingFlowSignal) {
+  if (progress === "complete" && stepOverride !== "symptoms" && !isCompletionSwitching && !isReviewingFlowSignal) {
     if (completedDisplay === "expanded") {
       const content = (
         <>
