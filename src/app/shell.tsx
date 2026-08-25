@@ -59,6 +59,16 @@ export function AppShell({ initialView }: AppShellProps) {
     previousProfileRef.current = profile;
   }, [profile]);
 
+  useEffect(() => {
+    if (!animateQuickLog) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => setAnimateQuickLog(false), 620);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [animateQuickLog]);
+
   useLayoutEffect(() => {
     if (previousViewRef.current === "calendar" && currentView === "today") {
       const stickyHeader = document.querySelector("[data-sticky-shell-header]");
