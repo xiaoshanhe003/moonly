@@ -72,6 +72,26 @@
   --color-ink-subtle: var(--foreground-subtle);
   --color-muted: var(--muted-foreground);
   --color-border: var(--border);
+
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.segmented-thumb {
+  transform: translateX(0);
+  transition: transform 220ms var(--ease-in-out);
+  will-change: transform;
+}
+
+.segmented-thumb-active {
+  transform: translateX(100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .segmented-thumb {
+    transition: none;
+  }
 }
 
 * {
